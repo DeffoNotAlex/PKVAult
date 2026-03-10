@@ -8,6 +8,9 @@ public partial class App : Application
     /// <summary>The currently loaded save file, set by MainPage after a successful parse.</summary>
     public static SaveFile? ActiveSave { get; set; }
 
+    /// <summary>Original filename of the loaded save, used for export.</summary>
+    public static string ActiveSaveFileName { get; set; } = "save.bin";
+
     public App()
     {
         InitializeComponent();

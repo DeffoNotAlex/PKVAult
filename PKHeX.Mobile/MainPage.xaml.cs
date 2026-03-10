@@ -29,6 +29,7 @@ public partial class MainPage : ContentPage
 
             var (data, fileName) = result.Value;
             _loadedFileName = fileName;
+            App.ActiveSaveFileName = fileName;
 
             if (!SaveUtil.TryGetSaveFile(data, out var sav))
             {
@@ -86,7 +87,7 @@ public partial class MainPage : ContentPage
 
     private async void OnBoxClicked(object sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync(nameof(BoxPage));
+        await Shell.Current.GoToAsync(nameof(GamePage));
     }
 
     private async void OnSearchClicked(object sender, EventArgs e)
