@@ -1,5 +1,6 @@
 using PKHeX.Core;
 using PKHeX.Drawing.Mobile.Sprites;
+using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Pages;
 

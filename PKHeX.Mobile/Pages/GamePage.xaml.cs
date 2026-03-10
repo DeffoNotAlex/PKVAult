@@ -216,9 +216,11 @@ public partial class GamePage : ContentPage
         if (_selectedPk is not { } pk) return;
 
         const int n = 6;
+        // GetStats returns [HP, ATK, DEF, SPA, SPD, SPE]
+        var s = pk.GetStats(pk.PersonalInfo);
         // Clockwise from top: HP, Atk, Def, Spe, SpD, SpA
         string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
-        int[]    values = [pk.Stat_HP, pk.Stat_ATK, pk.Stat_DEF, pk.Stat_SPE, pk.Stat_SPD, pk.Stat_SPA];
+        int[]    values = [s[0], s[1], s[2], s[5], s[4], s[3]];
 
         float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.24f;
         float cx = e.Info.Width  / 2f;
@@ -270,28 +272,22 @@ public partial class GamePage : ContentPage
         }
 
         // Labels and values at each axis tip
-        float textR  = r + margin * 0.52f;
+        float textR   = r + margin * 0.52f;
         float labelSz = Math.Max(16f, r * 0.15f);
         float valueSz = Math.Max(20f, r * 0.19f);
 
-        using var labelPaint = new SKPaint
-        {
-            Color = new SKColor(110, 130, 180), TextSize = labelSz,
-            IsAntialias = true, TextAlign = SKTextAlign.Center,
-        };
-        using var valuePaint = new SKPaint
-        {
-            Color = new SKColor(225, 235, 255), TextSize = valueSz,
-            IsAntialias = true, TextAlign = SKTextAlign.Center, FakeBoldText = true,
-        };
+        using var labelFont = new SKFont(SKTypeface.Default, labelSz);
+        using var valueFont = new SKFont(SKTypeface.Default, valueSz) { Embolden = true };
+        using var labelPaint = new SKPaint { Color = new SKColor(110, 130, 180), IsAntialias = true };
+        using var valuePaint = new SKPaint { Color = new SKColor(225, 235, 255), IsAntialias = true };
 
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
             float lx = cx + textR * MathF.Cos(angle);
             float ly = cy + textR * MathF.Sin(angle);
-            canvas.DrawText(labels[i], lx, ly,              labelPaint);
-            canvas.DrawText(values[i].ToString(), lx, ly + valueSz * 1.05f, valuePaint);
+            canvas.DrawText(labels[i],          lx, ly,                 SKTextAlign.Center, labelFont, labelPaint);
+            canvas.DrawText(values[i].ToString(), lx, ly + valueSz * 1.05f, SKTextAlign.Center, valueFont, valuePaint);
         }
     }
 
