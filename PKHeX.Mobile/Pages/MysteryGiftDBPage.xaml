@@ -2,17 +2,22 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PKHeX.Mobile.Pages.MysteryGiftDBPage"
-             Title="Mystery Gift DB">
+             Title="Mystery Gift DB"
+             BackgroundColor="#0B0F1E">
 
-    <Grid RowDefinitions="Auto,*" Padding="8">
+    <Grid RowDefinitions="Auto,*" Padding="8" BackgroundColor="#0B0F1E">
 
         <!-- Filter bar -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
             <Entry Grid.Column="0" x:Name="SearchEntry"
                    Placeholder="Search card title or species…"
+                   PlaceholderColor="#556080"
+                   BackgroundColor="#1A2035"
+                   TextColor="White"
                    TextChanged="OnFilterChanged" />
             <Label Grid.Column="1" Text="Compatible" FontSize="12"
-                   VerticalOptions="Center" Opacity="0.7" />
+                   TextColor="#8888BB"
+                   VerticalOptions="Center" />
             <Switch Grid.Column="2" x:Name="CompatibleOnly"
                     IsToggled="True" Toggled="OnFilterChanged"
                     VerticalOptions="Center" />
@@ -21,29 +26,33 @@
         <!-- Gift list -->
         <CollectionView Grid.Row="1" x:Name="GiftList"
                         SelectionMode="Single"
-                        SelectionChanged="OnGiftSelected">
+                        SelectionChanged="OnGiftSelected"
+                        BackgroundColor="#0B0F1E">
             <CollectionView.ItemsLayout>
                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="2" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid ColumnDefinitions="56,*,Auto" Padding="4,2" ColumnSpacing="8">
+                    <Grid ColumnDefinitions="56,*,Auto" Padding="6,4" ColumnSpacing="8"
+                          BackgroundColor="#111827">
                         <Image Grid.Column="0"
                                Source="{Binding SpriteSource}"
                                WidthRequest="56" HeightRequest="46"
                                Aspect="AspectFit" />
                         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="13" />
-                            <Label Text="{Binding SubInfo}" FontSize="11" Opacity="0.7" />
+                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="13"
+                                   TextColor="#EEEEFF" />
+                            <Label Text="{Binding SubInfo}" FontSize="11" TextColor="#8888BB" />
                         </VerticalStackLayout>
                         <Label Grid.Column="2" Text="{Binding GenLabel}"
-                               FontSize="11" Opacity="0.5" VerticalOptions="Center" />
+                               FontSize="11" TextColor="#445566" VerticalOptions="Center" />
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.EmptyView>
                 <Label Text="No gifts found." HorizontalOptions="Center"
-                       Margin="0,40,0,0" Opacity="0.5" />
+                       TextColor="#556080"
+                       Margin="0,40,0,0" />
             </CollectionView.EmptyView>
         </CollectionView>
 

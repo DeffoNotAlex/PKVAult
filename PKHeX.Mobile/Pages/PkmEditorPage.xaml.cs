@@ -3,6 +3,7 @@ using PKHeX.Drawing.Mobile.QR;
 using PKHeX.Mobile.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using Microsoft.Maui.Graphics;
 
 namespace PKHeX.Mobile.Pages;
 
@@ -16,6 +17,7 @@ public partial class PkmEditorPage : ContentPage
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings _strings = GameInfo.GetStrings("en");
     private bool _movesPopulated;
+    private int _currentTab = 0;
 
     public string? BoxIndexParam  { set => int.TryParse(value, out _boxIndex); }
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
@@ -51,6 +53,11 @@ public partial class PkmEditorPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+#if ANDROID
+        GamepadRouter.KeyReceived += OnGamepadKey;
+#endif
+
         if (App.ActiveSave is null) return;
 
         _pk = App.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
@@ -58,6 +65,95 @@ public partial class PkmEditorPage : ContentPage
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
     }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnGamepadKey;
+#endif
+    }
+
+    // ──────────────────────────────────────────────
+    //  Tab management
+    // ──────────────────────────────────────────────
+
+    private void SwitchTab(int tab)
+    {
+        _currentTab = tab;
+        StatsPanel.IsVisible  = tab == 0;
+        MovesPanel.IsVisible  = tab == 1;
+        MetPanel.IsVisible    = tab == 2;
+        OTPanel.IsVisible     = tab == 3;
+
+        if (tab == 1)
+            EnsureMovesPopulated();
+
+        UpdateTabHighlights();
+    }
+
+    private void UpdateTabHighlights()
+    {
+        var selected   = Color.FromArgb("#4F80FF");
+        var unselected = Color.FromArgb("#1A2035");
+        var selText    = Colors.White;
+        var unselText  = Color.FromArgb("#8888BB");
+
+        TabStats.BackgroundColor  = _currentTab == 0 ? selected : unselected;
+        TabMoves.BackgroundColor  = _currentTab == 1 ? selected : unselected;
+        TabMet.BackgroundColor    = _currentTab == 2 ? selected : unselected;
+        TabOT.BackgroundColor     = _currentTab == 3 ? selected : unselected;
+
+        TabStats.TextColor  = _currentTab == 0 ? selText : unselText;
+        TabMoves.TextColor  = _currentTab == 1 ? selText : unselText;
+        TabMet.TextColor    = _currentTab == 2 ? selText : unselText;
+        TabOT.TextColor     = _currentTab == 3 ? selText : unselText;
+    }
+
+    private void OnTabClicked(object sender, EventArgs e)
+    {
+        int tab = sender == TabStats  ? 0
+                : sender == TabMoves  ? 1
+                : sender == TabMet    ? 2
+                : 3;
+        SwitchTab(tab);
+    }
+
+    // ──────────────────────────────────────────────
+    //  Gamepad input
+    // ──────────────────────────────────────────────
+
+#if ANDROID
+    private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        MainThread.BeginInvokeOnMainThread(() => HandleGamepadKey(keyCode));
+    }
+
+    private void HandleGamepadKey(Android.Views.Keycode keyCode)
+    {
+        switch (keyCode)
+        {
+            case Android.Views.Keycode.ButtonL1:
+            case Android.Views.Keycode.Button5:
+                SwitchTab((_currentTab + 3) % 4); break;
+
+            case Android.Views.Keycode.ButtonR1:
+            case Android.Views.Keycode.Button6:
+                SwitchTab((_currentTab + 1) % 4); break;
+
+            case Android.Views.Keycode.ButtonB:
+                _ = Shell.Current.GoToAsync(".."); break;
+
+            case Android.Views.Keycode.ButtonStart:
+                OnSaveClicked(this, EventArgs.Empty); break;
+        }
+    }
+#endif
+
+    // ──────────────────────────────────────────────
+    //  Data population
+    // ──────────────────────────────────────────────
 
     private void PopulateControls()
     {
@@ -146,17 +242,6 @@ public partial class PkmEditorPage : ContentPage
         canvas.DrawBitmap(sprite, SKRect.Create(0, 0, e.Info.Width, e.Info.Height));
     }
 
-    private void OnTabClicked(object sender, EventArgs e)
-    {
-        StatsPanel.IsVisible  = sender == TabStats;
-        MovesPanel.IsVisible  = sender == TabMoves;
-        MetPanel.IsVisible    = sender == TabMet;
-        OTPanel.IsVisible     = sender == TabOT;
-
-        if (sender == TabMoves)
-            EnsureMovesPopulated();
-    }
-
     private async void OnQRClicked(object sender, EventArgs e)
     {
         if (_pk is null) return;
@@ -185,6 +270,9 @@ public partial class PkmEditorPage : ContentPage
         App.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
         await Shell.Current.GoToAsync("..");
     }
+
+    private async void OnBackClicked(object sender, EventArgs e)
+        => await Shell.Current.GoToAsync("..");
 
     private void ApplyChanges()
     {

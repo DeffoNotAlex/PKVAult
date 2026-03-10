@@ -156,7 +156,15 @@ public partial class GamePage : ContentPage
             if (pk.Species != 0)
             {
                 var sprite = _sprites.GetSprite(pk);
-                canvas.DrawBitmap(sprite, SKRect.Create(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2));
+                float innerW = slotW - pad * 2;
+                float innerH = slotH - pad * 2;
+                float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
+                float drawW, drawH;
+                if (innerW / innerH > aspect) { drawH = innerH; drawW = drawH * aspect; }
+                else { drawW = innerW; drawH = drawW / aspect; }
+                float sx = x + pad + (innerW - drawW) / 2f;
+                float sy = y + pad + (innerH - drawH) / 2f;
+                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
             }
 
             // Cursor outline (blue)
@@ -349,6 +357,9 @@ public partial class GamePage : ContentPage
         if (_selectedSlot < 0) return;
         await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_selectedSlot}");
     }
+
+    private async void OnMenuClicked(object sender, EventArgs e)
+        => await Shell.Current.GoToAsync("..");
 
     private async void OnSearchClicked(object sender, EventArgs e)
         => await Shell.Current.GoToAsync(nameof(DatabasePage));

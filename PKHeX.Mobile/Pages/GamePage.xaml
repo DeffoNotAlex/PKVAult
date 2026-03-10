@@ -76,16 +76,19 @@
                 <HorizontalStackLayout Grid.Row="1"
                                         HorizontalOptions="Center" Spacing="10">
                     <Button Text="Search"   Clicked="OnSearchClicked"
-                            BackgroundColor="#1A2A50" TextColor="#A0C0FF"
+                            BackgroundColor="#1D3A70" TextColor="#A0C0FF"
                             FontSize="13" Padding="14,8" />
                     <Button Text="Gifts"    Clicked="OnGiftsClicked"
-                            BackgroundColor="#1A2A50" TextColor="#A0C0FF"
+                            BackgroundColor="#1D3A70" TextColor="#A0C0FF"
                             FontSize="13" Padding="14,8" />
                     <Button Text="Settings" Clicked="OnSettingsClicked"
-                            BackgroundColor="#1A2A50" TextColor="#A0C0FF"
+                            BackgroundColor="#1D3A70" TextColor="#A0C0FF"
                             FontSize="13" Padding="14,8" />
                     <Button Text="Export"   Clicked="OnExportClicked"
-                            BackgroundColor="#2A1A50" TextColor="#C0A0FF"
+                            BackgroundColor="#2D1B69" TextColor="#C0A0FF"
+                            FontSize="13" Padding="14,8" />
+                    <Button Text="☰ Menu"   Clicked="OnMenuClicked"
+                            BackgroundColor="#1D3A70" TextColor="#A0C0FF"
                             FontSize="13" Padding="14,8" />
                 </HorizontalStackLayout>
 

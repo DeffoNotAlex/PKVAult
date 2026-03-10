@@ -3,112 +3,172 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="PKHeX.Mobile.Pages.PkmEditorPage"
-             Title="Edit Pokémon">
+             Title="Edit Pokémon"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0B0F1E">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="QRButton" Text="QR" Clicked="OnQRClicked" />
         <ToolbarItem Text="Save" Clicked="OnSaveClicked" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="0" BackgroundColor="#0B0F1E">
 
-        <!-- Header: sprite + species/level -->
-        <Grid Grid.Row="0" ColumnDefinitions="80,*" Padding="8"
-              BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2A2A2A}">
+        <!-- Row 0: Header: sprite + species/level + back button -->
+        <Grid Grid.Row="0" ColumnDefinitions="80,*,Auto" Padding="8"
+              BackgroundColor="#0D1121">
             <skia:SKCanvasView Grid.Column="0"
                                x:Name="SpriteCanvas"
                                WidthRequest="68" HeightRequest="56"
                                PaintSurface="OnSpritePaint" />
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2" Margin="8,0,0,0">
-                <Label x:Name="SpeciesLabel" FontSize="18" FontAttributes="Bold" />
-                <Label x:Name="SubtitleLabel" FontSize="13" Opacity="0.7" />
+                <Label x:Name="SpeciesLabel" FontSize="18" FontAttributes="Bold"
+                       TextColor="#EEEEFF" />
+                <Label x:Name="SubtitleLabel" FontSize="13" TextColor="#8888BB" />
             </VerticalStackLayout>
+            <Button Grid.Column="2"
+                    Text="← Back"
+                    Clicked="OnBackClicked"
+                    BackgroundColor="#1D3A70" TextColor="#A0C0FF"
+                    FontSize="13" Padding="14,8"
+                    VerticalOptions="Center" Margin="0,0,4,0" />
         </Grid>
 
-        <!-- Tab bar -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="1"
-              BackgroundColor="{AppThemeBinding Light=#CCCCCC, Dark=#333333}">
-            <Button x:Name="TabStats"  Grid.Column="0" Text="Stats"  Clicked="OnTabClicked" FontSize="13" Padding="0,8" />
-            <Button x:Name="TabMoves" Grid.Column="1" Text="Moves" Clicked="OnTabClicked" FontSize="13" Padding="0,8" />
-            <Button x:Name="TabMet"   Grid.Column="2" Text="Met"   Clicked="OnTabClicked" FontSize="13" Padding="0,8" />
-            <Button x:Name="TabOT"    Grid.Column="3" Text="OT"    Clicked="OnTabClicked" FontSize="13" Padding="0,8" />
+        <!-- Row 1: Tab bar -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="0"
+              BackgroundColor="#0B0F1E">
+            <Button x:Name="TabStats"  Grid.Column="0" Text="Stats"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="#4F80FF" TextColor="White"
+                    FontSize="13" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabMoves" Grid.Column="1" Text="Moves"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    FontSize="13" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabMet"   Grid.Column="2" Text="Met"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    FontSize="13" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabOT"    Grid.Column="3" Text="OT"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    FontSize="13" Padding="0,8" CornerRadius="0" />
         </Grid>
 
-        <!-- Scrollable content panels (only one visible at a time) -->
-        <ScrollView Grid.Row="2" Padding="12">
+        <!-- Row 2: Scrollable content panels (only one visible at a time) -->
+        <ScrollView Grid.Row="2" Padding="12" BackgroundColor="#0B0F1E">
             <Grid>
 
                 <!-- ── STATS ── -->
                 <VerticalStackLayout x:Name="StatsPanel" Spacing="10">
 
                     <Grid ColumnDefinitions="90,*" RowSpacing="8">
-                        <Label Grid.Row="0" Grid.Column="0" Text="Nickname" VerticalOptions="Center" />
-                        <Entry Grid.Row="0" Grid.Column="1" x:Name="NicknameEntry" />
+                        <Label Grid.Row="0" Grid.Column="0" Text="Nickname"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="0" Grid.Column="1" x:Name="NicknameEntry"
+                               BackgroundColor="#1A2035" TextColor="White"
+                               PlaceholderColor="#556080" />
                     </Grid>
 
                     <Grid ColumnDefinitions="90,*">
-                        <Label Grid.Column="0" Text="Level" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" x:Name="LevelEntry" Keyboard="Numeric" />
+                        <Label Grid.Column="0" Text="Level"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Column="1" x:Name="LevelEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White"
+                               PlaceholderColor="#556080" />
                     </Grid>
 
                     <Grid ColumnDefinitions="90,*">
-                        <Label Grid.Column="0" Text="Nature" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="NaturePicker" />
+                        <Label Grid.Column="0" Text="Nature"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="NaturePicker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
 
                     <Grid ColumnDefinitions="90,*">
-                        <Label Grid.Column="0" Text="Ability" VerticalOptions="Center" />
-                        <Label Grid.Column="1" x:Name="AbilityLabel" VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="Ability"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Label Grid.Column="1" x:Name="AbilityLabel"
+                               VerticalOptions="Center" TextColor="#EEEEFF" />
                     </Grid>
 
                     <Grid ColumnDefinitions="90,*">
-                        <Label Grid.Column="0" Text="Gender" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="GenderPicker" />
+                        <Label Grid.Column="0" Text="Gender"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="GenderPicker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
 
                     <Grid ColumnDefinitions="90,*">
-                        <Label Grid.Column="0" Text="Shiny" VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="Shiny"
+                               VerticalOptions="Center" TextColor="#8888BB" />
                         <Switch Grid.Column="1" x:Name="ShinySwitch" HorizontalOptions="Start" />
                     </Grid>
 
                     <!-- IVs -->
-                    <Label Text="IVs  (0 – 31)" FontAttributes="Bold" Margin="0,8,0,0" />
+                    <Label Text="IVs  (0 – 31)" FontAttributes="Bold"
+                           TextColor="#4F80FF" Margin="0,8,0,0" />
                     <Grid ColumnDefinitions="50,*,50,*" RowDefinitions="Auto,Auto,Auto"
                           ColumnSpacing="8" RowSpacing="6">
-                        <Label Grid.Row="0" Grid.Column="0" Text="HP"  VerticalOptions="Center" />
-                        <Entry Grid.Row="0" Grid.Column="1" x:Name="IvHpEntry"  Keyboard="Numeric" />
-                        <Label Grid.Row="0" Grid.Column="2" Text="Atk" VerticalOptions="Center" />
-                        <Entry Grid.Row="0" Grid.Column="3" x:Name="IvAtkEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="0" Grid.Column="0" Text="HP"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="0" Grid.Column="1" x:Name="IvHpEntry"  Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="0" Grid.Column="2" Text="Atk"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="0" Grid.Column="3" x:Name="IvAtkEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
 
-                        <Label Grid.Row="1" Grid.Column="0" Text="Def" VerticalOptions="Center" />
-                        <Entry Grid.Row="1" Grid.Column="1" x:Name="IvDefEntry" Keyboard="Numeric" />
-                        <Label Grid.Row="1" Grid.Column="2" Text="SpA" VerticalOptions="Center" />
-                        <Entry Grid.Row="1" Grid.Column="3" x:Name="IvSpaEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="Def"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="1" Grid.Column="1" x:Name="IvDefEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="1" Grid.Column="2" Text="SpA"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="1" Grid.Column="3" x:Name="IvSpaEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
 
-                        <Label Grid.Row="2" Grid.Column="0" Text="SpD" VerticalOptions="Center" />
-                        <Entry Grid.Row="2" Grid.Column="1" x:Name="IvSpdEntry" Keyboard="Numeric" />
-                        <Label Grid.Row="2" Grid.Column="2" Text="Spe" VerticalOptions="Center" />
-                        <Entry Grid.Row="2" Grid.Column="3" x:Name="IvSpeEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="2" Grid.Column="0" Text="SpD"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="2" Grid.Column="1" x:Name="IvSpdEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="2" Grid.Column="2" Text="Spe"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="2" Grid.Column="3" x:Name="IvSpeEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
 
                     <!-- EVs -->
-                    <Label Text="EVs  (0 – 252)" FontAttributes="Bold" Margin="0,8,0,0" />
+                    <Label Text="EVs  (0 – 252)" FontAttributes="Bold"
+                           TextColor="#4F80FF" Margin="0,8,0,0" />
                     <Grid ColumnDefinitions="50,*,50,*" RowDefinitions="Auto,Auto,Auto"
                           ColumnSpacing="8" RowSpacing="6">
-                        <Label Grid.Row="0" Grid.Column="0" Text="HP"  VerticalOptions="Center" />
-                        <Entry Grid.Row="0" Grid.Column="1" x:Name="EvHpEntry"  Keyboard="Numeric" />
-                        <Label Grid.Row="0" Grid.Column="2" Text="Atk" VerticalOptions="Center" />
-                        <Entry Grid.Row="0" Grid.Column="3" x:Name="EvAtkEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="0" Grid.Column="0" Text="HP"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="0" Grid.Column="1" x:Name="EvHpEntry"  Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="0" Grid.Column="2" Text="Atk"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="0" Grid.Column="3" x:Name="EvAtkEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
 
-                        <Label Grid.Row="1" Grid.Column="0" Text="Def" VerticalOptions="Center" />
-                        <Entry Grid.Row="1" Grid.Column="1" x:Name="EvDefEntry" Keyboard="Numeric" />
-                        <Label Grid.Row="1" Grid.Column="2" Text="SpA" VerticalOptions="Center" />
-                        <Entry Grid.Row="1" Grid.Column="3" x:Name="EvSpaEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="Def"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="1" Grid.Column="1" x:Name="EvDefEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="1" Grid.Column="2" Text="SpA"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="1" Grid.Column="3" x:Name="EvSpaEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
 
-                        <Label Grid.Row="2" Grid.Column="0" Text="SpD" VerticalOptions="Center" />
-                        <Entry Grid.Row="2" Grid.Column="1" x:Name="EvSpdEntry" Keyboard="Numeric" />
-                        <Label Grid.Row="2" Grid.Column="2" Text="Spe" VerticalOptions="Center" />
-                        <Entry Grid.Row="2" Grid.Column="3" x:Name="EvSpeEntry" Keyboard="Numeric" />
+                        <Label Grid.Row="2" Grid.Column="0" Text="SpD"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="2" Grid.Column="1" x:Name="EvSpdEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
+                        <Label Grid.Row="2" Grid.Column="2" Text="Spe"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Row="2" Grid.Column="3" x:Name="EvSpeEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
 
                 </VerticalStackLayout>
@@ -116,65 +176,98 @@
                 <!-- ── MOVES ── -->
                 <VerticalStackLayout x:Name="MovesPanel" IsVisible="False" Spacing="12">
                     <Grid ColumnDefinitions="60,*">
-                        <Label Grid.Column="0" Text="Move 1" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="Move1Picker" />
+                        <Label Grid.Column="0" Text="Move 1"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="Move1Picker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
                     <Grid ColumnDefinitions="60,*">
-                        <Label Grid.Column="0" Text="Move 2" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="Move2Picker" />
+                        <Label Grid.Column="0" Text="Move 2"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="Move2Picker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
                     <Grid ColumnDefinitions="60,*">
-                        <Label Grid.Column="0" Text="Move 3" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="Move3Picker" />
+                        <Label Grid.Column="0" Text="Move 3"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="Move3Picker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
                     <Grid ColumnDefinitions="60,*">
-                        <Label Grid.Column="0" Text="Move 4" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="Move4Picker" />
+                        <Label Grid.Column="0" Text="Move 4"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="Move4Picker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
                 </VerticalStackLayout>
 
                 <!-- ── MET ── -->
                 <VerticalStackLayout x:Name="MetPanel" IsVisible="False" Spacing="10">
                     <Grid ColumnDefinitions="110,*">
-                        <Label Grid.Column="0" Text="Met Level" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" x:Name="MetLevelEntry" Keyboard="Numeric" />
+                        <Label Grid.Column="0" Text="Met Level"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Column="1" x:Name="MetLevelEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
                     <Grid ColumnDefinitions="110,*">
-                        <Label Grid.Column="0" Text="Ball" VerticalOptions="Center" />
-                        <Label Grid.Column="1" x:Name="BallLabel" VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="Ball"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Label Grid.Column="1" x:Name="BallLabel"
+                               VerticalOptions="Center" TextColor="#EEEEFF" />
                     </Grid>
                     <Grid ColumnDefinitions="110,*">
-                        <Label Grid.Column="0" Text="Met Location" VerticalOptions="Center" />
-                        <Label Grid.Column="1" x:Name="MetLocationLabel" VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="Met Location"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Label Grid.Column="1" x:Name="MetLocationLabel"
+                               VerticalOptions="Center" TextColor="#EEEEFF" />
                     </Grid>
                     <Grid ColumnDefinitions="110,*">
-                        <Label Grid.Column="0" Text="Origin Game" VerticalOptions="Center" />
-                        <Label Grid.Column="1" x:Name="OriginGameLabel" VerticalOptions="Center" />
+                        <Label Grid.Column="0" Text="Origin Game"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Label Grid.Column="1" x:Name="OriginGameLabel"
+                               VerticalOptions="Center" TextColor="#EEEEFF" />
                     </Grid>
                 </VerticalStackLayout>
 
                 <!-- ── OT ── -->
                 <VerticalStackLayout x:Name="OTPanel" IsVisible="False" Spacing="10">
                     <Grid ColumnDefinitions="100,*">
-                        <Label Grid.Column="0" Text="OT Name" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" x:Name="OTNameEntry" />
+                        <Label Grid.Column="0" Text="OT Name"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Column="1" x:Name="OTNameEntry"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
                     <Grid ColumnDefinitions="100,*">
-                        <Label Grid.Column="0" Text="TID" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" x:Name="TIDEntry" Keyboard="Numeric" />
+                        <Label Grid.Column="0" Text="TID"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Column="1" x:Name="TIDEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
                     <Grid ColumnDefinitions="100,*">
-                        <Label Grid.Column="0" Text="SID" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" x:Name="SIDEntry" Keyboard="Numeric" />
+                        <Label Grid.Column="0" Text="SID"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Entry Grid.Column="1" x:Name="SIDEntry" Keyboard="Numeric"
+                               BackgroundColor="#1A2035" TextColor="White" PlaceholderColor="#556080" />
                     </Grid>
                     <Grid ColumnDefinitions="100,*">
-                        <Label Grid.Column="0" Text="Language" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" x:Name="LanguagePicker" />
+                        <Label Grid.Column="0" Text="Language"
+                               VerticalOptions="Center" TextColor="#8888BB" />
+                        <Picker Grid.Column="1" x:Name="LanguagePicker"
+                                BackgroundColor="#1A2035" TextColor="White" />
                     </Grid>
                 </VerticalStackLayout>
 
             </Grid>
         </ScrollView>
+
+        <!-- Row 3: Save button fixed at bottom -->
+        <Button Grid.Row="3"
+                Text="💾 Save Changes"
+                Clicked="OnSaveClicked"
+                BackgroundColor="#2D1B69" TextColor="#C0A0FF"
+                FontSize="15" FontAttributes="Bold"
+                Padding="0,14"
+                Margin="12,8" CornerRadius="8" />
 
     </Grid>
 </ContentPage>
