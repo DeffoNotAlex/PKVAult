@@ -174,7 +174,7 @@ public partial class PkmEditorPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("QR Error", ex.Message, "OK");
+            await DisplayAlertAsync("QR Error", ex.Message, "OK");
         }
     }
 

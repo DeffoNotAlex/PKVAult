@@ -9,6 +9,9 @@ namespace PKHeX.Drawing.Mobile.Sprites;
 /// </summary>
 public static class SpriteName
 {
+    /// <summary>When false, shiny suffix is never appended — normal sprite is used instead.</summary>
+    public static bool AllowShinySprite { get; set; } = true;
+
     private const char Separator = '_';
     private const char Cosplay = 'c';
     private const char Shiny = 's';
@@ -56,7 +59,7 @@ public static class SpriteName
             sb.Append(Separator).Append(formarg);
         }
 
-        if (shiny)
+        if (shiny && AllowShinySprite)
             sb.Append(Shiny);
 
         return sb.ToString();
