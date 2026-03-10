@@ -236,6 +236,9 @@ public partial class MainPage : ContentPage
         public string DetailLine { get; }
         public string GameShortName { get; }
         public Color GameColor { get; }
+        public ImageSource? IconSource { get; }
+        public bool HasIcon { get; }
+        public bool HasNoIcon { get; }
 
         public SaveCardViewModel(SaveEntry entry)
         {
@@ -245,7 +248,59 @@ public partial class MainPage : ContentPage
             DetailLine   = $"TID {entry.TrainerID}  ·  {entry.BoxCount} boxes  ·  {entry.PlayTime}";
             GameShortName = GetGameShortName(entry.Version);
             GameColor     = GetGameColor(entry.Version);
+
+            var iconFile = GetIconFileName(entry.Version);
+            if (iconFile != null)
+            {
+                IconSource = ImageSource.FromStream(
+                    ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
+                HasIcon   = true;
+                HasNoIcon = false;
+            }
+            else
+            {
+                HasIcon   = false;
+                HasNoIcon = true;
+            }
         }
+
+        private static string? GetIconFileName(GameVersion v) => v switch
+        {
+            GameVersion.RD  => "red_vc.png",
+            GameVersion.BU  => "blue_vc.png",
+            GameVersion.GN  => "green_vc.png",
+            GameVersion.YW  => "yellow_vc.png",
+            GameVersion.GD  => "gold_vc.png",
+            GameVersion.SI  => "silver_vc.png",
+            GameVersion.C   => "crystal.png",
+            GameVersion.D   => "diamond.png",
+            GameVersion.P   => "pearl.png",
+            GameVersion.Pt  => "platinum.png",
+            GameVersion.HG  => "heartgold.png",
+            GameVersion.SS  => "soulsilver.png",
+            GameVersion.B   => "black.png",
+            GameVersion.W   => "white.png",
+            GameVersion.B2  => "black2.png",
+            GameVersion.W2  => "white2.png",
+            GameVersion.X   => "x.png",
+            GameVersion.Y   => "y.png",
+            GameVersion.OR  => "omega_ruby.png",
+            GameVersion.AS  => "alpha_sapphire.png",
+            GameVersion.SN  => "sun.png",
+            GameVersion.MN  => "moon.png",
+            GameVersion.US  => "ultra_sun.png",
+            GameVersion.UM  => "ultra_moon.png",
+            GameVersion.GP  => "lets_go_pikachu.jpg",
+            GameVersion.GE  => "lets_go_eevee.jpg",
+            GameVersion.SW  => "sword.png",
+            GameVersion.SH  => "shield.png",
+            GameVersion.BD  => "brilliant_diamond.jpg",
+            GameVersion.SP  => "shining_pearl.jpg",
+            GameVersion.PLA => "legends_arceus.jpg",
+            GameVersion.SL  => "scarlet.jpg",
+            GameVersion.VL  => "violet.jpg",
+            _               => null,   // GBA (FR/LG/R/S/E) — use colored badge
+        };
 
         private static string GetGameShortName(GameVersion v) => v switch
         {
