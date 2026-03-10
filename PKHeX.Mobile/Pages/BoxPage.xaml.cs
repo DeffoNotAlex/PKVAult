@@ -25,11 +25,13 @@ public partial class BoxPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _sav = App.ActiveSave;
-        if (_sav is null)
-            return;
+        var sav = App.ActiveSave;
+        if (sav is null) return;
 
-        _boxIndex = 0;
+        bool freshLoad = _sav != sav;
+        _sav = sav;
+        if (freshLoad) _boxIndex = 0;
+
         LoadBox(_boxIndex);
     }
 
@@ -122,13 +124,6 @@ public partial class BoxPage : ContentPage
         if (pk.Species == 0)
             return;
 
-        var name = GameInfo.GetStrings("en").Species[pk.Species];
-        var info = $"#{pk.Species:000} {name}\n" +
-                   $"Level {pk.CurrentLevel}\n" +
-                   $"OT: {pk.OriginalTrainerName}\n" +
-                   (pk.IsShiny ? "★ Shiny\n" : "") +
-                   (pk.IsEgg ? "🥚 Egg" : "");
-
-        await DisplayAlert(name, info, "OK");
+        await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={index}");
     }
 }
