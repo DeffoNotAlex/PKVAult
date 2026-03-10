@@ -62,14 +62,9 @@ public sealed class PlaceholderSpriteRenderer : ISpriteRenderer
         // Optional label
         if (label is not null)
         {
-            using var textPaint = new SKPaint
-            {
-                Color = SKColors.White,
-                TextSize = 24,
-                IsAntialias = true,
-                TextAlign = SKTextAlign.Center,
-            };
-            canvas.DrawText(label, Width / 2f, (Height / 2f) + 10, textPaint);
+            using var font = new SKFont { Size = 24 };
+            using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+            canvas.DrawText(label, Width / 2f, (Height / 2f) + 10, SKTextAlign.Center, font, textPaint);
         }
 
         return bmp;

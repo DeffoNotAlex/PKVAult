@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using SkiaSharp;
 
@@ -12,10 +13,22 @@ public static class ImageUtilSK
 {
     // --- Bitmap construction ---
 
+    /// <summary>
+    /// Gets a writable <see cref="Span{T}"/> over the bitmap's raw pixel buffer.
+    /// Uses the same pointer trick as PKHeX.Drawing.ImageUtil to avoid unsafe blocks.
+    /// </summary>
+    private static Span<byte> GetWritablePixelSpan(SKBitmap bmp)
+    {
+        var ptr = bmp.GetPixels();
+        return MemoryMarshal.CreateSpan(
+            ref Unsafe.AddByteOffset(ref Unsafe.NullRef<byte>(), ptr),
+            bmp.ByteCount);
+    }
+
     public static SKBitmap GetBitmap(ReadOnlySpan<byte> data, int width, int height)
     {
         var bmp = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-        bmp.Bytes = data.ToArray();
+        data.CopyTo(GetWritablePixelSpan(bmp));
         return bmp;
     }
 
@@ -47,39 +60,31 @@ public static class ImageUtilSK
     public static SKBitmap CopyChangeOpacity(SKBitmap img, double trans)
     {
         var bmp = img.Copy();
-        var bytes = bmp.Bytes;
-        SetAllTransparencyTo(bytes, trans);
-        bmp.Bytes = bytes;
+        SetAllTransparencyTo(GetWritablePixelSpan(bmp), trans);
         return bmp;
     }
 
     public static SKBitmap CopyChangeAllColorTo(SKBitmap img, SKColor c)
     {
         var bmp = img.Copy();
-        var bytes = bmp.Bytes;
-        ChangeAllColorTo(bytes, c);
-        bmp.Bytes = bytes;
+        ChangeAllColorTo(GetWritablePixelSpan(bmp), c);
         return bmp;
     }
 
     public static SKBitmap CopyChangeTransparentTo(SKBitmap img, SKColor c, byte trans, int start = 0, int end = -1)
     {
         var bmp = img.Copy();
-        var bytes = bmp.Bytes;
-        var span = bytes.AsSpan();
+        var span = GetWritablePixelSpan(bmp);
         if (end == -1)
             end = span.Length;
         SetAllTransparencyTo(span[start..end], c, trans);
-        bmp.Bytes = bytes;
         return bmp;
     }
 
     public static SKBitmap CopyWritePixels(SKBitmap img, SKColor c, int start, int end)
     {
         var bmp = img.Copy();
-        var bytes = bmp.Bytes;
-        ChangeAllTo(bytes.AsSpan(), c, start, end);
-        bmp.Bytes = bytes;
+        ChangeAllTo(GetWritablePixelSpan(bmp), c, start, end);
         return bmp;
     }
 
