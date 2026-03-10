@@ -16,7 +16,7 @@ public class AndroidDirectoryPicker : IDirectoryPicker
 
         var tcs = new TaskCompletionSource<string?>();
 
-        void Handler(Android.Net.Uri? uri)
+        void Handler(global::Android.Net.Uri? uri)
         {
             if (uri != null)
             {

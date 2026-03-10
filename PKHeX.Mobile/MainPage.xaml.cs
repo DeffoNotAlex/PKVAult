@@ -124,7 +124,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Export Error", ex.Message, "OK");
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
         }
     }
 
