@@ -11,5 +11,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(PkmEditorPage), typeof(PkmEditorPage));
         Routing.RegisterRoute(nameof(DatabasePage), typeof(DatabasePage));
         Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
+        Routing.RegisterRoute(nameof(MysteryGiftDBPage), typeof(MysteryGiftDBPage));
     }
 }

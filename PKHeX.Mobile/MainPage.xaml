@@ -31,6 +31,10 @@
                         Text="Search"
                         IsVisible="False"
                         Clicked="OnSearchClicked" />
+                <Button x:Name="GiftDBButton"
+                        Text="Mystery Gifts"
+                        IsVisible="False"
+                        Clicked="OnGiftDBClicked" />
                 <Button x:Name="ExportButton"
                         Text="Export Save"
                         IsVisible="False"

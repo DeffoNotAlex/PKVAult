@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PKHeX.Mobile.Pages.MysteryGiftDBPage"
+             Title="Mystery Gift DB">
+
+    <Grid RowDefinitions="Auto,*" Padding="8">
+
+        <!-- Filter bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+            <Entry Grid.Column="0" x:Name="SearchEntry"
+                   Placeholder="Search card title or species…"
+                   TextChanged="OnFilterChanged" />
+            <Label Grid.Column="1" Text="Compatible" FontSize="12"
+                   VerticalOptions="Center" Opacity="0.7" />
+            <Switch Grid.Column="2" x:Name="CompatibleOnly"
+                    IsToggled="True" Toggled="OnFilterChanged"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Gift list -->
+        <CollectionView Grid.Row="1" x:Name="GiftList"
+                        SelectionMode="Single"
+                        SelectionChanged="OnGiftSelected">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="2" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="56,*,Auto" Padding="4,2" ColumnSpacing="8">
+                        <Image Grid.Column="0"
+                               Source="{Binding SpriteSource}"
+                               WidthRequest="56" HeightRequest="46"
+                               Aspect="AspectFit" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="13" />
+                            <Label Text="{Binding SubInfo}" FontSize="11" Opacity="0.7" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="{Binding GenLabel}"
+                               FontSize="11" Opacity="0.5" VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="No gifts found." HorizontalOptions="Center"
+                       Margin="0,40,0,0" Opacity="0.5" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

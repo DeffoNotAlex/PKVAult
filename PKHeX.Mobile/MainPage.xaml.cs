@@ -61,6 +61,7 @@ public partial class MainPage : ContentPage
         SaveInfoCard.IsVisible = true;
         BoxButton.IsVisible = true;
         SearchButton.IsVisible = true;
+        GiftDBButton.IsVisible = true;
         ExportButton.IsVisible = true;
     }
 
@@ -96,6 +97,11 @@ public partial class MainPage : ContentPage
     private async void OnSettingsClicked(object sender, EventArgs e)
     {
         await Shell.Current.GoToAsync(nameof(SettingsPage));
+    }
+
+    private async void OnGiftDBClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(MysteryGiftDBPage));
     }
 
     private void ShowError(string message)
