@@ -6,6 +6,7 @@
              Title="Edit Pokémon">
 
     <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="QRButton" Text="QR" Clicked="OnQRClicked" />
         <ToolbarItem Text="Save" Clicked="OnSaveClicked" />
     </ContentPage.ToolbarItems>
 

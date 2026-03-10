@@ -1,4 +1,5 @@
 using PKHeX.Core;
+using PKHeX.Drawing.Mobile.QR;
 using PKHeX.Mobile.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -68,6 +69,9 @@ public partial class PkmEditorPage : ContentPage
         SubtitleLabel.Text = $"Lv.{pk.CurrentLevel}" +
             (pk.IsShiny ? " ★" : "") +
             $"  {_strings.natures[(int)pk.Nature]}";
+
+        // QR only supported for Gen 6 and Gen 7
+        QRButton.IsEnabled = pk.Generation is 6 or 7;
 
         // Stats
         NicknameEntry.Text = pk.Nickname;
@@ -151,6 +155,27 @@ public partial class PkmEditorPage : ContentPage
 
         if (sender == TabMoves)
             EnsureMovesPopulated();
+    }
+
+    private async void OnQRClicked(object sender, EventArgs e)
+    {
+        if (_pk is null) return;
+        try
+        {
+            var message = QRMessageUtil.GetMessage(_pk);
+            var png = QRGenerator.GeneratePng(message);
+            var path = Path.Combine(FileSystem.CacheDirectory, $"qr_{_pk.Species}.png");
+            await File.WriteAllBytesAsync(path, png);
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "QR Code",
+                File = new ShareFile(path, "image/png"),
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("QR Error", ex.Message, "OK");
+        }
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
