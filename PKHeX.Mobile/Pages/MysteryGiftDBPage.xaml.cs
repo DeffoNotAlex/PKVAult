@@ -59,7 +59,7 @@ public partial class MysteryGiftDBPage : ContentPage
 
             case Android.Views.Keycode.ButtonA:
                 if (_gpIndex >= 0 && _gpIndex < _filtered.Count)
-                    InjectGift(_filtered[_gpIndex]);
+                    _ = InjectGift(_filtered[_gpIndex]);
                 break;
 
             case Android.Views.Keycode.ButtonY:
@@ -80,7 +80,7 @@ public partial class MysteryGiftDBPage : ContentPage
         GiftList.SelectedItem = _filtered[_gpIndex];
         _gpNavigating = false;
 
-        GiftList.ScrollTo(_filtered[_gpIndex], ScrollToPosition.MakeVisible, false);
+        GiftList.ScrollTo(_filtered[_gpIndex], null, ScrollToPosition.MakeVisible, false);
     }
 
     private void BuildIndex()

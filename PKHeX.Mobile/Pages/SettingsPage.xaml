@@ -15,7 +15,7 @@
                    HorizontalOptions="End" />
 
             <!-- Language -->
-            <Border x:Name="Row_Language" Tag="Pick:Language"
+            <Border x:Name="Row_Language" StyleId="Pick:Language"
                     BackgroundColor="#111827" Stroke="Transparent"
                     StrokeShape="RoundRectangle 6" Padding="12,10">
                 <VerticalStackLayout Spacing="6">
@@ -33,7 +33,7 @@
             <BoxView HeightRequest="1" Color="#1E2D45" />
 
             <!-- Shiny sprites -->
-            <Border x:Name="Row_Shiny" Tag="Toggle"
+            <Border x:Name="Row_Shiny" StyleId="Toggle"
                     BackgroundColor="#111827" Stroke="Transparent"
                     StrokeShape="RoundRectangle 6" Padding="12,10">
                 <Grid ColumnDefinitions="*,Auto">

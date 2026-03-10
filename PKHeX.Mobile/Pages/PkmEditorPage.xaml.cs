@@ -216,7 +216,8 @@ public partial class PkmEditorPage : ContentPage
     private void AdjustCurrentRow(int delta)
     {
         var row = _tabRows[_currentTab][_focusRow[_currentTab]];
-        if (row.Tag is not string tag) return;
+        var tag = row.StyleId;
+        if (string.IsNullOrEmpty(tag)) return;
 
         if (tag.StartsWith("Step:"))
             DoStep(tag[5..], delta);
@@ -331,22 +332,22 @@ public partial class PkmEditorPage : ContentPage
 
     private void OnStepDec(object sender, EventArgs e)
     {
-        if (sender is Button { Tag: string t }) DoStep(t[5..], -1);
+        if (sender is Button b && b.StyleId is { Length: > 5 } t) DoStep(t[5..], -1);
     }
 
     private void OnStepInc(object sender, EventArgs e)
     {
-        if (sender is Button { Tag: string t }) DoStep(t[5..], +1);
+        if (sender is Button b && b.StyleId is { Length: > 5 } t) DoStep(t[5..], +1);
     }
 
     private void OnPickerDec(object sender, EventArgs e)
     {
-        if (sender is Button { Tag: string t }) DoPick(t[5..], -1);
+        if (sender is Button b && b.StyleId is { Length: > 5 } t) DoPick(t[5..], -1);
     }
 
     private void OnPickerInc(object sender, EventArgs e)
     {
-        if (sender is Button { Tag: string t }) DoPick(t[5..], +1);
+        if (sender is Button b && b.StyleId is { Length: > 5 } t) DoPick(t[5..], +1);
     }
 
     // ──────────────────────────────────────────────
