@@ -19,6 +19,9 @@ public partial class PkmEditorPage : ContentPage
     private bool _movesPopulated;
     private int _currentTab = 0;
 
+    private int[] _focusRow = new int[4];
+    private Border[][] _tabRows = null!;
+
     public string? BoxIndexParam  { set => int.TryParse(value, out _boxIndex); }
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
 
@@ -48,6 +51,36 @@ public partial class PkmEditorPage : ContentPage
         LanguagePicker.Items.Add("Chinese (S)");
         LanguagePicker.Items.Add("Chinese (T)");
         LanguagePicker.Items.Add("Spanish (LATAM)");
+
+        BuildTabRows();
+    }
+
+    private void BuildTabRows()
+    {
+        _tabRows =
+        [
+            [Row_Nickname, Row_Level, Row_Nature, Row_Ability, Row_Gender, Row_Shiny,
+             Row_IvHp, Row_IvAtk, Row_IvDef, Row_IvSpA, Row_IvSpD, Row_IvSpe,
+             Row_EvHp, Row_EvAtk, Row_EvDef, Row_EvSpA, Row_EvSpD, Row_EvSpe],
+            [Row_Move1, Row_Move2, Row_Move3, Row_Move4],
+            [Row_MetLevel, Row_Ball, Row_MetLoc, Row_OriginGame],
+            [Row_OTName, Row_TID, Row_SID, Row_Language],
+        ];
+    }
+
+    private void UpdateRowHighlight()
+    {
+        var rows = _tabRows[_currentTab];
+        var focusedBg     = Color.FromArgb("#182845");
+        var focusedStroke = Color.FromArgb("#4F80FF");
+        var normalBg      = Color.FromArgb("#111827");
+
+        for (int i = 0; i < rows.Length; i++)
+        {
+            bool focused = i == _focusRow[_currentTab];
+            rows[i].BackgroundColor = focused ? focusedBg : normalBg;
+            rows[i].Stroke          = focused ? focusedStroke : Colors.Transparent;
+        }
     }
 
     protected override async void OnAppearing()
@@ -64,6 +97,7 @@ public partial class PkmEditorPage : ContentPage
         await _sprites.PreloadBoxAsync([_pk]);
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
+        UpdateRowHighlight();
     }
 
     protected override void OnDisappearing()
@@ -90,6 +124,8 @@ public partial class PkmEditorPage : ContentPage
             EnsureMovesPopulated();
 
         UpdateTabHighlights();
+        UpdateRowHighlight();
+        _ = TabScrollView.ScrollToAsync(0, 0, false);
     }
 
     private void UpdateTabHighlights()
@@ -147,9 +183,171 @@ public partial class PkmEditorPage : ContentPage
 
             case Android.Views.Keycode.ButtonStart:
                 OnSaveClicked(this, EventArgs.Empty); break;
+
+            case Android.Views.Keycode.DpadUp:
+                MoveFocus(-1); break;
+
+            case Android.Views.Keycode.DpadDown:
+                MoveFocus(+1); break;
+
+            case Android.Views.Keycode.DpadLeft:
+                AdjustCurrentRow(-1); break;
+
+            case Android.Views.Keycode.DpadRight:
+                AdjustCurrentRow(+1); break;
+
+            case Android.Views.Keycode.ButtonA:
+                ActivateCurrentRow(); break;
         }
     }
 #endif
+
+    private void MoveFocus(int delta)
+    {
+        var rows = _tabRows[_currentTab];
+        int next = Math.Clamp(_focusRow[_currentTab] + delta, 0, rows.Length - 1);
+        _focusRow[_currentTab] = next;
+        UpdateRowHighlight();
+
+        var targetRow = rows[next];
+        _ = TabScrollView.ScrollToAsync(targetRow, ScrollToPosition.MakeVisible, true);
+    }
+
+    private void AdjustCurrentRow(int delta)
+    {
+        var row = _tabRows[_currentTab][_focusRow[_currentTab]];
+        if (row.Tag is not string tag) return;
+
+        if (tag.StartsWith("Step:"))
+            DoStep(tag[5..], delta);
+        else if (tag.StartsWith("Pick:"))
+            DoPick(tag[5..], delta);
+    }
+
+    private void DoStep(string field, int delta)
+    {
+        (Entry? entry, int min, int max) = field switch
+        {
+            "Level"   => ((Entry?)LevelEntry,    1,     100),
+            "IV_HP"   => (IvHpEntry,             0,     31),
+            "IV_ATK"  => (IvAtkEntry,            0,     31),
+            "IV_DEF"  => (IvDefEntry,            0,     31),
+            "IV_SPA"  => (IvSpaEntry,            0,     31),
+            "IV_SPD"  => (IvSpdEntry,            0,     31),
+            "IV_SPE"  => (IvSpeEntry,            0,     31),
+            "EV_HP"   => (EvHpEntry,             0,     252),
+            "EV_ATK"  => (EvAtkEntry,            0,     252),
+            "EV_DEF"  => (EvDefEntry,            0,     252),
+            "EV_SPA"  => (EvSpaEntry,            0,     252),
+            "EV_SPD"  => (EvSpdEntry,            0,     252),
+            "EV_SPE"  => (EvSpeEntry,            0,     252),
+            "MetLevel"=> (MetLevelEntry,         0,     100),
+            "TID"     => (TIDEntry,              0,     65535),
+            "SID"     => (SIDEntry,              0,     65535),
+            _         => (null,                  0,     0),
+        };
+
+        if (entry is null) return;
+        int v = int.TryParse(entry.Text, out var x) ? x : min;
+        entry.Text = Math.Clamp(v + delta, min, max).ToString();
+    }
+
+    private void DoPick(string field, int delta)
+    {
+        Picker? picker = field switch
+        {
+            "Nature"   => NaturePicker,
+            "Gender"   => GenderPicker,
+            "Move1"    => Move1Picker,
+            "Move2"    => Move2Picker,
+            "Move3"    => Move3Picker,
+            "Move4"    => Move4Picker,
+            "Language" => LanguagePicker,
+            _          => null,
+        };
+
+        if (picker is null) return;
+        int count = picker.Items.Count;
+        if (count == 0) return;
+        picker.SelectedIndex = Math.Clamp(picker.SelectedIndex + delta, 0, count - 1);
+    }
+
+    private void ActivateCurrentRow()
+    {
+        int tab = _currentTab;
+        int row = _focusRow[tab];
+
+        switch (tab)
+        {
+            case 0: // Stats
+                switch (row)
+                {
+                    case 0:  NicknameEntry.Focus(); break;
+                    case 1:  LevelEntry.Focus();    break;
+                    case 2:  NaturePicker.Focus();  break;
+                    case 3:  /* read-only */         break;
+                    case 4:  GenderPicker.Focus();  break;
+                    case 5:  ShinySwitch.IsToggled = !ShinySwitch.IsToggled; break;
+                    case 6:  IvHpEntry.Focus();     break;
+                    case 7:  IvAtkEntry.Focus();    break;
+                    case 8:  IvDefEntry.Focus();    break;
+                    case 9:  IvSpaEntry.Focus();    break;
+                    case 10: IvSpdEntry.Focus();    break;
+                    case 11: IvSpeEntry.Focus();    break;
+                    case 12: EvHpEntry.Focus();     break;
+                    case 13: EvAtkEntry.Focus();    break;
+                    case 14: EvDefEntry.Focus();    break;
+                    case 15: EvSpaEntry.Focus();    break;
+                    case 16: EvSpdEntry.Focus();    break;
+                    case 17: EvSpeEntry.Focus();    break;
+                }
+                break;
+
+            case 1: // Moves
+                switch (row)
+                {
+                    case 0: Move1Picker.Focus(); break;
+                    case 1: Move2Picker.Focus(); break;
+                    case 2: Move3Picker.Focus(); break;
+                    case 3: Move4Picker.Focus(); break;
+                }
+                break;
+
+            case 2: // Met
+                if (row == 0) MetLevelEntry.Focus();
+                break;
+
+            case 3: // OT
+                switch (row)
+                {
+                    case 0: OTNameEntry.Focus();    break;
+                    case 1: TIDEntry.Focus();       break;
+                    case 2: SIDEntry.Focus();       break;
+                    case 3: LanguagePicker.Focus(); break;
+                }
+                break;
+        }
+    }
+
+    private void OnStepDec(object sender, EventArgs e)
+    {
+        if (sender is Button { Tag: string t }) DoStep(t[5..], -1);
+    }
+
+    private void OnStepInc(object sender, EventArgs e)
+    {
+        if (sender is Button { Tag: string t }) DoStep(t[5..], +1);
+    }
+
+    private void OnPickerDec(object sender, EventArgs e)
+    {
+        if (sender is Button { Tag: string t }) DoPick(t[5..], -1);
+    }
+
+    private void OnPickerInc(object sender, EventArgs e)
+    {
+        if (sender is Button { Tag: string t }) DoPick(t[5..], +1);
+    }
 
     // ──────────────────────────────────────────────
     //  Data population

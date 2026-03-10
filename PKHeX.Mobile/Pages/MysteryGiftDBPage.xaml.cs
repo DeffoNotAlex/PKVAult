@@ -8,6 +8,10 @@ public partial class MysteryGiftDBPage : ContentPage
 {
     private readonly GameStrings _strings = GameInfo.GetStrings("en");
     private List<GiftEntry> _all = [];
+    private List<GiftEntry> _filtered = [];
+    private int _gpIndex = -1;
+    private bool _gpNavigating;
+    private DateTime _lastListNav = DateTime.MinValue;
 
     public MysteryGiftDBPage()
     {
@@ -37,10 +41,47 @@ public partial class MysteryGiftDBPage : ContentPage
     private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
     {
         if (action != Android.Views.KeyEventActions.Down) return;
-        if (keyCode == Android.Views.Keycode.ButtonB)
-            MainThread.BeginInvokeOnMainThread(async () => await Shell.Current.GoToAsync(".."));
+        MainThread.BeginInvokeOnMainThread(() => HandleGamepadKey(keyCode));
+    }
+
+    private void HandleGamepadKey(Android.Views.Keycode keyCode)
+    {
+        switch (keyCode)
+        {
+            case Android.Views.Keycode.ButtonB:
+                _ = Shell.Current.GoToAsync(".."); break;
+
+            case Android.Views.Keycode.DpadUp:
+                MoveListCursor(-1); break;
+
+            case Android.Views.Keycode.DpadDown:
+                MoveListCursor(+1); break;
+
+            case Android.Views.Keycode.ButtonA:
+                if (_gpIndex >= 0 && _gpIndex < _filtered.Count)
+                    InjectGift(_filtered[_gpIndex]);
+                break;
+
+            case Android.Views.Keycode.ButtonY:
+                SearchEntry.Focus(); break;
+        }
     }
 #endif
+
+    private void MoveListCursor(int delta)
+    {
+        if ((DateTime.UtcNow - _lastListNav).TotalMilliseconds < 150) return;
+        _lastListNav = DateTime.UtcNow;
+
+        if (_filtered.Count == 0) return;
+        _gpIndex = Math.Clamp(_gpIndex + delta, 0, _filtered.Count - 1);
+
+        _gpNavigating = true;
+        GiftList.SelectedItem = _filtered[_gpIndex];
+        _gpNavigating = false;
+
+        GiftList.ScrollTo(_filtered[_gpIndex], ScrollToPosition.MakeVisible, false);
+    }
 
     private void BuildIndex()
     {
@@ -81,7 +122,7 @@ public partial class MysteryGiftDBPage : ContentPage
         var text = SearchEntry.Text?.Trim() ?? "";
         var compatOnly = CompatibleOnly.IsToggled && sav is not null;
 
-        var filtered = _all.Where(e =>
+        _filtered = _all.Where(e =>
         {
             if (text.Length > 0 &&
                 !e.Title.Contains(text, StringComparison.OrdinalIgnoreCase) &&
@@ -94,15 +135,23 @@ public partial class MysteryGiftDBPage : ContentPage
             return true;
         }).ToList();
 
-        GiftList.ItemsSource = filtered;
+        _gpIndex = -1;
+        GiftList.ItemsSource = _filtered;
     }
 
     private void OnFilterChanged(object sender, EventArgs e) => ApplyFilter();
 
     private async void OnGiftSelected(object sender, SelectionChangedEventArgs e)
     {
+        if (_gpNavigating) return;
         if (e.CurrentSelection.FirstOrDefault() is not GiftEntry entry)
             return;
+        GiftList.SelectedItem = null;
+        await InjectGift(entry);
+    }
+
+    private async Task InjectGift(GiftEntry entry)
+    {
         GiftList.SelectedItem = null;
 
         var sav = App.ActiveSave;

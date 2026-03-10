@@ -6,7 +6,7 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="#0B0F1E">
 
-    <Grid RowDefinitions="Auto,*" Padding="8" BackgroundColor="#0B0F1E">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="8" BackgroundColor="#0B0F1E">
 
         <!-- Filter bar -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
@@ -23,13 +23,13 @@
         </Grid>
 
         <!-- Gamepad hint -->
-        <Label Grid.Row="0" Text="B: back"
+        <Label Grid.Row="1" Text="↕ navigate  A select  Y search  B back"
                FontSize="9" TextColor="#404060"
-               HorizontalOptions="End" VerticalOptions="End"
+               HorizontalOptions="End"
                Margin="0,0,4,2" />
 
         <!-- Results -->
-        <CollectionView Grid.Row="1" x:Name="ResultsView"
+        <CollectionView Grid.Row="2" x:Name="ResultsView"
                         SelectionMode="Single"
                         SelectionChanged="OnSelectionChanged"
                         BackgroundColor="#0B0F1E">

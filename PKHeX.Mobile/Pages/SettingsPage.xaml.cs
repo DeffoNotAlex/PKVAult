@@ -13,6 +13,8 @@ public partial class SettingsPage : ContentPage
     private static readonly string[] LanguageNames = ["日本語", "English", "Français", "Italiano", "Deutsch", "Español", "Español (LATAM)", "한국어", "中文 (简)", "中文 (繁)"];
 
     private bool _loading;
+    private int _focusRow = 0;
+    private Border[] _rows = [];
 
     public SettingsPage()
     {
@@ -36,6 +38,9 @@ public partial class SettingsPage : ContentPage
         ShinySwitch.IsToggled = Preferences.Default.Get(KeyShinySprites, true);
 
         _loading = false;
+
+        BuildRows();
+        UpdateHighlight();
     }
 
     protected override void OnDisappearing()
@@ -46,14 +51,87 @@ public partial class SettingsPage : ContentPage
 #endif
     }
 
+    private void BuildRows()
+    {
+        _rows = [Row_Language, Row_Shiny];
+    }
+
+    private void UpdateHighlight()
+    {
+        var focusedBg     = Color.FromArgb("#182845");
+        var focusedStroke = Color.FromArgb("#4F80FF");
+        var normalBg      = Color.FromArgb("#111827");
+
+        for (int i = 0; i < _rows.Length; i++)
+        {
+            bool focused = i == _focusRow;
+            _rows[i].BackgroundColor = focused ? focusedBg : normalBg;
+            _rows[i].Stroke          = focused ? focusedStroke : Colors.Transparent;
+        }
+    }
+
+    private void MoveFocus(int delta)
+    {
+        _focusRow = Math.Clamp(_focusRow + delta, 0, _rows.Length - 1);
+        UpdateHighlight();
+    }
+
 #if ANDROID
     private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
     {
         if (action != Android.Views.KeyEventActions.Down) return;
-        if (keyCode == Android.Views.Keycode.ButtonB)
-            MainThread.BeginInvokeOnMainThread(async () => await Shell.Current.GoToAsync(".."));
+        MainThread.BeginInvokeOnMainThread(() => HandleGamepadKey(keyCode));
+    }
+
+    private void HandleGamepadKey(Android.Views.Keycode keyCode)
+    {
+        switch (keyCode)
+        {
+            case Android.Views.Keycode.ButtonB:
+                _ = Shell.Current.GoToAsync(".."); break;
+
+            case Android.Views.Keycode.DpadUp:
+                MoveFocus(-1); break;
+
+            case Android.Views.Keycode.DpadDown:
+                MoveFocus(+1); break;
+
+            case Android.Views.Keycode.DpadLeft:
+                AdjustRow(-1); break;
+
+            case Android.Views.Keycode.DpadRight:
+                AdjustRow(+1); break;
+
+            case Android.Views.Keycode.ButtonA:
+                ActivateRow(); break;
+        }
     }
 #endif
+
+    private void AdjustRow(int delta)
+    {
+        if (_focusRow == 0)
+        {
+            // Language picker
+            int count = LanguagePicker.Items.Count;
+            if (count == 0) return;
+            LanguagePicker.SelectedIndex = Math.Clamp(LanguagePicker.SelectedIndex + delta, 0, count - 1);
+        }
+        // Row 1 (Shiny) — left/right does nothing for a toggle
+    }
+
+    private void ActivateRow()
+    {
+        switch (_focusRow)
+        {
+            case 0:
+                LanguagePicker.Focus();
+                break;
+            case 1:
+                ShinySwitch.IsToggled = !ShinySwitch.IsToggled;
+                break;
+        }
+    }
 
     private void OnLanguageChanged(object sender, EventArgs e)
     {
