@@ -60,6 +60,7 @@ public partial class MainPage : ContentPage
 
         SaveInfoCard.IsVisible = true;
         BoxButton.IsVisible = true;
+        SearchButton.IsVisible = true;
         ExportButton.IsVisible = true;
     }
 
@@ -85,6 +86,11 @@ public partial class MainPage : ContentPage
     private async void OnBoxClicked(object sender, EventArgs e)
     {
         await Shell.Current.GoToAsync(nameof(BoxPage));
+    }
+
+    private async void OnSearchClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(DatabasePage));
     }
 
     private void ShowError(string message)
