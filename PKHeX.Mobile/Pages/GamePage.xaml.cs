@@ -21,7 +21,8 @@ public partial class GamePage : ContentPage
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
-    private string? _spriteBgDataUri;  // cached base64 background image
+    private string? _spriteBgDataUri;      // cached base64 background image
+    private bool   _spriteWebViewReady;   // true after first full HTML load
 
     public GamePage()
     {
@@ -43,6 +44,9 @@ public partial class GamePage : ContentPage
 
         bool freshSave = _sav != sav;
         _sav = sav;
+
+        if (freshSave)
+            _spriteWebViewReady = false;
 
         if (freshSave)
         {
@@ -177,8 +181,8 @@ public partial class GamePage : ContentPage
             {
                 using var p = new SKPaint
                 {
-                    Color = new SKColor(255, 210, 50, 255),
-                    Style = SKPaintStyle.Stroke, StrokeWidth = 4f, IsAntialias = true,
+                    Color = new SKColor(200, 170, 80, 160),
+                    Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true,
                 };
                 canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
             }
@@ -318,10 +322,31 @@ public partial class GamePage : ContentPage
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
 
-        _spriteBgDataUri ??= await LoadSpriteBgAsync();
+        var slug = ToShowdownSlug(name);
+        var folder   = pk.IsShiny ? "ani-shiny" : "ani";
+        var primary  = $"https://play.pokemonshowdown.com/sprites/{folder}/{slug}.gif";
+        var fallback = $"https://play.pokemonshowdown.com/sprites/gen5ani/{slug}.gif";
 
-        SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteHtml(name, pk.IsShiny, _spriteBgDataUri) };
-        SpriteWebView.IsVisible = true;
+        if (!_spriteWebViewReady)
+        {
+            // First load: build full HTML with background baked in
+            _spriteBgDataUri ??= await LoadSpriteBgAsync();
+            SpriteWebView.Source = new HtmlWebViewSource { Html = BuildSpriteShell(_spriteBgDataUri, primary, fallback) };
+            SpriteWebView.IsVisible = true;
+            _spriteWebViewReady = true;
+        }
+        else
+        {
+            // Subsequent loads: update only the img src via JS — background stays
+            var js = $$"""
+                (function(){
+                  var img=document.getElementById('s');
+                  img.onerror=function(){if(img.src!=='{{fallback}}')img.src='{{fallback}}'};
+                  img.src='{{primary}}';
+                })();
+                """;
+            await SpriteWebView.EvaluateJavaScriptAsync(js);
+        }
     }
 
     private static async Task<string?> LoadSpriteBgAsync()
@@ -336,20 +361,15 @@ public partial class GamePage : ContentPage
         catch { return null; }
     }
 
-    private static string BuildSpriteHtml(string speciesName, bool shiny, string? bgDataUri)
+    private static string ToShowdownSlug(string speciesName) => speciesName
+        .ToLowerInvariant()
+        .Replace("♀", "-f").Replace("♂", "-m")
+        .Replace(" ", "-").Replace(".", "")
+        .Replace("'", "").Replace(":", "")
+        .Replace("é", "e");
+
+    private static string BuildSpriteShell(string? bgDataUri, string primary, string fallback)
     {
-        // Normalise to Pokémon Showdown URL convention
-        var slug = speciesName
-            .ToLowerInvariant()
-            .Replace("♀", "-f").Replace("♂", "-m")
-            .Replace(" ", "-").Replace(".", "")
-            .Replace("'", "").Replace(":", "")
-            .Replace("é", "e");
-
-        var folder   = shiny ? "ani-shiny" : "ani";
-        var primary  = $"https://play.pokemonshowdown.com/sprites/{folder}/{slug}.gif";
-        var fallback = $"https://play.pokemonshowdown.com/sprites/gen5ani/{slug}.gif";
-
         var bgCss = bgDataUri != null
             ? $"background:url('{bgDataUri}') center/cover no-repeat"
             : "background:#06060f";
@@ -360,8 +380,8 @@ public partial class GamePage : ContentPage
             <meta name="viewport" content="width=device-width,initial-scale=1">
             <style>*{margin:0;padding:0}body{{{bgCss}};display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
             </head><body>
-            <img src="{{primary}}"
-                 style="max-width:88%;max-height:88%;image-rendering:pixelated;drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
+            <img id="s" src="{{primary}}"
+                 style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
                  onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
             </body></html>
             """;
