@@ -22,8 +22,14 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border Margin="0,0,0,4" StrokeShape="RoundRectangle 8" Padding="12,10"
-                            BackgroundColor="#111827" Stroke="Transparent">
-                        <Grid ColumnDefinitions="56,*">
+                            BackgroundColor="#111827"
+                            Stroke="Transparent" StrokeThickness="2">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
+                                <Setter Property="Stroke" Value="#4F80FF" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Grid ColumnDefinitions="56,*,Auto">
                             <!-- Game icon: real icon when available, colored badge fallback -->
                             <Grid Grid.Column="0" WidthRequest="48" HeightRequest="48"
                                   VerticalOptions="Center" HorizontalOptions="Start">
@@ -46,6 +52,12 @@
                                 <Label Text="{Binding VersionLabel}" FontSize="12" TextColor="#8888BB" />
                                 <Label Text="{Binding DetailLine}" FontSize="11" TextColor="#445566" />
                             </VerticalStackLayout>
+                            <!-- Active indicator -->
+                            <Label Grid.Column="2" Text="● ACTIVE"
+                                   FontSize="10" FontAttributes="Bold"
+                                   TextColor="#4F80FF"
+                                   VerticalOptions="Center"
+                                   IsVisible="{Binding IsLoaded}" />
                         </Grid>
                     </Border>
                 </DataTemplate>

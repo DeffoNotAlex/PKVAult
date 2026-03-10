@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using PKHeX.Core;
 using PKHeX.Mobile.Pages;
 using PKHeX.Mobile.Services;
@@ -82,9 +84,18 @@ public partial class MainPage : ContentPage
     {
         if (SaveUtil.TryGetSaveFile(entry.RawData, out var sav))
         {
+            // Clear previous active indicator
+            foreach (var card in _saveCards)
+                card.IsLoaded = false;
+
             App.ActiveSave = sav;
             App.ActiveSaveFileName = entry.FileName;
             _selectedSave = entry;
+
+            // Mark new active card
+            var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
+            if (active != null) active.IsLoaded = true;
+
             UpdateHighlight();
         }
     }
@@ -228,8 +239,19 @@ public partial class MainPage : ContentPage
 
     // ── SaveCardViewModel ──────────────────────────────────────────────────
 
-    private sealed class SaveCardViewModel
+    private sealed class SaveCardViewModel : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private bool _isLoaded;
+        public bool IsLoaded
+        {
+            get => _isLoaded;
+            set { if (_isLoaded == value) return; _isLoaded = value; OnPropertyChanged(); }
+        }
+
         public SaveEntry Entry { get; }
         public string TrainerName { get; }
         public string VersionLabel { get; }

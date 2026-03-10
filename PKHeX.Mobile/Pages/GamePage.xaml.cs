@@ -21,6 +21,7 @@ public partial class GamePage : ContentPage
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
+    private string? _spriteBgDataUri;  // cached base64 background image
 
     public GamePage()
     {
@@ -311,16 +312,31 @@ public partial class GamePage : ContentPage
     //  Animated sprite (Pokémon Showdown CDN)
     // ──────────────────────────────────────────────
 
-    private void LoadAnimatedSprite(PKM pk)
+    private async void LoadAnimatedSprite(PKM pk)
     {
         var name = pk.Species < _strings.specieslist.Length
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
-        SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteHtml(name, pk.IsShiny) };
+
+        _spriteBgDataUri ??= await LoadSpriteBgAsync();
+
+        SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteHtml(name, pk.IsShiny, _spriteBgDataUri) };
         SpriteWebView.IsVisible = true;
     }
 
-    private static string BuildSpriteHtml(string speciesName, bool shiny)
+    private static async Task<string?> LoadSpriteBgAsync()
+    {
+        try
+        {
+            await using var stream = await FileSystem.OpenAppPackageFileAsync("sprite_bg.jpg");
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            return "data:image/jpeg;base64," + Convert.ToBase64String(ms.ToArray());
+        }
+        catch { return null; }
+    }
+
+    private static string BuildSpriteHtml(string speciesName, bool shiny, string? bgDataUri)
     {
         // Normalise to Pokémon Showdown URL convention
         var slug = speciesName
@@ -330,18 +346,22 @@ public partial class GamePage : ContentPage
             .Replace("'", "").Replace(":", "")
             .Replace("é", "e");
 
-        var folder  = shiny ? "ani-shiny" : "ani";
+        var folder   = shiny ? "ani-shiny" : "ani";
         var primary  = $"https://play.pokemonshowdown.com/sprites/{folder}/{slug}.gif";
         var fallback = $"https://play.pokemonshowdown.com/sprites/gen5ani/{slug}.gif";
+
+        var bgCss = bgDataUri != null
+            ? $"background:url('{bgDataUri}') center/cover no-repeat"
+            : "background:#06060f";
 
         return $$"""
             <!DOCTYPE html>
             <html><head>
             <meta name="viewport" content="width=device-width,initial-scale=1">
-            <style>*{margin:0;padding:0}body{background:#06060f;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
+            <style>*{margin:0;padding:0}body{{{bgCss}};display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
             </head><body>
             <img src="{{primary}}"
-                 style="max-width:88%;max-height:88%;image-rendering:pixelated"
+                 style="max-width:88%;max-height:88%;image-rendering:pixelated;drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
                  onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
             </body></html>
             """;
