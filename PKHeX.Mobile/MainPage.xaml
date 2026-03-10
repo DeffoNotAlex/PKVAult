@@ -22,6 +22,7 @@
                 <Button x:Name="LoadButton"
                         Text="Load Save File"
                         Clicked="OnLoadClicked" />
+                <Button Text="Settings" Clicked="OnSettingsClicked" />
                 <Button x:Name="BoxButton"
                         Text="View Boxes"
                         IsVisible="False"

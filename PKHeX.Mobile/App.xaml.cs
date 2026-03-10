@@ -1,4 +1,5 @@
 using PKHeX.Core;
+using PKHeX.Mobile.Pages;
 
 namespace PKHeX.Mobile;
 
@@ -10,6 +11,7 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        SettingsPage.ApplyOnStartup();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

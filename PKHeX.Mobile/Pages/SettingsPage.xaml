@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PKHeX.Mobile.Pages.SettingsPage"
+             Title="Settings">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="20">
+
+            <!-- Language -->
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Display Language" FontAttributes="Bold" FontSize="15" />
+                <Label Text="Affects species, move, and ability names. Takes effect when reopening pages."
+                       FontSize="12" Opacity="0.6" />
+                <Picker x:Name="LanguagePicker" SelectedIndexChanged="OnLanguageChanged" />
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#DDDDDD, Dark=#444444}" />
+
+            <!-- Shiny sprites -->
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Show Shiny Sprites" FontAttributes="Bold" FontSize="15" />
+                    <Label Text="Display alternate colour sprites for shiny Pokémon."
+                           FontSize="12" Opacity="0.6" />
+                </VerticalStackLayout>
+                <Switch Grid.Column="1" x:Name="ShinySwitch"
+                        Toggled="OnShinySwitchToggled" VerticalOptions="Center" />
+            </Grid>
+
+            <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#DDDDDD, Dark=#444444}" />
+
+            <!-- Legality -->
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Show Legality Badge" FontAttributes="Bold" FontSize="15" />
+                    <Label Text="Display a ✓/✗ legality indicator on each Pokémon in the box view. (Phase 5)"
+                           FontSize="12" Opacity="0.6" />
+                </VerticalStackLayout>
+                <Switch Grid.Column="1" x:Name="LegalitySwitch"
+                        IsEnabled="False" VerticalOptions="Center" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

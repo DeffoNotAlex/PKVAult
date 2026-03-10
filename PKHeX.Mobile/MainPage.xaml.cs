@@ -93,6 +93,11 @@ public partial class MainPage : ContentPage
         await Shell.Current.GoToAsync(nameof(DatabasePage));
     }
 
+    private async void OnSettingsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(SettingsPage));
+    }
+
     private void ShowError(string message)
     {
         ErrorLabel.Text = message;
