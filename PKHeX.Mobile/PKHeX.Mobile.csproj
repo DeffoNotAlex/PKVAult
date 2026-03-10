@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PKHeX.Core\PKHeX.Core.csproj" />
   </ItemGroup>
 
