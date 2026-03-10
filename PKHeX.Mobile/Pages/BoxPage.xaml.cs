@@ -93,8 +93,8 @@ public partial class BoxPage : ContentPage
             if (pk.Species == 0)
                 continue;
 
-            // Draw sprite scaled into slot
-            using var sprite = _sprites.GetSprite(pk);
+            // Draw sprite scaled into slot (do NOT dispose — bitmap is owned by renderer cache)
+            var sprite = _sprites.GetSprite(pk);
             var dest = SKRect.Create(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2);
             canvas.DrawBitmap(sprite, dest);
         }
