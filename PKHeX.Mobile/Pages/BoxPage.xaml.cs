@@ -123,7 +123,7 @@ public partial class BoxPage : ContentPage
         var name = GameInfo.GetStrings("en").Species[pk.Species];
         var info = $"#{pk.Species:000} {name}\n" +
                    $"Level {pk.CurrentLevel}\n" +
-                   $"OT: {pk.OT_Name}\n" +
+                   $"OT: {pk.OriginalTrainerName}\n" +
                    (pk.IsShiny ? "★ Shiny\n" : "") +
                    (pk.IsEgg ? "🥚 Egg" : "");
 
