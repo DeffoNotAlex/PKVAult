@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PKHeX.Mobile.MainPage"
+             Title="PKHeX">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <Label Text="PKHeX Mobile"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0" />
+
+            <Label Text="Pokémon Save Editor"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   Opacity="0.6" />
+
+            <Button x:Name="LoadButton"
+                    Text="Load Save File"
+                    Clicked="OnLoadClicked"
+                    HorizontalOptions="Center"
+                    Margin="0,16,0,0" />
+
+            <!-- Error display -->
+            <Label x:Name="ErrorLabel"
+                   IsVisible="False"
+                   TextColor="Red"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- Save file info card -->
+            <Border x:Name="SaveInfoCard"
+                    IsVisible="False"
+                    StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#444444}"
+                    BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#2A2A2A}"
+                    Padding="20"
+                    Margin="0,8,0,0">
+                <VerticalStackLayout Spacing="10">
+
+                    <Label x:Name="GameLabel"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+
+                    <BoxView HeightRequest="1"
+                             Color="{AppThemeBinding Light=#DDDDDD, Dark=#444444}" />
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+
+                        <Label Grid.Row="0" Grid.Column="0" Text="Trainer:" FontAttributes="Bold" />
+                        <Label x:Name="TrainerLabel" Grid.Row="0" Grid.Column="1" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Trainer ID:" FontAttributes="Bold" />
+                        <Label x:Name="IDLabel" Grid.Row="1" Grid.Column="1" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Play Time:" FontAttributes="Bold" />
+                        <Label x:Name="PlaytimeLabel" Grid.Row="2" Grid.Column="1" />
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="Storage:" FontAttributes="Bold" />
+                        <Label x:Name="StorageLabel" Grid.Row="3" Grid.Column="1" />
+
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

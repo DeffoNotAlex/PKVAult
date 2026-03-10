@@ -1,0 +1,55 @@
+name: Android
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Core Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run tests
+        run: dotnet test Tests/PKHeX.Core.Tests/PKHeX.Core.Tests.csproj -c Release --logger "console;verbosity=minimal"
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Restore
+        run: dotnet restore PKHeX.Mobile/PKHeX.Mobile.csproj
+
+      - name: Build APK (Debug)
+        run: >
+          dotnet build PKHeX.Mobile/PKHeX.Mobile.csproj
+          -f net10.0-android
+          -c Debug
+          -p:AndroidSdkDirectory=$ANDROID_SDK_ROOT
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKHeX-Android-Debug
+          path: PKHeX.Mobile/bin/Debug/net10.0-android/**/*.apk
+          if-no-files-found: error
