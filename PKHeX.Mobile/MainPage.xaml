@@ -26,6 +26,10 @@
                         Text="View Boxes"
                         IsVisible="False"
                         Clicked="OnBoxClicked" />
+                <Button x:Name="ExportButton"
+                        Text="Export Save"
+                        IsVisible="False"
+                        Clicked="OnExportClicked" />
             </HorizontalStackLayout>
 
             <!-- Error display -->

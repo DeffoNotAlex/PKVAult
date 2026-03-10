@@ -7,6 +7,7 @@ namespace PKHeX.Mobile;
 public partial class MainPage : ContentPage
 {
     private readonly IFileService _fileService;
+    private string _loadedFileName = "save.bin";
 
     public MainPage()
     {
@@ -27,6 +28,7 @@ public partial class MainPage : ContentPage
                 return;
 
             var (data, fileName) = result.Value;
+            _loadedFileName = fileName;
 
             if (!SaveUtil.TryGetSaveFile(data, out var sav))
             {
@@ -58,6 +60,26 @@ public partial class MainPage : ContentPage
 
         SaveInfoCard.IsVisible = true;
         BoxButton.IsVisible = true;
+        ExportButton.IsVisible = true;
+    }
+
+    private async void OnExportClicked(object sender, EventArgs e)
+    {
+        if (App.ActiveSave is null) return;
+        ExportButton.IsEnabled = false;
+        try
+        {
+            var data = App.ActiveSave.Write().ToArray();
+            await _fileService.ExportFileAsync(data, _loadedFileName);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Export failed: {ex.Message}");
+        }
+        finally
+        {
+            ExportButton.IsEnabled = true;
+        }
     }
 
     private async void OnBoxClicked(object sender, EventArgs e)
