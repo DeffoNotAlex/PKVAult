@@ -9,6 +9,22 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new AppShell());
+        try
+        {
+            return new Window(new AppShell());
+        }
+        catch (Exception ex)
+        {
+            var page = new ContentPage
+            {
+                Content = new Label
+                {
+                    Text = $"Startup error:\n{ex}",
+                    Margin = new Thickness(20),
+                    VerticalOptions = LayoutOptions.Center,
+                },
+            };
+            return new Window(page);
+        }
     }
 }

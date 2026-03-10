@@ -10,7 +10,7 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-        _fileService = IPlatformApplication.Current!.Services.GetRequiredService<IFileService>();
+        _fileService = new FileService();
     }
 
     private async void OnLoadClicked(object sender, EventArgs e)
