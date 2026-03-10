@@ -227,7 +227,9 @@ public partial class GamePage : ContentPage
         float cy = e.Info.Height / 2f;
         float r  = Math.Min(cx, cy) - margin;
 
-        const float maxStat = 300f;
+        // Dynamic scale: best stat reaches 85% of radius.
+        // Floor at 60 so even unevolved low-level Pokémon have a visible shape.
+        float visMax = Math.Max(values.Max() / 0.85f, 60f);
 
         // Background grid rings
         using var ringPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
@@ -250,15 +252,15 @@ public partial class GamePage : ContentPage
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(values[i] / maxStat, 0f, 1f);
+            float v  = Math.Clamp(values[i] / visMax, 0f, 1f);
             float px = cx + r * v * MathF.Cos(angle);
             float py = cy + r * v * MathF.Sin(angle);
             if (i == 0) statPath.MoveTo(px, py); else statPath.LineTo(px, py);
         }
         statPath.Close();
 
-        using var fillPaint   = new SKPaint { Color = new SKColor(79, 128, 255, 80),  Style = SKPaintStyle.Fill,   IsAntialias = true };
-        using var strokePaint = new SKPaint { Color = new SKColor(100, 160, 255, 220), Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true };
+        using var fillPaint   = new SKPaint { Color = new SKColor(79, 128, 255, 115), Style = SKPaintStyle.Fill,   IsAntialias = true };
+        using var strokePaint = new SKPaint { Color = new SKColor(120, 175, 255, 235), Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true };
         canvas.DrawPath(statPath, fillPaint);
         canvas.DrawPath(statPath, strokePaint);
 
@@ -267,7 +269,7 @@ public partial class GamePage : ContentPage
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(values[i] / maxStat, 0f, 1f);
+            float v  = Math.Clamp(values[i] / visMax, 0f, 1f);
             canvas.DrawCircle(cx + r * v * MathF.Cos(angle), cy + r * v * MathF.Sin(angle), 4.5f, dotPaint);
         }
 
