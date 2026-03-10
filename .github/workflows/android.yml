@@ -20,7 +20,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.100'
 
       - name: Run tests
         run: dotnet test Tests/PKHeX.Core.Tests/PKHeX.Core.Tests.csproj -c Release --logger "console;verbosity=minimal"
@@ -34,7 +34,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.100'
 
       - name: Install MAUI Android workload
         run: dotnet workload install maui-android
