@@ -26,10 +26,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PKHeX.Core\PKHeX.Core.csproj" />
+    <ProjectReference Include="..\PKHeX.Drawing.Mobile\PKHeX.Drawing.Mobile.csproj" />
   </ItemGroup>
 
 </Project>
