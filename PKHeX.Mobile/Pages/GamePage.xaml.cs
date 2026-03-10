@@ -126,8 +126,11 @@ public partial class GamePage : ContentPage
 
         if (_currentBox.Length == 0) return;
 
-        float slotW = (float)e.Info.Width / Columns;
-        float slotH = (float)e.Info.Height / Rows;
+        // Force perfect square slots; center the grid in the canvas
+        float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
+        float offX = ((float)e.Info.Width  - slotSize * Columns) / 2f;
+        float offY = ((float)e.Info.Height - slotSize * Rows)    / 2f;
+
         const float pad = 4f;
         const float radius = 8f;
 
@@ -135,8 +138,8 @@ public partial class GamePage : ContentPage
         {
             int col = i % Columns;
             int row = i / Columns;
-            float x = col * slotW;
-            float y = row * slotH;
+            float x = offX + col * slotSize;
+            float y = offY + row * slotSize;
             var pk = _currentBox[i];
 
             bool isCursor   = i == _cursorSlot;
@@ -150,20 +153,19 @@ public partial class GamePage : ContentPage
                 : new SKColor(20, 20, 40, 180);
 
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
-            canvas.DrawRoundRect(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2, radius, radius, bgPaint);
+            canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, bgPaint);
 
-            // Sprite
+            // Sprite — maintain aspect ratio, centered in slot
             if (pk.Species != 0)
             {
                 var sprite = _sprites.GetSprite(pk);
-                float innerW = slotW - pad * 2;
-                float innerH = slotH - pad * 2;
+                float inner = slotSize - pad * 2;
                 float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
                 float drawW, drawH;
-                if (innerW / innerH > aspect) { drawH = innerH; drawW = drawH * aspect; }
-                else { drawW = innerW; drawH = drawW / aspect; }
-                float sx = x + pad + (innerW - drawW) / 2f;
-                float sy = y + pad + (innerH - drawH) / 2f;
+                if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
+                else              { drawH = inner; drawW = inner * aspect; }
+                float sx = x + pad + (inner - drawW) / 2f;
+                float sy = y + pad + (inner - drawH) / 2f;
                 canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
             }
 
@@ -177,7 +179,7 @@ public partial class GamePage : ContentPage
                     StrokeWidth = 3f,
                     IsAntialias = true,
                 };
-                canvas.DrawRoundRect(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2, radius, radius, outlinePaint);
+                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, outlinePaint);
             }
 
             // Selection outline (gold)
@@ -190,7 +192,7 @@ public partial class GamePage : ContentPage
                     StrokeWidth = 4f,
                     IsAntialias = true,
                 };
-                canvas.DrawRoundRect(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2, radius, radius, selPaint);
+                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, selPaint);
             }
         }
     }
@@ -219,10 +221,13 @@ public partial class GamePage : ContentPage
         var point = e.GetPosition(view);
         if (point is null) return;
 
-        float slotW = (float)view.Width / Columns;
-        float slotH = (float)view.Height / Rows;
-        int col = (int)(point.Value.X / slotW);
-        int row = (int)(point.Value.Y / slotH);
+        // Compute square slot metrics in DIP space (matches the canvas paint logic)
+        float slotSize = (float)Math.Min(view.Width / Columns, view.Height / Rows);
+        float offX = (float)(view.Width  - slotSize * Columns) / 2f;
+        float offY = (float)(view.Height - slotSize * Rows)    / 2f;
+
+        int col = (int)((point.Value.X - offX) / slotSize);
+        int row = (int)((point.Value.Y - offY) / slotSize);
         int index = row * Columns + col;
 
         if ((uint)index >= (uint)_currentBox.Length) return;
@@ -259,26 +264,25 @@ public partial class GamePage : ContentPage
     {
         switch (keyCode)
         {
-            case Android.Views.Keycode.DpadUp:
-                MoveCursor(-Columns); break;
-            case Android.Views.Keycode.DpadDown:
-                MoveCursor(+Columns); break;
-            case Android.Views.Keycode.DpadLeft:
-                MoveCursor(-1); break;
-            case Android.Views.Keycode.DpadRight:
-                MoveCursor(+1); break;
+            // ── D-pad: move cursor ──
+            case Android.Views.Keycode.DpadUp:    MoveCursor(-Columns); break;
+            case Android.Views.Keycode.DpadDown:  MoveCursor(+Columns); break;
+            case Android.Views.Keycode.DpadLeft:  MoveCursor(-1);       break;
+            case Android.Views.Keycode.DpadRight: MoveCursor(+1);       break;
 
+            // ── A: select / open editor ──
             case Android.Views.Keycode.ButtonA:
-                if (_selectedSlot < 0)
-                    SelectSlot(_cursorSlot);
-                else
-                    _ = OpenEditor();
+                if (_selectedSlot < 0) SelectSlot(_cursorSlot);
+                else _ = OpenEditor();
                 break;
 
+            // ── B: deselect, or exit to main menu ──
             case Android.Views.Keycode.ButtonB:
                 if (_selectedSlot >= 0) DeselectSlot();
+                else OnMenuClicked(this, EventArgs.Empty);
                 break;
 
+            // ── L/R: prev/next box ──
             case Android.Views.Keycode.ButtonL1:
             case Android.Views.Keycode.Button5:
                 OnPrevBox(this, EventArgs.Empty); break;
@@ -286,6 +290,19 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonR1:
             case Android.Views.Keycode.Button6:
                 OnNextBox(this, EventArgs.Empty); break;
+
+            // ── Bottom panel shortcuts ──
+            case Android.Views.Keycode.ButtonX:
+                OnSearchClicked(this, EventArgs.Empty); break;
+
+            case Android.Views.Keycode.ButtonY:
+                OnGiftsClicked(this, EventArgs.Empty); break;
+
+            case Android.Views.Keycode.ButtonSelect:
+                OnSettingsClicked(this, EventArgs.Empty); break;
+
+            case Android.Views.Keycode.ButtonStart:
+                OnExportClicked(this, EventArgs.Empty); break;
         }
     }
 #endif

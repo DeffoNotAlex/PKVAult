@@ -15,6 +15,62 @@ public partial class MainPage : ContentPage
         _fileService = new FileService();
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+#if ANDROID
+        GamepadRouter.KeyReceived += OnGamepadKey;
+#endif
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnGamepadKey;
+#endif
+    }
+
+#if ANDROID
+    private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        MainThread.BeginInvokeOnMainThread(() => HandleGamepadKey(keyCode));
+    }
+
+    private void HandleGamepadKey(Android.Views.Keycode keyCode)
+    {
+        switch (keyCode)
+        {
+            // A / Start: load save (no save loaded) or open boxes (save loaded)
+            case Android.Views.Keycode.ButtonA:
+            case Android.Views.Keycode.ButtonStart:
+                if (App.ActiveSave is null)
+                    OnLoadClicked(this, EventArgs.Empty);
+                else
+                    OnBoxClicked(this, EventArgs.Empty);
+                break;
+
+            // X: search (save loaded)
+            case Android.Views.Keycode.ButtonX:
+                if (App.ActiveSave is not null)
+                    OnSearchClicked(this, EventArgs.Empty);
+                break;
+
+            // Y: mystery gifts (save loaded)
+            case Android.Views.Keycode.ButtonY:
+                if (App.ActiveSave is not null)
+                    OnGiftDBClicked(this, EventArgs.Empty);
+                break;
+
+            // Select: settings
+            case Android.Views.Keycode.ButtonSelect:
+                OnSettingsClicked(this, EventArgs.Empty);
+                break;
+        }
+    }
+#endif
+
     private async void OnLoadClicked(object sender, EventArgs e)
     {
         ErrorLabel.IsVisible = false;

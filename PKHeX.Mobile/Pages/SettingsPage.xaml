@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PKHeX.Mobile.Pages.SettingsPage"
              Title="Settings"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="#0B0F1E">
 
     <ScrollView Padding="16" BackgroundColor="#0B0F1E">

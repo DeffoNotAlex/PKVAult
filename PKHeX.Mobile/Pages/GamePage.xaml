@@ -69,7 +69,7 @@
                     <Label Grid.Column="1"
                            TextColor="#404060" FontSize="10"
                            HorizontalOptions="End" VerticalOptions="End"
-                           Text="D-pad: move  A: select&#10;L/R: prev/next box" />
+                           Text="D-pad: move  A: select  B: back&#10;X: search  Y: gifts  ⊙: settings  ▶: export&#10;L/R: prev/next box" />
                 </Grid>
 
                 <!-- Nav buttons -->
