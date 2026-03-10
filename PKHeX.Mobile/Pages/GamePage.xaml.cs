@@ -8,7 +8,7 @@ namespace PKHeX.Mobile.Pages;
 public partial class GamePage : ContentPage
 {
     private const int Columns = 6;
-    private const int Rows = 5;
+    private const int Rows    = 5;
 
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings _strings = GameInfo.GetStrings("en");
@@ -33,11 +33,9 @@ public partial class GamePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
-
         var sav = App.ActiveSave;
         if (sav is null) return;
 
@@ -46,13 +44,13 @@ public partial class GamePage : ContentPage
 
         if (freshSave)
         {
-            _boxIndex = 0;
-            _cursorSlot = 0;
+            _boxIndex    = 0;
+            _cursorSlot  = 0;
             DeselectSlot();
 
             TrainerNameLabel.Text = sav.OT;
-            SaveGameLabel.Text = $"{sav.Version} — Gen {sav.Generation}";
-            BoxCountLabel.Text = $"{sav.BoxCount} boxes · {sav.SlotCount} slots";
+            SaveGameLabel.Text    = $"{sav.Version} — Gen {sav.Generation}";
+            BoxCountLabel.Text    = $"{sav.BoxCount} boxes · {sav.SlotCount} slots";
         }
 
         LoadBox(_boxIndex);
@@ -76,12 +74,11 @@ public partial class GamePage : ContentPage
         _loadingBox = true;
         try
         {
-            _currentBox = _sav.GetBoxData(box);
+            _currentBox    = _sav.GetBoxData(box);
             BoxNameLabel.Text = _sav is IBoxDetailName named
                 ? named.GetBoxName(box)
                 : $"Box {box + 1}";
 
-            // Keep selected slot in sync if returning from editor
             if (_selectedSlot >= 0 && _selectedSlot < _currentBox.Length)
             {
                 var pk = _currentBox[_selectedSlot];
@@ -116,22 +113,20 @@ public partial class GamePage : ContentPage
     }
 
     // ──────────────────────────────────────────────
-    //  Rendering — top screen
+    //  Rendering — box grid (bottom screen)
     // ──────────────────────────────────────────────
 
     private void OnBoxPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(new SKColor(10, 10, 20));
-
         if (_currentBox.Length == 0) return;
 
-        // Force perfect square slots; center the grid in the canvas
         float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
         float offX = ((float)e.Info.Width  - slotSize * Columns) / 2f;
         float offY = ((float)e.Info.Height - slotSize * Rows)    / 2f;
 
-        const float pad = 4f;
+        const float pad    = 4f;
         const float radius = 8f;
 
         for (int i = 0; i < _currentBox.Length; i++)
@@ -145,7 +140,6 @@ public partial class GamePage : ContentPage
             bool isCursor   = i == _cursorSlot;
             bool isSelected = i == _selectedSlot;
 
-            // Slot background
             var bgColor = isSelected
                 ? new SKColor(80, 60, 20, 220)
                 : isCursor
@@ -155,11 +149,10 @@ public partial class GamePage : ContentPage
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
             canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, bgPaint);
 
-            // Sprite — maintain aspect ratio, centered in slot
             if (pk.Species != 0)
             {
                 var sprite = _sprites.GetSprite(pk);
-                float inner = slotSize - pad * 2;
+                float inner  = slotSize - pad * 2;
                 float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
                 float drawW, drawH;
                 if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
@@ -169,45 +162,191 @@ public partial class GamePage : ContentPage
                 canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
             }
 
-            // Cursor outline (blue)
             if (isCursor)
             {
-                using var outlinePaint = new SKPaint
+                using var p = new SKPaint
                 {
                     Color = new SKColor(80, 160, 255, 230),
-                    Style = SKPaintStyle.Stroke,
-                    StrokeWidth = 3f,
-                    IsAntialias = true,
+                    Style = SKPaintStyle.Stroke, StrokeWidth = 3f, IsAntialias = true,
                 };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, outlinePaint);
+                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
             }
 
-            // Selection outline (gold)
             if (isSelected)
             {
-                using var selPaint = new SKPaint
+                using var p = new SKPaint
                 {
                     Color = new SKColor(255, 210, 50, 255),
-                    Style = SKPaintStyle.Stroke,
-                    StrokeWidth = 4f,
-                    IsAntialias = true,
+                    Style = SKPaintStyle.Stroke, StrokeWidth = 4f, IsAntialias = true,
                 };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, selPaint);
+                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
             }
         }
     }
 
     // ──────────────────────────────────────────────
-    //  Rendering — bottom screen preview
+    //  Rendering — static sprite fallback (top-left)
     // ──────────────────────────────────────────────
 
     private void OnPreviewPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(SKColors.Transparent);
+        canvas.Clear(new SKColor(6, 6, 15));
         if (_selectedPk is null) return;
+
         var sprite = _sprites.GetSprite(_selectedPk);
-        canvas.DrawBitmap(sprite, SKRect.Create(0, 0, e.Info.Width, e.Info.Height));
+        float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
+        float w = e.Info.Width, h = e.Info.Height;
+        float drawW, drawH;
+        if (aspect >= 1f) { drawW = w; drawH = w / aspect; }
+        else              { drawH = h; drawW = h * aspect; }
+        float sx = (w - drawW) / 2f;
+        float sy = (h - drawH) / 2f;
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
+    }
+
+    // ──────────────────────────────────────────────
+    //  Rendering — hexagonal stat radar (top-right)
+    // ──────────────────────────────────────────────
+
+    private void OnRadarPaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(8, 8, 20));
+        if (_selectedPk is not { } pk) return;
+
+        const int n = 6;
+        // Clockwise from top: HP, Atk, Def, Spe, SpD, SpA
+        string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
+        int[]    values = [pk.Stat_HP, pk.Stat_ATK, pk.Stat_DEF, pk.Stat_SPE, pk.Stat_SPD, pk.Stat_SPA];
+
+        float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.24f;
+        float cx = e.Info.Width  / 2f;
+        float cy = e.Info.Height / 2f;
+        float r  = Math.Min(cx, cy) - margin;
+
+        const float maxStat = 300f;
+
+        // Background grid rings
+        using var ringPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
+        for (int ring = 1; ring <= 4; ring++)
+        {
+            ringPaint.Color = new SKColor(35, 50, 90, (byte)(60 + ring * 18));
+            DrawHexPath(canvas, cx, cy, r * ring / 4f, n, ringPaint);
+        }
+
+        // Axes
+        using var axisPaint = new SKPaint { Color = new SKColor(35, 45, 80, 100), StrokeWidth = 1f, IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            canvas.DrawLine(cx, cy, cx + r * MathF.Cos(angle), cy + r * MathF.Sin(angle), axisPaint);
+        }
+
+        // Stat polygon
+        using var statPath = new SKPath();
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float v  = Math.Clamp(values[i] / maxStat, 0f, 1f);
+            float px = cx + r * v * MathF.Cos(angle);
+            float py = cy + r * v * MathF.Sin(angle);
+            if (i == 0) statPath.MoveTo(px, py); else statPath.LineTo(px, py);
+        }
+        statPath.Close();
+
+        using var fillPaint   = new SKPaint { Color = new SKColor(79, 128, 255, 80),  Style = SKPaintStyle.Fill,   IsAntialias = true };
+        using var strokePaint = new SKPaint { Color = new SKColor(100, 160, 255, 220), Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true };
+        canvas.DrawPath(statPath, fillPaint);
+        canvas.DrawPath(statPath, strokePaint);
+
+        // Vertex dots
+        using var dotPaint = new SKPaint { Color = new SKColor(160, 205, 255), IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float v  = Math.Clamp(values[i] / maxStat, 0f, 1f);
+            canvas.DrawCircle(cx + r * v * MathF.Cos(angle), cy + r * v * MathF.Sin(angle), 4.5f, dotPaint);
+        }
+
+        // Labels and values at each axis tip
+        float textR  = r + margin * 0.52f;
+        float labelSz = Math.Max(16f, r * 0.15f);
+        float valueSz = Math.Max(20f, r * 0.19f);
+
+        using var labelPaint = new SKPaint
+        {
+            Color = new SKColor(110, 130, 180), TextSize = labelSz,
+            IsAntialias = true, TextAlign = SKTextAlign.Center,
+        };
+        using var valuePaint = new SKPaint
+        {
+            Color = new SKColor(225, 235, 255), TextSize = valueSz,
+            IsAntialias = true, TextAlign = SKTextAlign.Center, FakeBoldText = true,
+        };
+
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float lx = cx + textR * MathF.Cos(angle);
+            float ly = cy + textR * MathF.Sin(angle);
+            canvas.DrawText(labels[i], lx, ly,              labelPaint);
+            canvas.DrawText(values[i].ToString(), lx, ly + valueSz * 1.05f, valuePaint);
+        }
+    }
+
+    private static void DrawHexPath(SKCanvas canvas, float cx, float cy, float r, int n, SKPaint paint)
+    {
+        using var path = new SKPath();
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float x = cx + r * MathF.Cos(angle);
+            float y = cy + r * MathF.Sin(angle);
+            if (i == 0) path.MoveTo(x, y); else path.LineTo(x, y);
+        }
+        path.Close();
+        canvas.DrawPath(path, paint);
+    }
+
+    // ──────────────────────────────────────────────
+    //  Animated sprite (Pokémon Showdown CDN)
+    // ──────────────────────────────────────────────
+
+    private void LoadAnimatedSprite(PKM pk)
+    {
+        var name = pk.Species < _strings.specieslist.Length
+            ? _strings.specieslist[pk.Species]
+            : pk.Species.ToString();
+        SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteHtml(name, pk.IsShiny) };
+        SpriteWebView.IsVisible = true;
+    }
+
+    private static string BuildSpriteHtml(string speciesName, bool shiny)
+    {
+        // Normalise to Pokémon Showdown URL convention
+        var slug = speciesName
+            .ToLowerInvariant()
+            .Replace("♀", "-f").Replace("♂", "-m")
+            .Replace(" ", "-").Replace(".", "")
+            .Replace("'", "").Replace(":", "")
+            .Replace("é", "e");
+
+        var folder  = shiny ? "ani-shiny" : "ani";
+        var primary  = $"https://play.pokemonshowdown.com/sprites/{folder}/{slug}.gif";
+        var fallback = $"https://play.pokemonshowdown.com/sprites/gen5ani/{slug}.gif";
+
+        return $$"""
+            <!DOCTYPE html>
+            <html><head>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <style>*{margin:0;padding:0}body{background:#06060f;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
+            </head><body>
+            <img src="{{primary}}"
+                 style="max-width:88%;max-height:88%;image-rendering:pixelated"
+                 onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
+            </body></html>
+            """;
     }
 
     // ──────────────────────────────────────────────
@@ -221,32 +360,23 @@ public partial class GamePage : ContentPage
         var point = e.GetPosition(view);
         if (point is null) return;
 
-        // Compute square slot metrics in DIP space (matches the canvas paint logic)
         float slotSize = (float)Math.Min(view.Width / Columns, view.Height / Rows);
         float offX = (float)(view.Width  - slotSize * Columns) / 2f;
         float offY = (float)(view.Height - slotSize * Rows)    / 2f;
 
-        int col = (int)((point.Value.X - offX) / slotSize);
-        int row = (int)((point.Value.Y - offY) / slotSize);
+        int col   = (int)((point.Value.X - offX) / slotSize);
+        int row   = (int)((point.Value.Y - offY) / slotSize);
         int index = row * Columns + col;
 
         if ((uint)index >= (uint)_currentBox.Length) return;
-
         _cursorSlot = index;
 
         if (index == _selectedSlot)
-        {
-            // Double-tap selected slot → open editor
             _ = OpenEditor();
-        }
         else if (_currentBox[index].Species != 0)
-        {
             SelectSlot(index);
-        }
         else
-        {
             DeselectSlot();
-        }
     }
 
     // ──────────────────────────────────────────────
@@ -264,25 +394,21 @@ public partial class GamePage : ContentPage
     {
         switch (keyCode)
         {
-            // ── D-pad: move cursor ──
             case Android.Views.Keycode.DpadUp:    MoveCursor(-Columns); break;
             case Android.Views.Keycode.DpadDown:  MoveCursor(+Columns); break;
             case Android.Views.Keycode.DpadLeft:  MoveCursor(-1);       break;
             case Android.Views.Keycode.DpadRight: MoveCursor(+1);       break;
 
-            // ── A: select / open editor ──
             case Android.Views.Keycode.ButtonA:
                 if (_selectedSlot < 0) SelectSlot(_cursorSlot);
                 else _ = OpenEditor();
                 break;
 
-            // ── B: deselect, or exit to main menu ──
             case Android.Views.Keycode.ButtonB:
                 if (_selectedSlot >= 0) DeselectSlot();
                 else OnMenuClicked(this, EventArgs.Empty);
                 break;
 
-            // ── L/R: prev/next box ──
             case Android.Views.Keycode.ButtonL1:
             case Android.Views.Keycode.Button5:
                 OnPrevBox(this, EventArgs.Empty); break;
@@ -291,26 +417,17 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.Button6:
                 OnNextBox(this, EventArgs.Empty); break;
 
-            // ── Bottom panel shortcuts ──
-            case Android.Views.Keycode.ButtonX:
-                OnSearchClicked(this, EventArgs.Empty); break;
-
-            case Android.Views.Keycode.ButtonY:
-                OnGiftsClicked(this, EventArgs.Empty); break;
-
-            case Android.Views.Keycode.ButtonSelect:
-                OnSettingsClicked(this, EventArgs.Empty); break;
-
-            case Android.Views.Keycode.ButtonStart:
-                OnExportClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonX:      OnSearchClicked(this, EventArgs.Empty);  break;
+            case Android.Views.Keycode.ButtonY:      OnGiftsClicked(this, EventArgs.Empty);   break;
+            case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonStart:  OnExportClicked(this, EventArgs.Empty);  break;
         }
     }
 #endif
 
     private void MoveCursor(int delta)
     {
-        // Prevent wrapping left/right across row boundaries
-        if (delta == -1 && _cursorSlot % Columns == 0) return;
+        if (delta == -1 && _cursorSlot % Columns == 0)           return;
         if (delta == +1 && _cursorSlot % Columns == Columns - 1) return;
 
         int next = _cursorSlot + delta;
@@ -330,35 +447,34 @@ public partial class GamePage : ContentPage
         if (pk.Species == 0) return;
 
         _selectedSlot = slot;
-        _selectedPk = pk;
+        _selectedPk   = pk;
 
         var speciesName = pk.Species < _strings.specieslist.Length
             ? _strings.specieslist[pk.Species] : pk.Species.ToString();
+        var natureName = (int)pk.Nature < _strings.natures.Length
+            ? _strings.natures[(int)pk.Nature] : "";
 
-        PkmNameLabel.Text = $"#{pk.Species:000} {speciesName}";
-        PkmLevelLabel.Text = $"Lv. {pk.CurrentLevel}" + (pk.IsShiny ? "  ✦" : "");
-        PkmNatureLabel.Text = (int)pk.Nature < _strings.natures.Length
-            ? _strings.natures[(int)pk.Nature] : pk.Nature.ToString();
+        SelectedSpeciesLabel.Text =
+            $"#{pk.Species:000} {speciesName}  •  Lv.{pk.CurrentLevel}" +
+            (pk.IsShiny ? "  ✦" : "") +
+            $"  {natureName}";
 
-        var moveIds = new[] { pk.Move1, pk.Move2, pk.Move3, pk.Move4 };
-        var moveNames = moveIds
-            .Where(m => m != 0)
-            .Select(m => m < _strings.movelist.Length ? _strings.movelist[m] : m.ToString());
-        PkmMovesLabel.Text = string.Join(" · ", moveNames);
+        TopIdlePanel.IsVisible     = false;
+        TopSelectedPanel.IsVisible = true;
 
-        IdlePanel.IsVisible = false;
-        SelectedPanel.IsVisible = true;
-
+        LoadAnimatedSprite(pk);
         PreviewCanvas.InvalidateSurface();
+        RadarCanvas.InvalidateSurface();
         BoxCanvas.InvalidateSurface();
     }
 
     private void DeselectSlot()
     {
         _selectedSlot = -1;
-        _selectedPk = null;
-        IdlePanel.IsVisible = true;
-        SelectedPanel.IsVisible = false;
+        _selectedPk   = null;
+        SpriteWebView.IsVisible    = false;
+        TopIdlePanel.IsVisible     = true;
+        TopSelectedPanel.IsVisible = false;
         BoxCanvas.InvalidateSurface();
     }
 
@@ -366,7 +482,7 @@ public partial class GamePage : ContentPage
     //  Navigation
     // ──────────────────────────────────────────────
 
-    private void OnEditClicked(object sender, EventArgs e) => _ = OpenEditor();
+    private void OnEditClicked(object sender, EventArgs e)     => _ = OpenEditor();
     private void OnDeselectClicked(object sender, EventArgs e) => DeselectSlot();
 
     private async Task OpenEditor()

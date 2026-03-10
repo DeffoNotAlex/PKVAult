@@ -7,6 +7,8 @@
         android:supportsRtl="true">
     </application>
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Storage access for save files (API < 33) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="32" />

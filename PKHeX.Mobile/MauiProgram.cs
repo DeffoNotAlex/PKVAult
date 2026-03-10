@@ -10,7 +10,15 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseSkiaSharp();
+            .UseSkiaSharp()
+            .ConfigureMauiHandlers(handlers =>
+            {
+#if ANDROID
+                Microsoft.Maui.Handlers.WebViewHandler.Mapper.AppendToMapping(
+                    "EnableJavaScript", (handler, _) =>
+                        handler.PlatformView.Settings.JavaScriptEnabled = true);
+#endif
+            });
 
         builder.Services.AddSingleton<IFileService, FileService>();
 
