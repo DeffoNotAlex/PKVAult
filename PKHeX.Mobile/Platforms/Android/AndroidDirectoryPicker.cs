@@ -22,7 +22,7 @@ public class AndroidDirectoryPicker : IDirectoryPicker
             {
                 activity.ContentResolver?.TakePersistableUriPermission(
                     uri,
-                    ActivityFlags.GrantReadUriPermission | ActivityFlags.GrantPersistableUriPermission);
+                    ActivityFlags.GrantReadUriPermission);
                 tcs.TrySetResult(uri.ToString());
             }
             else
