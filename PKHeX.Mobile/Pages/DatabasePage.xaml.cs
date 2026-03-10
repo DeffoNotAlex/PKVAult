@@ -43,7 +43,7 @@ public partial class DatabasePage : ContentPage
 
                 var displayName = (pk.IsShiny ? "✦ " : "") +
                     $"#{pk.Species:000} {speciesName}" +
-                    (pk.IsNicknamed ? $"  "{pk.Nickname}"" : "");
+                    (pk.IsNicknamed ? $"  \"{pk.Nickname}\"" : "");
 
                 var subInfo = $"Lv.{pk.CurrentLevel}  {natureName}  {abilityName}";
 
