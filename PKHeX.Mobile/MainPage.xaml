@@ -57,6 +57,11 @@
                         FontSize="14" Padding="16,10" />
             </HorizontalStackLayout>
 
+            <!-- Gamepad hint -->
+            <Label Text="Controller:  A = Load save  •  (after load) A = Boxes  X = Search  Y = Gifts  ⊙ = Settings"
+                   FontSize="10" TextColor="#404060"
+                   HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+
             <!-- Error display -->
             <Label x:Name="ErrorLabel"
                    IsVisible="False"

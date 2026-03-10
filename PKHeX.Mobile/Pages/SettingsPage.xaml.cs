@@ -23,6 +23,9 @@ public partial class SettingsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+#if ANDROID
+        GamepadRouter.KeyReceived += OnGamepadKey;
+#endif
         _loading = true;
 
         var lang = Preferences.Default.Get(KeyLanguage, "en");
@@ -33,6 +36,23 @@ public partial class SettingsPage : ContentPage
 
         _loading = false;
     }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnGamepadKey;
+#endif
+    }
+
+#if ANDROID
+    private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        if (keyCode == Android.Views.Keycode.ButtonB)
+            MainThread.BeginInvokeOnMainThread(async () => await Shell.Current.GoToAsync(".."));
+    }
+#endif
 
     private void OnLanguageChanged(object sender, EventArgs e)
     {

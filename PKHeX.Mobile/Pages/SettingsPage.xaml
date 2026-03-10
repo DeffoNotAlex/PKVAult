@@ -9,6 +9,11 @@
     <ScrollView Padding="16" BackgroundColor="#0B0F1E">
         <VerticalStackLayout Spacing="20">
 
+            <!-- Gamepad hint -->
+            <Label Text="Controller:  B = back"
+                   FontSize="10" TextColor="#404060"
+                   HorizontalOptions="End" />
+
             <!-- Language -->
             <VerticalStackLayout Spacing="6">
                 <Label Text="Display Language"

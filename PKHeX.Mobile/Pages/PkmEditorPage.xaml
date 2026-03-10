@@ -26,12 +26,16 @@
                        TextColor="#EEEEFF" />
                 <Label x:Name="SubtitleLabel" FontSize="13" TextColor="#8888BB" />
             </VerticalStackLayout>
-            <Button Grid.Column="2"
-                    Text="← Back"
-                    Clicked="OnBackClicked"
-                    BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                    FontSize="13" Padding="14,8"
-                    VerticalOptions="Center" Margin="0,0,4,0" />
+            <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
+                                  Spacing="4" Margin="0,0,4,0">
+                <Button Text="← Back"
+                        Clicked="OnBackClicked"
+                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
+                        FontSize="13" Padding="14,8" />
+                <Label Text="L/R: tabs  B: back  ▶: save"
+                       FontSize="9" TextColor="#404060"
+                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Row 1: Tab bar -->

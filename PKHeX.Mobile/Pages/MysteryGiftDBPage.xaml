@@ -24,6 +24,12 @@
                     VerticalOptions="Center" />
         </Grid>
 
+        <!-- Gamepad hint -->
+        <Label Grid.Row="0" Text="B: back"
+               FontSize="9" TextColor="#404060"
+               HorizontalOptions="End" VerticalOptions="End"
+               Margin="0,0,4,2" />
+
         <!-- Gift list -->
         <CollectionView Grid.Row="1" x:Name="GiftList"
                         SelectionMode="Single"

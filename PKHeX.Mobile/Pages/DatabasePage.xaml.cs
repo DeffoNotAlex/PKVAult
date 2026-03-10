@@ -16,10 +16,30 @@ public partial class DatabasePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+#if ANDROID
+        GamepadRouter.KeyReceived += OnGamepadKey;
+#endif
         if (App.ActiveSave is null) return;
         BuildIndex();
         ApplyFilter();
     }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnGamepadKey;
+#endif
+    }
+
+#if ANDROID
+    private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        if (keyCode == Android.Views.Keycode.ButtonB)
+            MainThread.BeginInvokeOnMainThread(async () => await Shell.Current.GoToAsync(".."));
+    }
+#endif
 
     private void BuildIndex()
     {
