@@ -17,8 +17,9 @@ public partial class GamePage : ContentPage
     private PKM[] _currentBox = [];
     private int _boxIndex;
     private int _cursorSlot;
-    private int _selectedSlot = -1;
-    private PKM? _selectedPk;
+    private int _selectedSlot = -1;   // gold outline (A-confirmed), -1 = none
+    private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
+    private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
 
     public GamePage()
@@ -79,15 +80,14 @@ public partial class GamePage : ContentPage
                 ? named.GetBoxName(box)
                 : $"Box {box + 1}";
 
-            if (_selectedSlot >= 0 && _selectedSlot < _currentBox.Length)
-            {
-                var pk = _currentBox[_selectedSlot];
-                if (pk.Species != 0) SelectSlot(_selectedSlot);
-                else DeselectSlot();
-            }
+            // Clear gold outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
+            if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
+                || _currentBox[_selectedSlot].Species == 0))
+                _selectedSlot = -1;
 
             await _sprites.PreloadBoxAsync(_currentBox);
             BoxCanvas.InvalidateSurface();
+            UpdateTopPanel();
         }
         finally { _loadingBox = false; }
     }
@@ -192,9 +192,9 @@ public partial class GamePage : ContentPage
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(new SKColor(6, 6, 15));
-        if (_selectedPk is null) return;
+        if (_previewPk is null) return;
 
-        var sprite = _sprites.GetSprite(_selectedPk);
+        var sprite = _sprites.GetSprite(_previewPk);
         float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
         float w = e.Info.Width, h = e.Info.Height;
         float drawW, drawH;
@@ -213,7 +213,7 @@ public partial class GamePage : ContentPage
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(new SKColor(8, 8, 20));
-        if (_selectedPk is not { } pk) return;
+        if (_previewPk is not { } pk) return;
 
         const int n = 6;
         // GetStats returns [HP, ATK, DEF, SPA, SPD, SPE]
@@ -367,14 +367,19 @@ public partial class GamePage : ContentPage
         int index = row * Columns + col;
 
         if ((uint)index >= (uint)_currentBox.Length) return;
-        _cursorSlot = index;
 
-        if (index == _selectedSlot)
-            _ = OpenEditor();
-        else if (_currentBox[index].Species != 0)
-            SelectSlot(index);
+        _cursorSlot = index;
+        UpdateTopPanel();   // stats update immediately on any tap/cursor move
+
+        if (_currentBox[index].Species != 0)
+        {
+            if (index == _selectedSlot) _ = OpenEditor();  // tap selected again → edit
+            else SelectSlot(index);                         // tap new slot → select
+        }
         else
+        {
             DeselectSlot();
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -398,8 +403,11 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.DpadRight: MoveCursor(+1);       break;
 
             case Android.Views.Keycode.ButtonA:
-                if (_selectedSlot < 0) SelectSlot(_cursorSlot);
-                else _ = OpenEditor();
+                if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
+                {
+                    if (_cursorSlot == _selectedSlot) _ = OpenEditor();   // 2nd A on same slot → edit
+                    else SelectSlot(_cursorSlot);                          // 1st A / new slot → select
+                }
                 break;
 
             case Android.Views.Keycode.ButtonB:
@@ -432,20 +440,27 @@ public partial class GamePage : ContentPage
         if ((uint)next >= (uint)_currentBox.Length) return;
 
         _cursorSlot = next;
+        UpdateTopPanel();
         BoxCanvas.InvalidateSurface();
     }
 
     // ──────────────────────────────────────────────
-    //  Selection state machine
+    //  Top panel — follows cursor
     // ──────────────────────────────────────────────
 
-    private void SelectSlot(int slot)
+    private void UpdateTopPanel()
     {
-        var pk = _currentBox[slot];
-        if (pk.Species == 0) return;
+        if (_currentBox.Length == 0) return;
+        var pk = _cursorSlot < _currentBox.Length ? _currentBox[_cursorSlot] : null;
+        if (pk?.Species > 0)
+            ShowPokemonPreview(pk);
+        else
+            ShowIdlePanel();
+    }
 
-        _selectedSlot = slot;
-        _selectedPk   = pk;
+    private void ShowPokemonPreview(PKM pk)
+    {
+        _previewPk = pk;
 
         var speciesName = pk.Species < _strings.specieslist.Length
             ? _strings.specieslist[pk.Species] : pk.Species.ToString();
@@ -454,25 +469,47 @@ public partial class GamePage : ContentPage
 
         SelectedSpeciesLabel.Text =
             $"#{pk.Species:000} {speciesName}  •  Lv.{pk.CurrentLevel}" +
-            (pk.IsShiny ? "  ✦" : "") +
-            $"  {natureName}";
+            (pk.IsShiny ? "  ✦" : "") + $"  {natureName}";
 
         TopIdlePanel.IsVisible     = false;
         TopSelectedPanel.IsVisible = true;
 
-        LoadAnimatedSprite(pk);
+        // Only reload WebView if the species/shiny changed (avoid flicker on cursor move)
+        int key = pk.Species * 2 + (pk.IsShiny ? 1 : 0);
+        if (key != _previewSpecies)
+        {
+            _previewSpecies = key;
+            LoadAnimatedSprite(pk);
+        }
+
         PreviewCanvas.InvalidateSurface();
         RadarCanvas.InvalidateSurface();
-        BoxCanvas.InvalidateSurface();
     }
 
-    private void DeselectSlot()
+    private void ShowIdlePanel()
     {
-        _selectedSlot = -1;
-        _selectedPk   = null;
+        _previewPk = null;
         SpriteWebView.IsVisible    = false;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
+    }
+
+    // ──────────────────────────────────────────────
+    //  Selection state machine (gold outline only)
+    // ──────────────────────────────────────────────
+
+    /// <summary>Mark slot with gold outline (does not change the top panel display).</summary>
+    private void SelectSlot(int slot)
+    {
+        if (_currentBox[slot].Species == 0) return;
+        _selectedSlot = slot;
+        BoxCanvas.InvalidateSurface();
+    }
+
+    /// <summary>Clear gold outline.</summary>
+    private void DeselectSlot()
+    {
+        _selectedSlot = -1;
         BoxCanvas.InvalidateSurface();
     }
 
@@ -485,8 +522,10 @@ public partial class GamePage : ContentPage
 
     private async Task OpenEditor()
     {
-        if (_selectedSlot < 0) return;
-        await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_selectedSlot}");
+        // Always edit the slot the cursor is currently on
+        if (_cursorSlot < 0 || _cursorSlot >= _currentBox.Length) return;
+        if (_currentBox[_cursorSlot].Species == 0) return;
+        await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_cursorSlot}");
     }
 
     private async void OnMenuClicked(object sender, EventArgs e)
