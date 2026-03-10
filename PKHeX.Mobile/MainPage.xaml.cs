@@ -6,13 +6,19 @@ namespace PKHeX.Mobile;
 
 public partial class MainPage : ContentPage
 {
-    private readonly IFileService _fileService;
-    private string _loadedFileName = "save.bin";
+    private readonly SaveDirectoryService _dirService = new();
+    private readonly IFileService _fileService = new FileService();
+    private List<SaveCardViewModel> _saveCards = [];
+    private int _focusSection = 0; // 0 = cards, 1 = actions
+    private int _cardCursor = -1;
+    private int _actionCursor = 0;
+    private Border[] _actionRows = [];
+    private SaveEntry? _selectedSave;
+    private bool _gpNavigating;
 
     public MainPage()
     {
         InitializeComponent();
-        _fileService = new FileService();
     }
 
     protected override void OnAppearing()
@@ -21,6 +27,9 @@ public partial class MainPage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
+        _actionRows = [Row_Load, Row_Search, Row_Gifts, Row_Export, Row_Settings];
+        _ = RefreshSavesAsync();
+        UpdateHighlight();
     }
 
     protected override void OnDisappearing()
@@ -30,6 +39,100 @@ public partial class MainPage : ContentPage
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
     }
+
+    private async Task RefreshSavesAsync()
+    {
+        var entries = await _dirService.ScanAllAsync();
+        _saveCards = entries.Select(e => new SaveCardViewModel(e)).ToList();
+        SaveCardsList.ItemsSource = _saveCards;
+        if (_saveCards.Count > 0 && _cardCursor < 0)
+            _cardCursor = 0;
+        UpdateHighlight();
+    }
+
+    private void UpdateHighlight()
+    {
+        var focusedBg     = Color.FromArgb("#182845");
+        var focusedStroke = Color.FromArgb("#4F80FF");
+        var normalBg      = Color.FromArgb("#111827");
+        var dimmedBg      = Color.FromArgb("#0D1520");
+
+        for (int i = 0; i < _actionRows.Length; i++)
+        {
+            bool focused = _focusSection == 1 && i == _actionCursor;
+            // Grey out Row_Load if no save selected
+            bool dimmed = i == 0 && _selectedSave is null;
+            _actionRows[i].BackgroundColor = focused ? focusedBg : (dimmed ? dimmedBg : normalBg);
+            _actionRows[i].Stroke          = focused ? focusedStroke : Colors.Transparent;
+        }
+    }
+
+    private void OnSaveCardSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_gpNavigating) return;
+        if (e.CurrentSelection.Count == 0) return;
+        if (e.CurrentSelection[0] is SaveCardViewModel vm)
+        {
+            _cardCursor = _saveCards.IndexOf(vm);
+            LoadSave(vm.Entry);
+        }
+    }
+
+    private void LoadSave(SaveEntry entry)
+    {
+        if (SaveUtil.TryGetSaveFile(entry.RawData, out var sav))
+        {
+            App.ActiveSave = sav;
+            App.ActiveSaveFileName = entry.FileName;
+            _selectedSave = entry;
+            UpdateHighlight();
+        }
+    }
+
+    private void ActivateAction(int row)
+    {
+        switch (row)
+        {
+            case 0:
+                if (_selectedSave is not null)
+                    _ = Shell.Current.GoToAsync(nameof(GamePage));
+                break;
+            case 1:
+                if (_selectedSave is not null)
+                    _ = Shell.Current.GoToAsync(nameof(DatabasePage));
+                break;
+            case 2:
+                _ = Shell.Current.GoToAsync(nameof(MysteryGiftDBPage));
+                break;
+            case 3:
+                if (_selectedSave is not null)
+                    _ = ExportSaveAsync();
+                break;
+            case 4:
+                _ = Shell.Current.GoToAsync(nameof(SettingsPage));
+                break;
+        }
+    }
+
+    private async Task ExportSaveAsync()
+    {
+        if (App.ActiveSave is null || _selectedSave is null) return;
+        try
+        {
+            var data = App.ActiveSave.Write().ToArray();
+            await _fileService.ExportFileAsync(data, _selectedSave.FileName);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Export Error", ex.Message, "OK");
+        }
+    }
+
+    private void OnLoadBoxesClicked(object sender, EventArgs e)  => ActivateAction(0);
+    private void OnSearchClicked(object sender, EventArgs e)     => ActivateAction(1);
+    private void OnGiftsClicked(object sender, EventArgs e)      => ActivateAction(2);
+    private void OnExportClicked(object sender, EventArgs e)     => ActivateAction(3);
+    private void OnSettingsClicked(object sender, EventArgs e)   => ActivateAction(4);
 
 #if ANDROID
     private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
@@ -42,128 +145,177 @@ public partial class MainPage : ContentPage
     {
         switch (keyCode)
         {
-            // A / Start: load save (no save loaded) or open boxes (save loaded)
+            case Android.Views.Keycode.DpadUp:
+                MoveUp(); break;
+
+            case Android.Views.Keycode.DpadDown:
+                MoveDown(); break;
+
             case Android.Views.Keycode.ButtonA:
-            case Android.Views.Keycode.ButtonStart:
-                if (App.ActiveSave is null)
-                    OnLoadClicked(this, EventArgs.Empty);
-                else
-                    OnBoxClicked(this, EventArgs.Empty);
-                break;
+                OnAPressed(); break;
 
-            // X: search (save loaded)
-            case Android.Views.Keycode.ButtonX:
-                if (App.ActiveSave is not null)
-                    OnSearchClicked(this, EventArgs.Empty);
-                break;
-
-            // Y: mystery gifts (save loaded)
-            case Android.Views.Keycode.ButtonY:
-                if (App.ActiveSave is not null)
-                    OnGiftDBClicked(this, EventArgs.Empty);
-                break;
-
-            // Select: settings
             case Android.Views.Keycode.ButtonSelect:
-                OnSettingsClicked(this, EventArgs.Empty);
-                break;
+                ActivateAction(4); break; // Settings
         }
     }
 #endif
 
-    private async void OnLoadClicked(object sender, EventArgs e)
+    private void MoveUp()
     {
-        ErrorLabel.IsVisible = false;
-        SaveInfoCard.IsVisible = false;
-        LoadButton.IsEnabled = false;
-
-        try
+        if (_focusSection == 1)
         {
-            var result = await _fileService.PickFileAsync();
-            if (result is null)
-                return;
-
-            var (data, fileName) = result.Value;
-            _loadedFileName = fileName;
-            App.ActiveSaveFileName = fileName;
-
-            if (!SaveUtil.TryGetSaveFile(data, out var sav))
+            if (_actionCursor > 0)
+                _actionCursor--;
+            else
             {
-                ShowError("Could not parse save file. Ensure the file is not encrypted with console-specific keys.");
-                return;
+                // Jump back to cards section
+                _focusSection = 0;
+                if (_saveCards.Count > 0 && _cardCursor < 0)
+                    _cardCursor = 0;
             }
-
-            DisplaySaveInfo(sav);
         }
-        catch (Exception ex)
+        else
         {
-            ShowError($"Unexpected error: {ex.Message}");
+            if (_saveCards.Count == 0) return;
+            _cardCursor = Math.Max(0, (_cardCursor < 0 ? 0 : _cardCursor) - 1);
+            _gpNavigating = true;
+            SaveCardsList.SelectedItem = _saveCards[_cardCursor];
+            _gpNavigating = false;
+            SaveCardsList.ScrollTo(_cardCursor, -1, ScrollToPosition.MakeVisible, false);
         }
-        finally
+        UpdateHighlight();
+    }
+
+    private void MoveDown()
+    {
+        if (_focusSection == 0)
         {
-            LoadButton.IsEnabled = true;
+            if (_saveCards.Count > 0 && _cardCursor < _saveCards.Count - 1)
+            {
+                _cardCursor++;
+                _gpNavigating = true;
+                SaveCardsList.SelectedItem = _saveCards[_cardCursor];
+                _gpNavigating = false;
+                SaveCardsList.ScrollTo(_cardCursor, -1, ScrollToPosition.MakeVisible, false);
+            }
+            else
+            {
+                // Jump to actions section
+                _focusSection = 1;
+                _actionCursor = 0;
+            }
         }
-    }
-
-    private void DisplaySaveInfo(SaveFile sav)
-    {
-        App.ActiveSave = sav;
-
-        GameLabel.Text = $"{sav.Version} — Generation {sav.Generation}";
-        TrainerLabel.Text = sav.OT;
-        IDLabel.Text = $"TID: {sav.TID16} / SID: {sav.SID16}";
-        PlaytimeLabel.Text = sav.PlayTimeString;
-        StorageLabel.Text = $"{sav.BoxCount} boxes / {sav.SlotCount} slots";
-
-        SaveInfoCard.IsVisible = true;
-        BoxButton.IsVisible = true;
-        SearchButton.IsVisible = true;
-        GiftDBButton.IsVisible = true;
-        ExportButton.IsVisible = true;
-    }
-
-    private async void OnExportClicked(object sender, EventArgs e)
-    {
-        if (App.ActiveSave is null) return;
-        ExportButton.IsEnabled = false;
-        try
+        else
         {
-            var data = App.ActiveSave.Write().ToArray();
-            await _fileService.ExportFileAsync(data, _loadedFileName);
+            _actionCursor = Math.Min(_actionRows.Length - 1, _actionCursor + 1);
         }
-        catch (Exception ex)
+        UpdateHighlight();
+    }
+
+    private void OnAPressed()
+    {
+        if (_focusSection == 0)
         {
-            ShowError($"Export failed: {ex.Message}");
+            // Load selected card
+            if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
+                LoadSave(_saveCards[_cardCursor].Entry);
         }
-        finally
+        else
         {
-            ExportButton.IsEnabled = true;
+            ActivateAction(_actionCursor);
         }
     }
 
-    private async void OnBoxClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(nameof(GamePage));
-    }
+    // ── SaveCardViewModel ──────────────────────────────────────────────────
 
-    private async void OnSearchClicked(object sender, EventArgs e)
+    private sealed class SaveCardViewModel
     {
-        await Shell.Current.GoToAsync(nameof(DatabasePage));
-    }
+        public SaveEntry Entry { get; }
+        public string TrainerName { get; }
+        public string VersionLabel { get; }
+        public string DetailLine { get; }
+        public string GameShortName { get; }
+        public Color GameColor { get; }
 
-    private async void OnSettingsClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(nameof(SettingsPage));
-    }
+        public SaveCardViewModel(SaveEntry entry)
+        {
+            Entry = entry;
+            TrainerName = entry.TrainerName;
+            VersionLabel = $"Pokémon {entry.Version}  ·  Gen {entry.Generation}";
+            DetailLine   = $"TID {entry.TrainerID}  ·  {entry.BoxCount} boxes  ·  {entry.PlayTime}";
+            GameShortName = GetGameShortName(entry.Version);
+            GameColor     = GetGameColor(entry.Version);
+        }
 
-    private async void OnGiftDBClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(nameof(MysteryGiftDBPage));
-    }
+        private static string GetGameShortName(GameVersion v) => v switch
+        {
+            GameVersion.RD  => "Red",
+            GameVersion.BU  => "Blue",
+            GameVersion.GN  => "Green",
+            GameVersion.YW  => "Yel",
+            GameVersion.GD  => "Gold",
+            GameVersion.SI  => "Slvr",
+            GameVersion.C   => "Crys",
+            GameVersion.R   => "Ruby",
+            GameVersion.S   => "Saph",
+            GameVersion.E   => "Em",
+            GameVersion.FR  => "FR",
+            GameVersion.LG  => "LG",
+            GameVersion.D   => "D",
+            GameVersion.P   => "P",
+            GameVersion.Pt  => "Pt",
+            GameVersion.HG  => "HG",
+            GameVersion.SS  => "SS",
+            GameVersion.B   => "BLK",
+            GameVersion.W   => "WHT",
+            GameVersion.B2  => "BLK2",
+            GameVersion.W2  => "WHT2",
+            GameVersion.X   => "X",
+            GameVersion.Y   => "Y",
+            GameVersion.OR  => "OR",
+            GameVersion.AS  => "AS",
+            GameVersion.SN  => "Sun",
+            GameVersion.MN  => "Moon",
+            GameVersion.US  => "US",
+            GameVersion.UM  => "UM",
+            GameVersion.GP  => "LGP",
+            GameVersion.GE  => "LGE",
+            GameVersion.SW  => "Sw",
+            GameVersion.SH  => "Sh",
+            GameVersion.PLA => "PLA",
+            GameVersion.BD  => "BD",
+            GameVersion.SP  => "SP",
+            GameVersion.SL  => "SL",
+            GameVersion.VL  => "VL",
+            _ => v.ToString()[..Math.Min(4, v.ToString().Length)],
+        };
 
-    private void ShowError(string message)
-    {
-        ErrorLabel.Text = message;
-        ErrorLabel.IsVisible = true;
+        private static Color GetGameColor(GameVersion v) => v switch
+        {
+            GameVersion.RD or GameVersion.FR => Color.FromArgb("#C0392B"),
+            GameVersion.GN or GameVersion.LG => Color.FromArgb("#27AE60"),
+            GameVersion.BU or GameVersion.GD or GameVersion.HG => Color.FromArgb("#D4AC0D"),
+            GameVersion.SI or GameVersion.SS => Color.FromArgb("#85929E"),
+            GameVersion.C   => Color.FromArgb("#1ABC9C"),
+            GameVersion.YW  => Color.FromArgb("#E67E22"),
+            GameVersion.R or GameVersion.OR => Color.FromArgb("#C0392B"),
+            GameVersion.S or GameVersion.AS => Color.FromArgb("#2980B9"),
+            GameVersion.E   => Color.FromArgb("#27AE60"),
+            GameVersion.D or GameVersion.BD => Color.FromArgb("#5DADE2"),
+            GameVersion.P or GameVersion.SP => Color.FromArgb("#F1948A"),
+            GameVersion.Pt  => Color.FromArgb("#717D7E"),
+            GameVersion.B or GameVersion.B2 => Color.FromArgb("#1C2833"),
+            GameVersion.W or GameVersion.W2 => Color.FromArgb("#9EAAB5"),
+            GameVersion.X   => Color.FromArgb("#1A5276"),
+            GameVersion.Y   => Color.FromArgb("#922B21"),
+            GameVersion.SN or GameVersion.US or GameVersion.GP => Color.FromArgb("#E67E22"),
+            GameVersion.MN or GameVersion.UM or GameVersion.GE => Color.FromArgb("#8E44AD"),
+            GameVersion.SW  => Color.FromArgb("#2471A3"),
+            GameVersion.SH  => Color.FromArgb("#A93226"),
+            GameVersion.PLA => Color.FromArgb("#5D6D7E"),
+            GameVersion.SL  => Color.FromArgb("#C0392B"),
+            GameVersion.VL  => Color.FromArgb("#7D3C98"),
+            _ => Color.FromArgb("#2C3E50"),
+        };
     }
 }

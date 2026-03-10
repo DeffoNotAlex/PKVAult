@@ -80,7 +80,7 @@ public partial class MysteryGiftDBPage : ContentPage
         GiftList.SelectedItem = _filtered[_gpIndex];
         _gpNavigating = false;
 
-        GiftList.ScrollTo(_filtered[_gpIndex], null, ScrollToPosition.MakeVisible, false);
+        GiftList.ScrollTo(_gpIndex, -1, ScrollToPosition.MakeVisible, false);
     }
 
     private void BuildIndex()

@@ -51,6 +51,25 @@
 
             <BoxView HeightRequest="1" Color="#1E2D45" />
 
+            <!-- Manage Folders -->
+            <Border x:Name="Row_Folders" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Manage Save Folders"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Add or remove folders scanned for save files on startup."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="›" FontSize="20" TextColor="#4F80FF"
+                           VerticalOptions="Center" Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
             <!-- Legality (read-only / disabled) -->
             <Grid ColumnDefinitions="*,Auto">
                 <VerticalStackLayout Grid.Column="0" Spacing="4">

@@ -1,4 +1,5 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.Views;
 using PKHeX.Mobile.Services;
@@ -18,6 +19,9 @@ namespace PKHeX.Mobile;
         ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
+    public const int RequestPickDirectory = 9001;
+    public static event Action<Android.Net.Uri?>? DirectoryPickResult;
+
     // Previous analog axis positions for edge detection
     private float _prevHatX, _prevHatY;
     private float _prevLX,   _prevLY;
@@ -71,5 +75,14 @@ public class MainActivity : MauiAppCompatActivity
             GamepadRouter.Dispatch(Math.Sign(prev) < 0 ? neg : pos, KeyEventActions.Up);
 
         prev = value;
+    }
+
+    protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
+    {
+        base.OnActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestPickDirectory)
+        {
+            DirectoryPickResult?.Invoke(resultCode == Result.Ok ? data?.Data : null);
+        }
     }
 }

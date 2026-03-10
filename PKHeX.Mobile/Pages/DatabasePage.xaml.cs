@@ -83,7 +83,7 @@ public partial class DatabasePage : ContentPage
         ResultsView.SelectedItem = _filtered[_gpIndex];
         _gpNavigating = false;
 
-        ResultsView.ScrollTo(_filtered[_gpIndex], null, ScrollToPosition.MakeVisible, false);
+        ResultsView.ScrollTo(_gpIndex, -1, ScrollToPosition.MakeVisible, false);
     }
 
     private void BuildIndex()

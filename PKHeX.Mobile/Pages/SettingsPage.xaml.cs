@@ -53,7 +53,7 @@ public partial class SettingsPage : ContentPage
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny];
+        _rows = [Row_Language, Row_Shiny, Row_Folders];
     }
 
     private void UpdateHighlight()
@@ -129,6 +129,9 @@ public partial class SettingsPage : ContentPage
                 break;
             case 1:
                 ShinySwitch.IsToggled = !ShinySwitch.IsToggled;
+                break;
+            case 2:
+                _ = Shell.Current.GoToAsync(nameof(FolderManagerPage));
                 break;
         }
     }

@@ -6,117 +6,99 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="#0B0F1E">
 
-    <ScrollView BackgroundColor="#0B0F1E">
-        <VerticalStackLayout Padding="24" Spacing="20" BackgroundColor="#0B0F1E">
+    <Grid RowDefinitions="*,Auto" Padding="12,8">
 
-            <Label Text="PKHeX"
-                   FontSize="32"
-                   FontAttributes="Bold"
-                   TextColor="#EEEEFF"
-                   HorizontalOptions="Center"
-                   Margin="0,28,0,0" />
+        <!-- Save cards section -->
+        <CollectionView x:Name="SaveCardsList" Grid.Row="0"
+                        SelectionMode="Single"
+                        BackgroundColor="Transparent"
+                        SelectionChanged="OnSaveCardSelectionChanged">
+            <CollectionView.EmptyView>
+                <Label Text="No saves found. Add folders in Settings → Manage Folders."
+                       TextColor="#8888BB" FontSize="14"
+                       HorizontalOptions="Center" VerticalOptions="Center"
+                       Margin="24,60" HorizontalTextAlignment="Center" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,4" StrokeShape="RoundRectangle 8" Padding="12,10"
+                            BackgroundColor="#111827" Stroke="Transparent">
+                        <Grid ColumnDefinitions="56,*">
+                            <!-- Game color badge -->
+                            <Border Grid.Column="0" StrokeShape="RoundRectangle 6" Padding="4"
+                                    BackgroundColor="{Binding GameColor}" WidthRequest="48" HeightRequest="48"
+                                    VerticalOptions="Center" HorizontalOptions="Start">
+                                <Label Text="{Binding GameShortName}" TextColor="White" FontAttributes="Bold"
+                                       FontSize="11" HorizontalOptions="Center" VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+                            </Border>
+                            <!-- Info -->
+                            <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" Spacing="2" VerticalOptions="Center">
+                                <Label Text="{Binding TrainerName}" FontAttributes="Bold" FontSize="15" TextColor="#EEEEFF" />
+                                <Label Text="{Binding VersionLabel}" FontSize="12" TextColor="#8888BB" />
+                                <Label Text="{Binding DetailLine}" FontSize="11" TextColor="#445566" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-            <Label Text="Pokémon Save Editor"
-                   FontSize="14"
-                   TextColor="#8888BB"
-                   HorizontalOptions="Center" />
-
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="12" Margin="0,16,0,0">
-                <Button x:Name="LoadButton"
-                        Text="Load Save File"
-                        Clicked="OnLoadClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                        FontSize="14" Padding="16,10" />
-                <Button Text="Settings"
-                        Clicked="OnSettingsClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                        FontSize="14" Padding="16,10" />
-                <Button x:Name="BoxButton"
-                        Text="View Boxes"
-                        IsVisible="False"
-                        Clicked="OnBoxClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                        FontSize="14" Padding="16,10" />
-                <Button x:Name="SearchButton"
-                        Text="Search"
-                        IsVisible="False"
-                        Clicked="OnSearchClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                        FontSize="14" Padding="16,10" />
-                <Button x:Name="GiftDBButton"
-                        Text="Mystery Gifts"
-                        IsVisible="False"
-                        Clicked="OnGiftDBClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
-                        FontSize="14" Padding="16,10" />
-                <Button x:Name="ExportButton"
-                        Text="Export Save"
-                        IsVisible="False"
-                        Clicked="OnExportClicked"
-                        BackgroundColor="#2D1B69" TextColor="#C0A0FF"
-                        FontSize="14" Padding="16,10" />
-            </HorizontalStackLayout>
+        <!-- Action buttons and hint -->
+        <VerticalStackLayout Grid.Row="1" Spacing="4" Margin="0,8,0,0">
 
             <!-- Gamepad hint -->
-            <Label Text="Controller:  A = Load save  •  (after load) A = Boxes  X = Search  Y = Gifts  ⊙ = Settings"
+            <Label Text="↕ navigate  A select  B back"
                    FontSize="10" TextColor="#404060"
-                   HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                   HorizontalOptions="End" Margin="0,0,0,4" />
 
-            <!-- Error display -->
-            <Label x:Name="ErrorLabel"
-                   IsVisible="False"
-                   TextColor="#FF6060"
-                   BackgroundColor="#1A0A0A"
-                   Padding="12,8"
-                   HorizontalOptions="Center"
-                   HorizontalTextAlignment="Center" />
+            <Border x:Name="Row_Load" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="0">
+                <Button Text="💾 Load from Boxes"
+                        Clicked="OnLoadBoxesClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
+            </Border>
 
-            <!-- Save file info card -->
-            <Border x:Name="SaveInfoCard"
-                    IsVisible="False"
-                    StrokeShape="RoundRectangle 12"
-                    Stroke="#1E2D45"
-                    BackgroundColor="#111827"
-                    Padding="20"
-                    Margin="0,8,0,0">
-                <VerticalStackLayout Spacing="10">
+            <Border x:Name="Row_Search" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="0">
+                <Button Text="🔍 Search Pokémon"
+                        Clicked="OnSearchClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
+            </Border>
 
-                    <Label x:Name="GameLabel"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="#EEEEFF" />
+            <Border x:Name="Row_Gifts" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="0">
+                <Button Text="🎁 Mystery Gifts"
+                        Clicked="OnGiftsClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
+            </Border>
 
-                    <BoxView HeightRequest="1"
-                             Color="#1E2D45" />
+            <Border x:Name="Row_Export" StyleId="Action"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="0">
+                <Button Text="📤 Export Save"
+                        Clicked="OnExportClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
+            </Border>
 
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto"
-                          ColumnSpacing="12" RowSpacing="8">
-
-                        <Label Grid.Row="0" Grid.Column="0" Text="Trainer:"
-                               TextColor="#8888BB" FontAttributes="Bold" />
-                        <Label x:Name="TrainerLabel" Grid.Row="0" Grid.Column="1"
-                               TextColor="#EEEEFF" />
-
-                        <Label Grid.Row="1" Grid.Column="0" Text="Trainer ID:"
-                               TextColor="#8888BB" FontAttributes="Bold" />
-                        <Label x:Name="IDLabel" Grid.Row="1" Grid.Column="1"
-                               TextColor="#EEEEFF" />
-
-                        <Label Grid.Row="2" Grid.Column="0" Text="Play Time:"
-                               TextColor="#8888BB" FontAttributes="Bold" />
-                        <Label x:Name="PlaytimeLabel" Grid.Row="2" Grid.Column="1"
-                               TextColor="#EEEEFF" />
-
-                        <Label Grid.Row="3" Grid.Column="0" Text="Storage:"
-                               TextColor="#8888BB" FontAttributes="Bold" />
-                        <Label x:Name="StorageLabel" Grid.Row="3" Grid.Column="1"
-                               TextColor="#EEEEFF" />
-
-                    </Grid>
-                </VerticalStackLayout>
+            <Border x:Name="Row_Settings" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="0">
+                <Button Text="⚙ Settings"
+                        Clicked="OnSettingsClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
             </Border>
 
         </VerticalStackLayout>
-    </ScrollView>
+
+    </Grid>
 
 </ContentPage>
