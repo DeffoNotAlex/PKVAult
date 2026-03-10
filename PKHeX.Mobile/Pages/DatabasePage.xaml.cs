@@ -57,7 +57,7 @@ public partial class DatabasePage : ContentPage
                     pk.Context, pk.IsShiny);
 
                 var source = ImageSource.FromStream(
-                    ct => FileSystem.OpenAppPackageFileAsync($"sprites/{spriteKey}.png").AsTask().WaitAsync(ct));
+                    ct => FileSystem.OpenAppPackageFileAsync($"sprites/{spriteKey}.png").WaitAsync(ct));
 
                 _all.Add(new PokemonEntry(pk, box, slot, displayName, subInfo, boxLabel, source));
             }
