@@ -7,10 +7,10 @@ public partial class MainPage : ContentPage
 {
     private readonly IFileService _fileService;
 
-    public MainPage(IFileService fileService)
+    public MainPage()
     {
         InitializeComponent();
-        _fileService = fileService;
+        _fileService = IPlatformApplication.Current!.Services.GetRequiredService<IFileService>();
     }
 
     private async void OnLoadClicked(object sender, EventArgs e)

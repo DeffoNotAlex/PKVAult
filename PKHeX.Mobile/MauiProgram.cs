@@ -11,7 +11,6 @@ public static class MauiProgram
             .UseMauiApp<App>();
 
         builder.Services.AddSingleton<IFileService, FileService>();
-        builder.Services.AddTransient<MainPage>();
 
         return builder.Build();
     }
