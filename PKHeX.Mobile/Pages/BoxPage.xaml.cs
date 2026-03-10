@@ -1,5 +1,6 @@
 using PKHeX.Core;
 using PKHeX.Drawing.Mobile.Sprites;
+using PKHeX.Mobile.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
@@ -11,7 +12,7 @@ public partial class BoxPage : ContentPage
     private const int Columns = 6;
     private const int Rows = 5;
 
-    private readonly ISpriteRenderer _sprites = new PlaceholderSpriteRenderer();
+    private readonly FileSystemSpriteRenderer _sprites = new();
     private SaveFile? _sav;
     private PKM[] _currentBox = [];
     private int _boxIndex;
@@ -32,7 +33,7 @@ public partial class BoxPage : ContentPage
         LoadBox(_boxIndex);
     }
 
-    private void LoadBox(int box)
+    private async void LoadBox(int box)
     {
         if (_sav is null)
             return;
@@ -42,6 +43,7 @@ public partial class BoxPage : ContentPage
             ? named.GetBoxName(box)
             : $"Box {box + 1}";
 
+        await _sprites.PreloadBoxAsync(_currentBox);
         BoxCanvas.InvalidateSurface();
     }
 

@@ -22,6 +22,14 @@
     <MauiImage Include="Resources/Images/**" />
     <MauiFont Include="Resources/Fonts/**" />
     <MauiAsset Include="Resources/Raw/**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+
+    <!-- Pokémon sprites bundled from PKHeX.Drawing.PokeSprite -->
+    <MauiAsset Include="..\PKHeX.Drawing.PokeSprite\Resources\img\Big Pokemon Sprites\*.png"
+               LogicalName="sprites/%(Filename)%(Extension)" />
+    <MauiAsset Include="..\PKHeX.Drawing.PokeSprite\Resources\img\Big Shiny Sprites\*.png"
+               LogicalName="sprites/%(Filename)%(Extension)" />
+    <MauiAsset Include="..\PKHeX.Drawing.PokeSprite\Resources\img\ball\*.png"
+               LogicalName="sprites/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
