@@ -24,9 +24,29 @@
                     <Border Margin="0,0,0,4" StrokeShape="RoundRectangle 8" Padding="12,10"
                             BackgroundColor="#111827"
                             Stroke="Transparent" StrokeThickness="2">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#111827" />
+                                            <Setter Property="Stroke" Value="Transparent" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#141E30" />
+                                            <Setter Property="Stroke" Value="#2A4870" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
                         <Border.Triggers>
                             <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
-                                <Setter Property="Stroke" Value="#4F80FF" />
+                                <Setter Property="Stroke" Value="#80B4FF" />
+                                <Setter Property="StrokeThickness" Value="2.5" />
+                                <Setter Property="BackgroundColor" Value="#141E3A" />
                             </DataTrigger>
                         </Border.Triggers>
                         <Grid ColumnDefinitions="56,*,Auto">

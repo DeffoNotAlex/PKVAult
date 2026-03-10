@@ -183,6 +183,13 @@ public partial class MainPage : ContentPage
                 _focusSection = 0;
                 if (_saveCards.Count > 0 && _cardCursor < 0)
                     _cardCursor = 0;
+                if (_saveCards.Count > 0)
+                {
+                    _gpNavigating = true;
+                    SaveCardsList.SelectedItem = _saveCards[_cardCursor];
+                    _gpNavigating = false;
+                    SaveCardsList.ScrollTo(_cardCursor, -1, ScrollToPosition.MakeVisible, false);
+                }
             }
         }
         else
@@ -211,9 +218,12 @@ public partial class MainPage : ContentPage
             }
             else
             {
-                // Jump to actions section
+                // Jump to actions section — clear card highlight
                 _focusSection = 1;
                 _actionCursor = 0;
+                _gpNavigating = true;
+                SaveCardsList.SelectedItem = null;
+                _gpNavigating = false;
             }
         }
         else
