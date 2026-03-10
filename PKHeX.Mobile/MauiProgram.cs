@@ -1,4 +1,5 @@
 using PKHeX.Mobile.Services;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace PKHeX.Mobile;
 
@@ -8,7 +9,8 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder
-            .UseMauiApp<App>();
+            .UseMauiApp<App>()
+            .UseSkiaSharp();
 
         builder.Services.AddSingleton<IFileService, FileService>();
 

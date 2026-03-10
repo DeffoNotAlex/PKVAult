@@ -1,7 +1,12 @@
+using PKHeX.Core;
+
 namespace PKHeX.Mobile;
 
 public partial class App : Application
 {
+    /// <summary>The currently loaded save file, set by MainPage after a successful parse.</summary>
+    public static SaveFile? ActiveSave { get; set; }
+
     public App()
     {
         InitializeComponent();

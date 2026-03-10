@@ -18,11 +18,15 @@
                    HorizontalOptions="Center"
                    Opacity="0.6" />
 
-            <Button x:Name="LoadButton"
-                    Text="Load Save File"
-                    Clicked="OnLoadClicked"
-                    HorizontalOptions="Center"
-                    Margin="0,16,0,0" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="12" Margin="0,16,0,0">
+                <Button x:Name="LoadButton"
+                        Text="Load Save File"
+                        Clicked="OnLoadClicked" />
+                <Button x:Name="BoxButton"
+                        Text="View Boxes"
+                        IsVisible="False"
+                        Clicked="OnBoxClicked" />
+            </HorizontalStackLayout>
 
             <!-- Error display -->
             <Label x:Name="ErrorLabel"

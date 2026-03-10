@@ -1,4 +1,5 @@
 using PKHeX.Core;
+using PKHeX.Mobile.Pages;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile;
@@ -47,6 +48,8 @@ public partial class MainPage : ContentPage
 
     private void DisplaySaveInfo(SaveFile sav)
     {
+        App.ActiveSave = sav;
+
         GameLabel.Text = $"{sav.Version} — Generation {sav.Generation}";
         TrainerLabel.Text = sav.OT;
         IDLabel.Text = $"TID: {sav.TID16} / SID: {sav.SID16}";
@@ -54,6 +57,12 @@ public partial class MainPage : ContentPage
         StorageLabel.Text = $"{sav.BoxCount} boxes / {sav.SlotCount} slots";
 
         SaveInfoCard.IsVisible = true;
+        BoxButton.IsVisible = true;
+    }
+
+    private async void OnBoxClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BoxPage));
     }
 
     private void ShowError(string message)
