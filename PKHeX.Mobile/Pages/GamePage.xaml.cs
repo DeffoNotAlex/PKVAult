@@ -38,6 +38,9 @@ public partial class GamePage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
+        SpriteBgImage.Source ??= ImageSource.FromStream(
+            ct => FileSystem.OpenAppPackageFileAsync("sprite_bg.jpg").WaitAsync(ct));
+
         var sav = App.ActiveSave;
         if (sav is null) return;
 
