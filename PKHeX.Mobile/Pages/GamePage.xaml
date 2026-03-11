@@ -11,7 +11,10 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SCREEN — idle: trainer info  /  selected: stats  -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="0" BackgroundColor="#0D0D1F">
+        <Grid Grid.Row="0">
+
+            <!-- Background image spanning full top section -->
+            <Image x:Name="TopBgImage" Aspect="AspectFill" />
 
             <!-- ── IDLE STATE ── -->
             <Grid x:Name="TopIdlePanel" RowDefinitions="*,Auto" Padding="14,10">
@@ -50,42 +53,48 @@
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
                   ColumnDefinitions="2*,3*">
 
-                <!-- Left: animated sprite (WebView over static fallback) -->
+                <!-- Left: animated sprite (transparent canvas / dark WebView) -->
                 <Grid Grid.Column="0">
                     <skia:SKCanvasView x:Name="PreviewCanvas"
                                        PaintSurface="OnPreviewPaint" />
                     <WebView x:Name="SpriteWebView"
-                             BackgroundColor="Transparent"
+                             BackgroundColor="#06060F"
                              IsVisible="False" />
                 </Grid>
 
-                <!-- Right: hex radar chart + info + buttons -->
-                <Grid Grid.Column="1" RowDefinitions="*,Auto,Auto" Padding="6,4">
+                <!-- Right: floating semi-transparent stats panel -->
+                <Border Grid.Column="1"
+                        BackgroundColor="#CC0D0D1F"
+                        StrokeShape="RoundRectangle 14"
+                        Stroke="#22FFFFFF"
+                        Margin="6,8,8,8">
+                    <Grid RowDefinitions="*,Auto,Auto" Padding="6,4">
 
-                    <skia:SKCanvasView Grid.Row="0"
-                                       x:Name="RadarCanvas"
-                                       PaintSurface="OnRadarPaint" />
+                        <skia:SKCanvasView Grid.Row="0"
+                                           x:Name="RadarCanvas"
+                                           PaintSurface="OnRadarPaint" />
 
-                    <Label Grid.Row="1"
-                           x:Name="SelectedSpeciesLabel"
-                           TextColor="#EEEEFF" FontSize="12" FontAttributes="Bold"
-                           HorizontalOptions="Center" HorizontalTextAlignment="Center"
-                           Margin="0,2,0,0" />
+                        <Label Grid.Row="1"
+                               x:Name="SelectedSpeciesLabel"
+                               TextColor="#EEEEFF" FontSize="12" FontAttributes="Bold"
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center"
+                               Margin="0,2,0,0" />
 
-                    <HorizontalStackLayout Grid.Row="2"
-                                           HorizontalOptions="Center"
-                                           Spacing="10" Margin="0,6,0,6">
-                        <Button Text="✎ Edit"
-                                Clicked="OnEditClicked"
-                                BackgroundColor="#3A1A60" TextColor="#D0A0FF"
-                                FontSize="13" Padding="18,9" />
-                        <Button Text="✕ Back"
-                                Clicked="OnDeselectClicked"
-                                BackgroundColor="#1A1A30" TextColor="#6060A0"
-                                FontSize="12" Padding="12,7" />
-                    </HorizontalStackLayout>
+                        <HorizontalStackLayout Grid.Row="2"
+                                               HorizontalOptions="Center"
+                                               Spacing="10" Margin="0,6,0,6">
+                            <Button Text="✎ Edit"
+                                    Clicked="OnEditClicked"
+                                    BackgroundColor="#3A1A60" TextColor="#D0A0FF"
+                                    FontSize="13" Padding="18,9" />
+                            <Button Text="✕ Back"
+                                    Clicked="OnDeselectClicked"
+                                    BackgroundColor="#1A1A30" TextColor="#6060A0"
+                                    FontSize="12" Padding="12,7" />
+                        </HorizontalStackLayout>
 
-                </Grid>
+                    </Grid>
+                </Border>
 
             </Grid>
 
