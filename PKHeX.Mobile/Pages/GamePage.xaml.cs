@@ -330,7 +330,8 @@ public partial class GamePage : ContentPage
         {
             // First load: build HTML shell (background lives in XAML layer)
             SpriteWebView.Source = new HtmlWebViewSource { Html = BuildSpriteShell(primary, fallback) };
-            SpriteWebView.IsVisible = true;
+            SpriteWebView.IsVisible  = true;
+            PreviewCanvas.IsVisible  = false;
             _spriteWebViewReady = true;
         }
         else
@@ -509,6 +510,7 @@ public partial class GamePage : ContentPage
     {
         _previewPk = null;
         SpriteWebView.IsVisible    = false;
+        PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
     }
