@@ -30,7 +30,6 @@
                                     <VisualState x:Name="Normal">
                                         <VisualState.Setters>
                                             <Setter Property="BackgroundColor" Value="#111827" />
-                                            <Setter Property="Stroke" Value="Transparent" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Selected">

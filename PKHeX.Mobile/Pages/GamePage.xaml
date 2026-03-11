@@ -51,11 +51,13 @@
                   ColumnDefinitions="2*,3*">
 
                 <!-- Left: animated sprite (WebView over static fallback) -->
-                <Grid Grid.Column="0" BackgroundColor="#06060F">
+                <Grid Grid.Column="0">
+                    <!-- Background image — always visible -->
+                    <Image Source="sprite_bg.jpg" Aspect="AspectFill" />
                     <skia:SKCanvasView x:Name="PreviewCanvas"
                                        PaintSurface="OnPreviewPaint" />
                     <WebView x:Name="SpriteWebView"
-                             BackgroundColor="#06060F"
+                             BackgroundColor="Transparent"
                              IsVisible="False" />
                 </Grid>
 
