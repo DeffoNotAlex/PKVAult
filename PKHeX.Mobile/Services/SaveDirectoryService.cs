@@ -15,8 +15,9 @@ public record SaveEntry(
 
 public class SaveDirectoryService
 {
-    private const string PrefKey = "watched_dirs";
-    private const char Sep = '|';
+    private const string PrefKey     = "watched_dirs";
+    private const string FilePrefKey = "watched_files";
+    private const char   Sep         = '|';
 
     public List<string> GetWatchedDirectories()
     {
@@ -40,12 +41,106 @@ public class SaveDirectoryService
         Preferences.Default.Set(PrefKey, string.Join(Sep, dirs));
     }
 
+    public List<string> GetWatchedFiles()
+    {
+        var raw = Preferences.Default.Get(FilePrefKey, "");
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+        return [.. raw.Split(Sep, StringSplitOptions.RemoveEmptyEntries)];
+    }
+
+    public void AddFile(string uri)
+    {
+        var files = GetWatchedFiles();
+        if (files.Contains(uri)) return;
+        files.Add(uri);
+        Preferences.Default.Set(FilePrefKey, string.Join(Sep, files));
+    }
+
+    public void RemoveFile(string uri)
+    {
+        var files = GetWatchedFiles();
+        files.Remove(uri);
+        Preferences.Default.Set(FilePrefKey, string.Join(Sep, files));
+    }
+
     public async Task<List<SaveEntry>> ScanAllAsync()
     {
         var result = new List<SaveEntry>();
         foreach (var dir in GetWatchedDirectories())
             result.AddRange(await ScanDirectoryAsync(dir));
+        foreach (var file in GetWatchedFiles())
+        {
+            var entry = await ScanFileAsync(file);
+            if (entry != null) result.Add(entry);
+        }
         return result;
+    }
+
+    public async Task<SaveEntry?> ScanFileAsync(string fileUri)
+    {
+#if ANDROID
+        return await Task.Run(() =>
+        {
+            try
+            {
+                var context = Android.App.Application.Context;
+                var uri = global::Android.Net.Uri.Parse(fileUri);
+                if (uri == null) return null;
+
+                using var stream = context.ContentResolver?.OpenInputStream(uri);
+                if (stream == null) return null;
+                using var ms = new MemoryStream();
+                stream.CopyTo(ms);
+                var data = ms.ToArray();
+                if (data.Length == 0) return null;
+
+                if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
+
+                // Query display name
+                string[] proj = [global::Android.Provider.OpenableColumns.DisplayName];
+                var name = "";
+                using var cursor = context.ContentResolver?.Query(uri, proj, null, null, null);
+                if (cursor != null && cursor.MoveToFirst())
+                    name = cursor.GetString(0) ?? "";
+
+                return new SaveEntry(
+                    FileUri: fileUri,
+                    FileName: name,
+                    DirectoryUri: fileUri,
+                    Version: sav.Version,
+                    Generation: sav.Generation,
+                    TrainerName: sav.OT,
+                    TrainerID: $"{sav.TID16}/{sav.SID16}",
+                    PlayTime: sav.PlayTimeString,
+                    BoxCount: sav.BoxCount,
+                    SlotCount: sav.SlotCount,
+                    RawData: data);
+            }
+            catch { return null; }
+        });
+#else
+        return await Task.Run(() =>
+        {
+            try
+            {
+                var data = File.ReadAllBytes(fileUri);
+                if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
+                return new SaveEntry(
+                    FileUri: fileUri,
+                    FileName: Path.GetFileName(fileUri),
+                    DirectoryUri: fileUri,
+                    Version: sav.Version,
+                    Generation: sav.Generation,
+                    TrainerName: sav.OT,
+                    TrainerID: $"{sav.TID16}/{sav.SID16}",
+                    PlayTime: sav.PlayTimeString,
+                    BoxCount: sav.BoxCount,
+                    SlotCount: sav.SlotCount,
+                    RawData: data);
+            }
+            catch { return null; }
+        });
+#endif
     }
 
     public async Task<List<SaveEntry>> ScanDirectoryAsync(string dirUri)

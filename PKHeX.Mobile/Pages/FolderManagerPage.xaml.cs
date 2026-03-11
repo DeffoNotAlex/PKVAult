@@ -5,13 +5,15 @@ namespace PKHeX.Mobile.Pages;
 public partial class FolderManagerPage : ContentPage
 {
     private readonly SaveDirectoryService _dirService = new();
-    private List<string> _dirs = [];
+    private List<WatchedEntry> _items = [];
     private int _listCursor = -1;
 
 #if ANDROID
     private readonly IDirectoryPicker _dirPicker = new Platforms.Android.AndroidDirectoryPicker();
+    private readonly IFilePicker      _filePicker = new Platforms.Android.AndroidFilePicker();
 #else
-    private readonly IDirectoryPicker _dirPicker = new NullDirectoryPicker();
+    private readonly IDirectoryPicker _dirPicker  = new NullDirectoryPicker();
+    private readonly IFilePicker      _filePicker = new NullFilePicker();
 #endif
 
     public FolderManagerPage()
@@ -38,10 +40,13 @@ public partial class FolderManagerPage : ContentPage
 
     private void RefreshList()
     {
-        _dirs = _dirService.GetWatchedDirectories();
+        _items = [
+            .. _dirService.GetWatchedDirectories().Select(u => new WatchedEntry(u, false)),
+            .. _dirService.GetWatchedFiles().Select(u => new WatchedEntry(u, true)),
+        ];
         DirList.ItemsSource = null;
-        DirList.ItemsSource = _dirs;
-        _listCursor = _dirs.Count > 0 ? 0 : -1;
+        DirList.ItemsSource = _items;
+        _listCursor = _items.Count > 0 ? 0 : -1;
     }
 
     private async void OnAddFolderClicked(object sender, EventArgs e)
@@ -52,19 +57,26 @@ public partial class FolderManagerPage : ContentPage
         RefreshList();
     }
 
+    private async void OnAddFileClicked(object sender, EventArgs e)
+    {
+        var uri = await _filePicker.PickFileAsync();
+        if (uri is null) return;
+        _dirService.AddFile(uri);
+        RefreshList();
+    }
+
     private void OnRemoveClicked(object sender, EventArgs e)
     {
-        if (sender is Button btn && btn.CommandParameter is string uri)
+        if (sender is Button btn && btn.CommandParameter is WatchedEntry entry)
         {
-            _dirService.RemoveDirectory(uri);
+            if (entry.IsFile) _dirService.RemoveFile(entry.Uri);
+            else              _dirService.RemoveDirectory(entry.Uri);
             RefreshList();
         }
     }
 
     private async void OnBackClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync("..");
-    }
+        => await Shell.Current.GoToAsync("..");
 
 #if ANDROID
     private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
@@ -80,45 +92,57 @@ public partial class FolderManagerPage : ContentPage
             case Android.Views.Keycode.ButtonB:
                 _ = Shell.Current.GoToAsync("..");
                 break;
-
             case Android.Views.Keycode.DpadUp:
-                MoveCursor(-1);
-                break;
-
+                MoveCursor(-1); break;
             case Android.Views.Keycode.DpadDown:
-                MoveCursor(+1);
-                break;
-
+                MoveCursor(+1); break;
             case Android.Views.Keycode.ButtonX:
-                RemoveFocused();
-                break;
-
-            case Android.Views.Keycode.ButtonA:
-                // items are read-only, no action
-                break;
+                RemoveFocused(); break;
         }
     }
 #endif
 
     private void MoveCursor(int delta)
     {
-        if (_dirs.Count == 0) return;
-        _listCursor = Math.Clamp(_listCursor + delta, 0, _dirs.Count - 1);
-        DirList.SelectedItem = _dirs[_listCursor];
+        if (_items.Count == 0) return;
+        _listCursor = Math.Clamp(_listCursor + delta, 0, _items.Count - 1);
+        DirList.SelectedItem = _items[_listCursor];
         DirList.ScrollTo(_listCursor, -1, ScrollToPosition.MakeVisible, false);
     }
 
     private void RemoveFocused()
     {
-        if (_listCursor < 0 || _listCursor >= _dirs.Count) return;
-        var uri = _dirs[_listCursor];
-        _dirService.RemoveDirectory(uri);
+        if (_listCursor < 0 || _listCursor >= _items.Count) return;
+        var entry = _items[_listCursor];
+        if (entry.IsFile) _dirService.RemoveFile(entry.Uri);
+        else              _dirService.RemoveDirectory(entry.Uri);
         RefreshList();
     }
 
-    // Stub for non-Android platforms
+    // ── View model ────────────────────────────────────────────────────────
+
+    public sealed record WatchedEntry(string Uri, bool IsFile)
+    {
+        public string Icon  => IsFile ? "📄" : "📁";
+        public string Label => ExtractLabel(Uri);
+
+        private static string ExtractLabel(string uri)
+        {
+            var decoded = Uri.UnescapeDataString(uri);
+            var idx = Math.Max(decoded.LastIndexOf(':'), decoded.LastIndexOf('/'));
+            return idx >= 0 && idx < decoded.Length - 1 ? decoded[(idx + 1)..] : decoded;
+        }
+    }
+
+    // ── Stubs for non-Android ─────────────────────────────────────────────
+
     private sealed class NullDirectoryPicker : IDirectoryPicker
     {
         public Task<string?> PickDirectoryAsync() => Task.FromResult<string?>(null);
+    }
+
+    private sealed class NullFilePicker : IFilePicker
+    {
+        public Task<string?> PickFileAsync() => Task.FromResult<string?>(null);
     }
 }

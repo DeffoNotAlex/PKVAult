@@ -20,7 +20,9 @@ namespace PKHeX.Mobile;
 public class MainActivity : MauiAppCompatActivity
 {
     public const int RequestPickDirectory = 9001;
+    public const int RequestPickFile      = 9002;
     public static event Action<Android.Net.Uri?>? DirectoryPickResult;
+    public static event Action<Android.Net.Uri?>? FilePickResult;
 
     // Previous analog axis positions for edge detection
     private float _prevHatX, _prevHatY;
@@ -81,8 +83,8 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnActivityResult(requestCode, resultCode, data);
         if (requestCode == RequestPickDirectory)
-        {
             DirectoryPickResult?.Invoke(resultCode == Result.Ok ? data?.Data : null);
-        }
+        else if (requestCode == RequestPickFile)
+            FilePickResult?.Invoke(resultCode == Result.Ok ? data?.Data : null);
     }
 }

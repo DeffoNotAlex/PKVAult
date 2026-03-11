@@ -57,7 +57,7 @@
                     StrokeShape="RoundRectangle 6" Padding="12,10">
                 <Grid ColumnDefinitions="*,Auto">
                     <VerticalStackLayout Grid.Column="0" Spacing="4">
-                        <Label Text="Manage Save Folders"
+                        <Label Text="Manage Save Folders/Files"
                                FontAttributes="Bold" FontSize="15"
                                TextColor="#EEEEFF" />
                         <Label Text="Add or remove folders scanned for save files on startup."

@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PKHeX.Mobile.Pages.FolderManagerPage"
-             Title="Watched Folders"
+             Title="Manage Save Folders/Files"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#0B0F1E">
 
@@ -14,38 +14,41 @@
                     Clicked="OnBackClicked"
                     BackgroundColor="Transparent" TextColor="#4F80FF"
                     FontSize="14" Padding="0,6" />
-            <Label Grid.Column="1" Text="Watched Folders"
+            <Label Grid.Column="1" Text="Save Folders / Files"
                    FontAttributes="Bold" FontSize="20" TextColor="#EEEEFF"
                    VerticalOptions="Center" HorizontalOptions="Center" />
         </Grid>
 
         <!-- Gamepad hint -->
         <Label Grid.Row="1"
-               Text="↕ scroll  A select  X remove  B back"
+               Text="↕ scroll  X remove  B back"
                FontSize="10" TextColor="#404060"
                HorizontalOptions="End" Margin="0,0,0,8" />
 
-        <!-- Directory list -->
+        <!-- Directory/file list -->
         <CollectionView x:Name="DirList" Grid.Row="2"
                         SelectionMode="Single"
                         BackgroundColor="Transparent">
             <CollectionView.EmptyView>
-                <Label Text="No folders added yet. Tap '＋ Add Folder' below."
+                <Label Text="No folders or files added yet."
                        TextColor="#8888BB" FontSize="14"
                        HorizontalOptions="Center" VerticalOptions="Center"
                        Margin="24,40" HorizontalTextAlignment="Center" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
+                <DataTemplate>
                     <Border Margin="0,0,0,4" StrokeShape="RoundRectangle 6"
                             BackgroundColor="#111827" Stroke="Transparent" Padding="12,10">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0"
-                                   Text="{Binding .}"
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Label Grid.Column="0" Text="{Binding Icon}"
+                                   FontSize="16" VerticalOptions="Center"
+                                   Margin="0,0,8,0" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding Label}"
                                    TextColor="#EEEEFF" FontSize="13"
                                    LineBreakMode="MiddleTruncation"
                                    VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="✕ Remove"
+                            <Button Grid.Column="2" Text="✕"
                                     Clicked="OnRemoveClicked"
                                     CommandParameter="{Binding .}"
                                     BackgroundColor="#2A1A1A" TextColor="#FF6060"
@@ -57,16 +60,25 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Add folder button -->
-        <Border Grid.Row="3" StrokeShape="RoundRectangle 8"
-                BackgroundColor="#1D3A70" Stroke="#4F80FF"
-                Padding="0" Margin="0,12,0,12">
-            <Button Text="＋ Add Folder"
-                    Clicked="OnAddFolderClicked"
-                    BackgroundColor="Transparent" TextColor="#A0C0FF"
-                    FontSize="16" FontAttributes="Bold"
-                    Padding="0,14" HorizontalOptions="Fill" />
-        </Border>
+        <!-- Add buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,12,0,12">
+            <Border Grid.Column="0" StrokeShape="RoundRectangle 8"
+                    BackgroundColor="#1D3A70" Stroke="#4F80FF" Padding="0">
+                <Button Text="📁 Add Folder"
+                        Clicked="OnAddFolderClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" FontAttributes="Bold"
+                        Padding="0,14" HorizontalOptions="Fill" />
+            </Border>
+            <Border Grid.Column="1" StrokeShape="RoundRectangle 8"
+                    BackgroundColor="#1D3A70" Stroke="#4F80FF" Padding="0">
+                <Button Text="📄 Add File"
+                        Clicked="OnAddFileClicked"
+                        BackgroundColor="Transparent" TextColor="#A0C0FF"
+                        FontSize="15" FontAttributes="Bold"
+                        Padding="0,14" HorizontalOptions="Fill" />
+            </Border>
+        </Grid>
 
     </Grid>
 
