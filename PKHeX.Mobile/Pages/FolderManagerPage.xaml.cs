@@ -10,10 +10,10 @@ public partial class FolderManagerPage : ContentPage
 
 #if ANDROID
     private readonly IDirectoryPicker _dirPicker = new Platforms.Android.AndroidDirectoryPicker();
-    private readonly IFilePicker      _filePicker = new Platforms.Android.AndroidFilePicker();
+    private readonly ISaveFilePicker  _filePicker = new Platforms.Android.AndroidFilePicker();
 #else
     private readonly IDirectoryPicker _dirPicker  = new NullDirectoryPicker();
-    private readonly IFilePicker      _filePicker = new NullFilePicker();
+    private readonly ISaveFilePicker  _filePicker = new NullFilePicker();
 #endif
 
     public FolderManagerPage()
@@ -141,7 +141,7 @@ public partial class FolderManagerPage : ContentPage
         public Task<string?> PickDirectoryAsync() => Task.FromResult<string?>(null);
     }
 
-    private sealed class NullFilePicker : IFilePicker
+    private sealed class NullFilePicker : ISaveFilePicker
     {
         public Task<string?> PickFileAsync() => Task.FromResult<string?>(null);
     }

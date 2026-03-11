@@ -4,7 +4,7 @@ using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Platforms.Android;
 
-public class AndroidFilePicker : IFilePicker
+public class AndroidFilePicker : ISaveFilePicker
 {
     public async Task<string?> PickFileAsync()
     {
