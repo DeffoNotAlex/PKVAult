@@ -62,12 +62,16 @@
                              IsVisible="False" />
                 </Grid>
 
-                <!-- Right: floating semi-transparent stats panel -->
+                <!-- Right: floating semi-transparent stats panel (always square) -->
                 <Border Grid.Column="1"
+                        x:Name="StatsPanelBorder"
                         BackgroundColor="#CC0D0D1F"
                         StrokeShape="RoundRectangle 14"
                         Stroke="#22FFFFFF"
-                        Margin="6,8,8,8">
+                        Margin="6,8,8,8"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        SizeChanged="OnStatsPanelSizeChanged">
                     <Grid RowDefinitions="*,Auto,Auto" Padding="6,4">
 
                         <skia:SKCanvasView Grid.Row="0"

@@ -367,6 +367,18 @@ public partial class GamePage : ContentPage
         """;
 
     // ──────────────────────────────────────────────
+    //  Stats panel — keep square on resize
+    // ──────────────────────────────────────────────
+
+    private void OnStatsPanelSizeChanged(object sender, EventArgs e)
+    {
+        var side = Math.Min(StatsPanelBorder.Width, StatsPanelBorder.Height);
+        if (side <= 0) return;
+        StatsPanelBorder.WidthRequest  = side;
+        StatsPanelBorder.HeightRequest = side;
+    }
+
+    // ──────────────────────────────────────────────
     //  Touch input
     // ──────────────────────────────────────────────
 
