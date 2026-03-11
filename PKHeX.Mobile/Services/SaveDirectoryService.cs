@@ -97,7 +97,7 @@ public class SaveDirectoryService
                 if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
 
                 // Query display name
-                string[] proj = [global::Android.Provider.OpenableColumns.DisplayName];
+                string[] proj = [global::Android.Provider.IOpenableColumns.DisplayName];
                 var name = "";
                 using var cursor = context.ContentResolver?.Query(uri, proj, null, null, null);
                 if (cursor != null && cursor.MoveToFirst())
@@ -196,7 +196,7 @@ public class SaveDirectoryService
                     if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) continue;
 
                     entries.Add(new SaveEntry(
-                        FileUri: fileUri.ToString(),
+                        FileUri: fileUri.ToString()!,
                         FileName: name,
                         DirectoryUri: dirUri,
                         Version: sav.Version,

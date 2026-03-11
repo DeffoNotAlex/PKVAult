@@ -128,7 +128,7 @@ public partial class FolderManagerPage : ContentPage
 
         private static string ExtractLabel(string uri)
         {
-            var decoded = Uri.UnescapeDataString(uri);
+            var decoded = System.Uri.UnescapeDataString(uri);
             var idx = Math.Max(decoded.LastIndexOf(':'), decoded.LastIndexOf('/'));
             return idx >= 0 && idx < decoded.Length - 1 ? decoded[(idx + 1)..] : decoded;
         }
