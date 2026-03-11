@@ -21,7 +21,8 @@ public partial class GamePage : ContentPage
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
-    private bool _spriteWebViewReady; // true after first full HTML load
+    private bool   _spriteWebViewReady; // true after first full HTML load
+    private string? _spriteBgDataUri;   // cached base64 background for WebView HTML
 
     public GamePage()
     {
@@ -38,9 +39,6 @@ public partial class GamePage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
-        SpriteBgImage.Source ??= ImageSource.FromStream(
-            ct => FileSystem.OpenAppPackageFileAsync("sprite_bg.jpg").WaitAsync(ct));
-
         var sav = App.ActiveSave;
         if (sav is null) return;
 
@@ -331,8 +329,9 @@ public partial class GamePage : ContentPage
 
         if (!_spriteWebViewReady)
         {
-            // First load: build HTML shell (background lives in XAML layer)
-            SpriteWebView.Source = new HtmlWebViewSource { Html = BuildSpriteShell(primary, fallback) };
+            // First load: embed background as base64 in HTML (Android WebView ignores transparent bg)
+            _spriteBgDataUri ??= await LoadSpriteBgAsync();
+            SpriteWebView.Source = new HtmlWebViewSource { Html = BuildSpriteShell(primary, fallback, _spriteBgDataUri) };
             SpriteWebView.IsVisible  = true;
             PreviewCanvas.IsVisible  = false;
             _spriteWebViewReady = true;
@@ -351,6 +350,18 @@ public partial class GamePage : ContentPage
         }
     }
 
+    private static async Task<string?> LoadSpriteBgAsync()
+    {
+        try
+        {
+            await using var stream = await FileSystem.OpenAppPackageFileAsync("sprite_bg.jpg");
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            return "data:image/jpeg;base64," + Convert.ToBase64String(ms.ToArray());
+        }
+        catch { return null; }
+    }
+
     private static string ToShowdownSlug(string speciesName) => speciesName
         .ToLowerInvariant()
         .Replace("♀", "-f").Replace("♂", "-m")
@@ -358,17 +369,23 @@ public partial class GamePage : ContentPage
         .Replace("'", "").Replace(":", "")
         .Replace("é", "e");
 
-    private static string BuildSpriteShell(string primary, string fallback) => $$"""
-        <!DOCTYPE html>
-        <html><head>
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
-        </head><body>
-        <img id="s" src="{{primary}}"
-             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
-             onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
-        </body></html>
-        """;
+    private static string BuildSpriteShell(string primary, string fallback, string? bgDataUri)
+    {
+        var bgCss = bgDataUri != null
+            ? $"background:url('{bgDataUri}') center/cover no-repeat"
+            : "background:#06060f";
+        return $$"""
+            <!DOCTYPE html>
+            <html><head>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <style>*{margin:0;padding:0}body{{{bgCss}};display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
+            </head><body>
+            <img id="s" src="{{primary}}"
+                 style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
+                 onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
+            </body></html>
+            """;
+    }
 
     // ──────────────────────────────────────────────
     //  Touch input

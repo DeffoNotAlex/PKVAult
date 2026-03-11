@@ -52,8 +52,6 @@
 
                 <!-- Left: animated sprite (WebView over static fallback) -->
                 <Grid Grid.Column="0">
-                    <!-- Background image — always visible -->
-                    <Image x:Name="SpriteBgImage" Aspect="AspectFill" />
                     <skia:SKCanvasView x:Name="PreviewCanvas"
                                        PaintSurface="OnPreviewPaint" />
                     <WebView x:Name="SpriteWebView"
