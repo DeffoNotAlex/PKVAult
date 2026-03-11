@@ -58,7 +58,7 @@
                     <skia:SKCanvasView x:Name="PreviewCanvas"
                                        PaintSurface="OnPreviewPaint" />
                     <WebView x:Name="SpriteWebView"
-                             BackgroundColor="#06060F"
+                             BackgroundColor="Transparent"
                              IsVisible="False" />
                 </Grid>
 

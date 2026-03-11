@@ -358,7 +358,7 @@ public partial class GamePage : ContentPage
         <!DOCTYPE html>
         <html><head>
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>*{margin:0;padding:0}body{background:#06060f;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
+        <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{primary}}"
              style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
