@@ -14,7 +14,7 @@
         <Grid Grid.Row="0">
 
             <!-- Background image spanning full top section -->
-            <Image x:Name="TopBgImage" Aspect="AspectFill" />
+            <Image Source="sprite_bg.jpg" Aspect="AspectFill" />
 
             <!-- ── IDLE STATE ── -->
             <Grid x:Name="TopIdlePanel" RowDefinitions="*,Auto" Padding="14,10">

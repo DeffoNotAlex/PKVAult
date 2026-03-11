@@ -38,9 +38,6 @@ public partial class GamePage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
-        TopBgImage.Source ??= ImageSource.FromStream(
-            ct => FileSystem.OpenAppPackageFileAsync("sprite_bg.jpg").WaitAsync(ct));
-
         var sav = App.ActiveSave;
         if (sav is null) return;
 
