@@ -49,6 +49,22 @@ public partial class MainPage : ContentPage
         SaveCardsList.ItemsSource = _saveCards;
         if (_saveCards.Count > 0 && _cardCursor < 0)
             _cardCursor = 0;
+
+        // Restore the active save highlight when returning from GamePage
+        if (App.ActiveSaveFileUri is { Length: > 0 } uri)
+        {
+            var active = _saveCards.FirstOrDefault(c => c.Entry.FileUri == uri);
+            if (active != null)
+            {
+                active.IsLoaded = true;
+                _selectedSave   = active.Entry;
+                _cardCursor     = _saveCards.IndexOf(active);
+                _gpNavigating   = true;
+                SaveCardsList.SelectedItem = active;
+                _gpNavigating   = false;
+            }
+        }
+
         UpdateHighlight();
     }
 
