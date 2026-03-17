@@ -844,15 +844,7 @@ public partial class GamePage : ContentPage
         }
 
         App.BankSlideDir = dir;
-
-        // Explicitly unsubscribe now so BankPage has exclusive input while shown
-#if ANDROID
-        GamepadRouter.KeyReceived        -= OnGamepadKey;
-        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
-#endif
-
-        var bank = new BankPage();
-        await Navigation.PushModalAsync(bank, animated: false);
+        await Shell.Current.GoToAsync(nameof(BankPage), false);
     }
 
     private async Task RunLegalityBadgesAsync(PKM[] snapshot)

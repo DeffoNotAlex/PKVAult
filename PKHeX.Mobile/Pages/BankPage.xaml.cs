@@ -404,18 +404,12 @@ public partial class BankPage : ContentPage
             _movePk   = null;
         }
 
-        // Update slide direction if caller specified one (L1/R1)
         if (exitDir != 0) App.BankSlideDir = exitDir;
-
-#if ANDROID
-        GamepadRouter.KeyReceived        -= OnGamepadKey;
-        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
-#endif
 
         double exitX = App.BankSlideDir < 0 ? -500 : 500;
         await RootGrid.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
         RootGrid.TranslationX = 0;
-        await Navigation.PopModalAsync(animated: false);
+        await Shell.Current.GoToAsync("..", false);
     }
 
     // ──────────────────────────────────────────────
