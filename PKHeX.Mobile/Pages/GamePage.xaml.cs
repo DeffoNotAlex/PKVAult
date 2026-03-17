@@ -25,9 +25,9 @@ public partial class GamePage : ContentPage
     private bool _showLegalityBadges;
     private bool?[] _legalityCache = [];
 
-    // Toolbar focus
-    private bool _toolbarFocused;
-    private int  _toolbarCursor; // 0 = Save, 1 = Export
+    // Action menu (Start button)
+    private bool _menuOpen;
+    private int  _menuCursor; // 0 = Save, 1 = Export
 
     // Move mode
     private bool _moveMode;
@@ -576,22 +576,24 @@ public partial class GamePage : ContentPage
 
     private void HandleGamepadKey(Android.Views.Keycode keyCode)
     {
-        // Toolbar focus mode intercepts all input
-        if (_toolbarFocused)
+        // Action menu intercepts all input while open
+        if (_menuOpen)
         {
             switch (keyCode)
             {
+                case Android.Views.Keycode.DpadUp:
                 case Android.Views.Keycode.DpadLeft:
-                    _toolbarCursor = 0; UpdateToolbarHighlight(); break;
-                case Android.Views.Keycode.DpadRight:
-                    _toolbarCursor = 1; UpdateToolbarHighlight(); break;
+                    _menuCursor = 0; UpdateMenuHighlight(); break;
                 case Android.Views.Keycode.DpadDown:
-                case Android.Views.Keycode.ButtonB:
-                    _toolbarFocused = false; UpdateToolbarHighlight(); break;
+                case Android.Views.Keycode.DpadRight:
+                    _menuCursor = 1; UpdateMenuHighlight(); break;
                 case Android.Views.Keycode.ButtonA:
-                    if (_toolbarCursor == 0) OnSaveClicked(this, EventArgs.Empty);
-                    else                     OnExportClicked(this, EventArgs.Empty);
-                    _toolbarFocused = false; UpdateToolbarHighlight(); break;
+                    if (_menuCursor == 0) OnSaveClicked(this, EventArgs.Empty);
+                    else                  OnExportClicked(this, EventArgs.Empty);
+                    CloseActionMenu(); break;
+                case Android.Views.Keycode.ButtonB:
+                case Android.Views.Keycode.ButtonStart:
+                    CloseActionMenu(); break;
             }
             return;
         }
@@ -633,8 +635,8 @@ public partial class GamePage : ContentPage
                 { EnterMoveMode(); break; }
                 OnGiftsClicked(this, EventArgs.Empty);
                 break;
-            case Android.Views.Keycode.ButtonSelect: OnSaveClicked(this, EventArgs.Empty); break;
-            case Android.Views.Keycode.ButtonStart:  OnExportClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonStart:  OpenActionMenu(); break;
         }
     }
 #endif
@@ -645,16 +647,6 @@ public partial class GamePage : ContentPage
         if (delta == +1 && _cursorSlot % Columns == Columns - 1) return;
 
         int next = _cursorSlot + delta;
-
-        // Up from top row → focus toolbar
-        if (next < 0)
-        {
-            _toolbarFocused = true;
-            _toolbarCursor  = 0;
-            UpdateToolbarHighlight();
-            return;
-        }
-
         if ((uint)next >= (uint)_currentBox.Length) return;
 
         _cursorSlot = next;
@@ -662,12 +654,26 @@ public partial class GamePage : ContentPage
         BoxCanvas.InvalidateSurface();
     }
 
-    private void UpdateToolbarHighlight()
+    private void OpenActionMenu()
     {
-        bool sf = _toolbarFocused && _toolbarCursor == 0;
-        bool ef = _toolbarFocused && _toolbarCursor == 1;
-        SaveBtn.BackgroundColor   = sf ? Color.FromArgb("#2A6A2A") : Color.FromArgb("#1A3A1A");
-        ExportBtn.BackgroundColor = ef ? Color.FromArgb("#4A2A90") : Color.FromArgb("#221550");
+        _menuOpen   = true;
+        _menuCursor = 0;
+        ActionMenuOverlay.IsVisible = true;
+        UpdateMenuHighlight();
+    }
+
+    private void CloseActionMenu()
+    {
+        _menuOpen = false;
+        ActionMenuOverlay.IsVisible = false;
+    }
+
+    private void UpdateMenuHighlight()
+    {
+        MenuItem_Save.BackgroundColor   = _menuCursor == 0 ? Color.FromArgb("#2A5A2A") : Color.FromArgb("#1A3A1A");
+        MenuItem_Export.BackgroundColor = _menuCursor == 1 ? Color.FromArgb("#3A2070") : Color.FromArgb("#1D1040");
+        MenuItem_Save.Stroke            = _menuCursor == 0 ? Color.FromArgb("#40CC40") : Colors.Transparent;
+        MenuItem_Export.Stroke          = _menuCursor == 1 ? Color.FromArgb("#8060DD") : Colors.Transparent;
     }
 
     // ──────────────────────────────────────────────
