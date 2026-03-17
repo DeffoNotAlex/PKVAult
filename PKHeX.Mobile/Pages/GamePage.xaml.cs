@@ -707,6 +707,12 @@ public partial class GamePage : ContentPage
             _previewSpecies = key;
             LoadAnimatedSprite(pk);
         }
+        else if (_spriteWebViewReady)
+        {
+            // Restore visibility after passing through an empty slot (ShowIdlePanel hides the WebView)
+            SpriteWebView.IsVisible = true;
+            PreviewCanvas.IsVisible = false;
+        }
 
         PreviewCanvas.InvalidateSurface();
         StartRadarAnimation(GetRadarStats(pk));
