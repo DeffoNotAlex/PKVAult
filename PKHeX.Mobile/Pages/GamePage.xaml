@@ -30,7 +30,7 @@
                     <Label Grid.Column="1"
                            TextColor="#303850" FontSize="10"
                            HorizontalOptions="End" VerticalOptions="End"
-                           Text="A: select  B: main menu&#10;X: search  Y: gifts&#10;⊙: settings  ▶: export&#10;L/R: prev / next box" />
+                           Text="A: select  B: back&#10;X: search  Y: move/gifts&#10;⊙: settings  ▶: export&#10;L/R: prev / next box" />
                 </Grid>
 
                 <!-- Nav buttons -->

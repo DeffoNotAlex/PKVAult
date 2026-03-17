@@ -24,7 +24,10 @@
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2" Margin="8,0,0,0">
                 <Label x:Name="SpeciesLabel" FontSize="18" FontAttributes="Bold"
                        TextColor="#EEEEFF" />
-                <Label x:Name="SubtitleLabel" FontSize="13" TextColor="#8888BB" />
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <Label x:Name="SubtitleLabel" FontSize="13" TextColor="#8888BB" />
+                    <Label x:Name="LegalityBadge" FontSize="13" FontAttributes="Bold" Text="" />
+                </HorizontalStackLayout>
                 <Label Text="↕ row  ◀▶ change  A keyboard  L/R tabs  B back  ▶ save"
                        FontSize="9" TextColor="#404060" />
             </VerticalStackLayout>
@@ -38,7 +41,7 @@
         </Grid>
 
         <!-- Row 1: Tab bar -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="0"
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="0"
               BackgroundColor="#0B0F1E">
             <Button x:Name="TabStats"  Grid.Column="0" Text="Stats"
                     Clicked="OnTabClicked"
@@ -53,6 +56,10 @@
                     BackgroundColor="#1A2035" TextColor="#8888BB"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabOT"    Grid.Column="3" Text="OT"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    FontSize="13" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabLegal" Grid.Column="4" Text="⚖"
                     Clicked="OnTabClicked"
                     BackgroundColor="#1A2035" TextColor="#8888BB"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
@@ -619,6 +626,14 @@
                         </Grid>
                     </Border>
 
+                </VerticalStackLayout>
+
+                <!-- ── LEGAL ── -->
+                <VerticalStackLayout x:Name="LegalPanel" IsVisible="False" Spacing="6">
+                    <Label x:Name="LegalityVerdictLabel"
+                           FontSize="22" FontAttributes="Bold"
+                           HorizontalOptions="Center" Margin="0,20,0,12" />
+                    <VerticalStackLayout x:Name="LegalityIssuesList" Spacing="3" Padding="4,0" />
                 </VerticalStackLayout>
 
             </Grid>

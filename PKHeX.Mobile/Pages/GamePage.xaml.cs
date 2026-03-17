@@ -23,6 +23,12 @@ public partial class GamePage : ContentPage
     private bool _loadingBox;
     private bool _spriteWebViewReady; // true after first full HTML load
 
+    // Move mode
+    private bool _moveMode;
+    private PKM? _movePk;
+    private int  _moveSourceBox;
+    private int  _moveSourceSlot;
+
     // Radar animation
     private float[]                  _radarCurrent = new float[6];
     private float                    _radarVisMax  = 255f;
@@ -191,6 +197,28 @@ public partial class GamePage : ContentPage
                     Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true,
                 };
                 canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+            }
+
+            if (_moveMode)
+            {
+                if (isCursor)
+                {
+                    using var p = new SKPaint
+                    {
+                        Color = new SKColor(60, 220, 110, 240),
+                        Style = SKPaintStyle.Stroke, StrokeWidth = 3.5f, IsAntialias = true,
+                    };
+                    canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+                }
+                else if (_moveSourceBox == _boxIndex && i == _moveSourceSlot)
+                {
+                    using var p = new SKPaint
+                    {
+                        Color = new SKColor(220, 80, 60, 190),
+                        Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true,
+                    };
+                    canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+                }
             }
         }
     }
@@ -496,12 +524,19 @@ public partial class GamePage : ContentPage
         if ((uint)index >= (uint)_currentBox.Length) return;
 
         _cursorSlot = index;
-        UpdateTopPanel();   // stats update immediately on any tap/cursor move
+
+        if (_moveMode)
+        {
+            ExecuteMove();
+            return;
+        }
+
+        UpdateTopPanel();
 
         if (_currentBox[index].Species != 0)
         {
-            if (index == _selectedSlot) _ = OpenEditor();  // tap selected again → edit
-            else SelectSlot(index);                         // tap new slot → select
+            if (index == _selectedSlot) _ = OpenEditor();
+            else SelectSlot(index);
         }
         else
         {
@@ -530,14 +565,16 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.DpadRight: MoveCursor(+1);       break;
 
             case Android.Views.Keycode.ButtonA:
+                if (_moveMode) { ExecuteMove(); break; }
                 if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
                 {
-                    if (_cursorSlot == _selectedSlot) _ = OpenEditor();   // 2nd A on same slot → edit
-                    else SelectSlot(_cursorSlot);                          // 1st A / new slot → select
+                    if (_cursorSlot == _selectedSlot) _ = OpenEditor();
+                    else SelectSlot(_cursorSlot);
                 }
                 break;
 
             case Android.Views.Keycode.ButtonB:
+                if (_moveMode) { CancelMoveMode(); break; }
                 if (_selectedSlot >= 0) DeselectSlot();
                 else OnMenuClicked(this, EventArgs.Empty);
                 break;
@@ -550,8 +587,12 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.Button6:
                 OnNextBox(this, EventArgs.Empty); break;
 
-            case Android.Views.Keycode.ButtonX:      OnSearchClicked(this, EventArgs.Empty);  break;
-            case Android.Views.Keycode.ButtonY:      OnGiftsClicked(this, EventArgs.Empty);   break;
+            case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonY:
+                if (_moveMode) { CancelMoveMode(); break; }
+                if (_selectedSlot >= 0) { EnterMoveMode(); break; }
+                OnGiftsClicked(this, EventArgs.Empty);
+                break;
             case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonStart:  OnExportClicked(this, EventArgs.Empty);  break;
         }
@@ -625,6 +666,42 @@ public partial class GamePage : ContentPage
     // ──────────────────────────────────────────────
     //  Selection state machine (gold outline only)
     // ──────────────────────────────────────────────
+
+    // ──────────────────────────────────────────────
+    //  Move mode
+    // ──────────────────────────────────────────────
+
+    private void EnterMoveMode()
+    {
+        if (_selectedSlot < 0 || _sav is null) return;
+        if (_currentBox[_selectedSlot].Species == 0) return;
+        _movePk         = _currentBox[_selectedSlot].Clone();
+        _moveSourceBox  = _boxIndex;
+        _moveSourceSlot = _selectedSlot;
+        _moveMode       = true;
+        BoxCanvas.InvalidateSurface();
+    }
+
+    private void CancelMoveMode()
+    {
+        _moveMode = false;
+        _movePk   = null;
+        BoxCanvas.InvalidateSurface();
+    }
+
+    private void ExecuteMove()
+    {
+        if (_movePk is null || _sav is null) return;
+
+        // Swap: destination goes to source slot, grabbed Pokémon goes to destination
+        var destPk = _currentBox[_cursorSlot];
+        _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
+        _sav.SetBoxSlotAtIndex(destPk,  _moveSourceBox, _moveSourceSlot);
+
+        CancelMoveMode();
+        DeselectSlot();
+        LoadBox(_boxIndex);
+    }
 
     /// <summary>Mark slot with gold outline (does not change the top panel display).</summary>
     private void SelectSlot(int slot)

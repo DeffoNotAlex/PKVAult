@@ -18,6 +18,7 @@ public partial class PkmEditorPage : ContentPage
     private readonly GameStrings _strings = GameInfo.GetStrings("en");
     private bool _movesPopulated;
     private int _currentTab = 0;
+    private LegalityAnalysis? _legalityResult;
 
     private int[] _focusRow = new int[4];
     private Border[][] _tabRows = null!;
@@ -65,6 +66,7 @@ public partial class PkmEditorPage : ContentPage
             [Row_Move1, Row_Move2, Row_Move3, Row_Move4],
             [Row_MetLevel, Row_Ball, Row_MetLoc, Row_OriginGame],
             [Row_OTName, Row_TID, Row_SID, Row_Language],
+            [],   // Legal tab — read-only, no navigable rows
         ];
     }
 
@@ -98,6 +100,8 @@ public partial class PkmEditorPage : ContentPage
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
         UpdateRowHighlight();
+        _legalityResult = null;
+        LegalityBadge.Text = "";
     }
 
     protected override void OnDisappearing()
@@ -119,9 +123,12 @@ public partial class PkmEditorPage : ContentPage
         MovesPanel.IsVisible  = tab == 1;
         MetPanel.IsVisible    = tab == 2;
         OTPanel.IsVisible     = tab == 3;
+        LegalPanel.IsVisible  = tab == 4;
 
         if (tab == 1)
             EnsureMovesPopulated();
+        if (tab == 4)
+            _ = RunLegalityAsync();
 
         UpdateTabHighlights();
         UpdateRowHighlight();
@@ -139,11 +146,13 @@ public partial class PkmEditorPage : ContentPage
         TabMoves.BackgroundColor  = _currentTab == 1 ? selected : unselected;
         TabMet.BackgroundColor    = _currentTab == 2 ? selected : unselected;
         TabOT.BackgroundColor     = _currentTab == 3 ? selected : unselected;
+        TabLegal.BackgroundColor  = _currentTab == 4 ? selected : unselected;
 
         TabStats.TextColor  = _currentTab == 0 ? selText : unselText;
         TabMoves.TextColor  = _currentTab == 1 ? selText : unselText;
         TabMet.TextColor    = _currentTab == 2 ? selText : unselText;
         TabOT.TextColor     = _currentTab == 3 ? selText : unselText;
+        TabLegal.TextColor  = _currentTab == 4 ? selText : unselText;
     }
 
     private void OnTabClicked(object sender, EventArgs e)
@@ -151,7 +160,8 @@ public partial class PkmEditorPage : ContentPage
         int tab = sender == TabStats  ? 0
                 : sender == TabMoves  ? 1
                 : sender == TabMet    ? 2
-                : 3;
+                : sender == TabOT     ? 3
+                : 4;
         SwitchTab(tab);
     }
 
@@ -172,11 +182,11 @@ public partial class PkmEditorPage : ContentPage
         {
             case Android.Views.Keycode.ButtonL1:
             case Android.Views.Keycode.Button5:
-                SwitchTab((_currentTab + 3) % 4); break;
+                SwitchTab((_currentTab + 4) % 5); break;
 
             case Android.Views.Keycode.ButtonR1:
             case Android.Views.Keycode.Button6:
-                SwitchTab((_currentTab + 1) % 4); break;
+                SwitchTab((_currentTab + 1) % 5); break;
 
             case Android.Views.Keycode.ButtonB:
                 _ = Shell.Current.GoToAsync(".."); break;
@@ -327,6 +337,74 @@ public partial class PkmEditorPage : ContentPage
                     case 3: LanguagePicker.Focus(); break;
                 }
                 break;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Legality
+    // ──────────────────────────────────────────────
+
+    private async Task RunLegalityAsync()
+    {
+        if (_pk is null) return;
+
+        LegalityVerdictLabel.Text      = "Checking…";
+        LegalityVerdictLabel.TextColor = Color.FromArgb("#888888");
+        LegalityIssuesList.Children.Clear();
+
+        var pk     = _pk;
+        var result = await Task.Run(() => new LegalityAnalysis(pk));
+        _legalityResult = result;
+
+        bool valid = result.Valid;
+
+        LegalityBadge.Text      = valid ? "✓" : "✗";
+        LegalityBadge.TextColor = valid ? Color.FromArgb("#44EE88") : Color.FromArgb("#FF5555");
+
+        LegalityVerdictLabel.Text      = valid ? "✓  Legal" : "✗  Illegal";
+        LegalityVerdictLabel.TextColor = valid ? Color.FromArgb("#44EE88") : Color.FromArgb("#FF5555");
+
+        int validCount = 0;
+        foreach (var check in result.Results)
+        {
+            if (check.Judgement == Severity.Valid) { validCount++; continue; }
+            if (check.Judgement == Severity.Unevaluated) continue;
+
+            var (icon, color) = check.Judgement switch
+            {
+                Severity.Invalid => ("✗", Color.FromArgb("#FF5555")),
+                Severity.Fishy   => ("⚠", Color.FromArgb("#FFBB44")),
+                _                => ("·", Color.FromArgb("#666688")),
+            };
+
+            LegalityIssuesList.Children.Add(new Label
+            {
+                Text      = $"{icon}  {check.Comment}",
+                TextColor = color,
+                FontSize  = 12,
+                Margin    = new Thickness(0, 1),
+            });
+        }
+
+        if (valid)
+        {
+            LegalityIssuesList.Children.Add(new Label
+            {
+                Text      = $"All {validCount} checks passed.",
+                TextColor = Color.FromArgb("#44AA66"),
+                FontSize  = 12,
+                Margin    = new Thickness(0, 4),
+            });
+        }
+        else if (validCount > 0)
+        {
+            LegalityIssuesList.Children.Add(new Label
+            {
+                Text      = $"  {validCount} checks passed.",
+                TextColor = Color.FromArgb("#446688"),
+                FontSize  = 11,
+                Margin    = new Thickness(0, 8, 0, 0),
+            });
         }
     }
 
