@@ -6,7 +6,7 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="#050518">
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="#050518">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="#050518">
 
         <!-- ── Header ── -->
         <Grid Grid.Row="0" ColumnDefinitions="52,*,52"

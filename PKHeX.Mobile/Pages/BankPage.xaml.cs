@@ -14,15 +14,6 @@ public partial class BankPage : ContentPage
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings              _strings = GameInfo.GetStrings("en");
 
-    // Box wallpaper sprite sheet (4 cols × 6 rows, each tile 160×160, stride 172px, offset 4px)
-    private static SKBitmap?   _wallpaperSheet;
-    private static SKBitmap?[] _wallpaperTiles = new SKBitmap?[24];
-    private const int WallpaperCols   = 4;
-    private const int WallpaperTileW  = 160;
-    private const int WallpaperTileH  = 160;
-    private const int WallpaperStride = 172;
-    private const int WallpaperOffset = 4;
-
     private PKM?[] _currentSlots = new PKM?[BankService.SlotsPerBox];
     private int    _boxIndex;
     private int    _cursorSlot;
@@ -46,19 +37,16 @@ public partial class BankPage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
-        GamepadRouter.KeyReceived      += OnGamepadKey;
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
+        GamepadRouter.KeyReceived        += OnGamepadKey;
+        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
-        // Slide in — L1 enters from left, R1 enters from right
-        this.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
-        await this.TranslateTo(0, 0, 260, Easing.CubicInOut);
+        // Slide in the inner grid (not `this`) so hit-testing is always correct
+        RootGrid.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
+        await RootGrid.TranslateTo(0, 0, 260, Easing.CubicInOut);
 
-        // Load wallpaper sheet once
-        _wallpaperSheet ??= await LoadWallpaperSheetAsync();
-
-        // If arriving with a pending deposit, enter deposit mode display
         UpdateModeBanner();
-
         LoadBox(_boxIndex);
     }
 
@@ -66,7 +54,7 @@ public partial class BankPage : ContentPage
     {
         base.OnDisappearing();
 #if ANDROID
-        GamepadRouter.KeyReceived      -= OnGamepadKey;
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
     }
@@ -122,51 +110,10 @@ public partial class BankPage : ContentPage
     //  Rendering
     // ──────────────────────────────────────────────
 
-    private static async Task<SKBitmap?> LoadWallpaperSheetAsync()
-    {
-        try
-        {
-            await using var stream = await FileSystem.OpenAppPackageFileAsync("boxwallpapers.png");
-            return SKBitmap.Decode(stream);
-        }
-        catch { return null; }
-    }
-
-    private static SKBitmap? GetWallpaperTile(int boxIndex)
-    {
-        if (_wallpaperSheet is null) return null;
-        int idx = boxIndex % 24;
-        if (_wallpaperTiles[idx] is { } cached) return cached;
-        int col  = idx % WallpaperCols;
-        int row  = idx / WallpaperCols;
-        int srcX = col * WallpaperStride + WallpaperOffset;
-        int srcY = row * WallpaperStride + WallpaperOffset;
-        var src  = new SKRectI(srcX, srcY, srcX + WallpaperTileW, srcY + WallpaperTileH);
-        var tile = new SKBitmap(WallpaperTileW, WallpaperTileH);
-        using var tileCanvas = new SKCanvas(tile);
-        tileCanvas.DrawBitmap(_wallpaperSheet, src, new SKRect(0, 0, WallpaperTileW, WallpaperTileH));
-        _wallpaperTiles[idx] = tile;
-        return tile;
-    }
-
     private void OnBankPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-
-        // Draw wallpaper background scaled to fill for this box
-        var wallpaper = GetWallpaperTile(_boxIndex);
-        if (wallpaper != null)
-        {
-            using var bgPaint = new SKPaint { FilterQuality = SKFilterQuality.Medium };
-            canvas.DrawBitmap(wallpaper, SKRect.Create(0, 0, e.Info.Width, e.Info.Height), bgPaint);
-            // Dim overlay so sprites remain readable
-            canvas.DrawRect(0, 0, e.Info.Width, e.Info.Height,
-                new SKPaint { Color = new SKColor(0, 0, 10, 160) });
-        }
-        else
-        {
-            canvas.Clear(new SKColor(5, 5, 24));
-        }
+        canvas.Clear(new SKColor(10, 10, 20));
         if (_currentSlots.Length == 0) return;
 
         float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
@@ -327,9 +274,8 @@ public partial class BankPage : ContentPage
                 _ = SwapToGame();
                 break;
 
-            case Android.Views.Keycode.ButtonL1:
-            case Android.Views.Keycode.ButtonR1:
-                _ = SwapToGame(); break;
+            case Android.Views.Keycode.ButtonL1: _ = SwapToGame(-1); break;
+            case Android.Views.Keycode.ButtonR1: _ = SwapToGame(+1); break;
 
             case Android.Views.Keycode.ButtonSelect:
                 _ = PromptRenameBox(); break;
@@ -445,12 +391,12 @@ public partial class BankPage : ContentPage
     //  Bank ↔ Game swap
     // ──────────────────────────────────────────────
 
-    private async Task SwapToGame()
+    private async Task SwapToGame(int exitDir = 0)
     {
         // If in withdraw move mode, carry Pokémon to game
         if (_moveMode && _movePk != null)
         {
-            App.PendingMove      = _movePk;
+            App.PendingMove       = _movePk;
             App.PendingSourceBox  = _boxIndex;
             App.PendingSourceSlot = _moveSourceSlot;
             App.PendingFromBank   = true;
@@ -458,10 +404,17 @@ public partial class BankPage : ContentPage
             _movePk   = null;
         }
 
-        // Slide out in reverse direction, then pop with no Shell animation
+        // Update slide direction if caller specified one (L1/R1)
+        if (exitDir != 0) App.BankSlideDir = exitDir;
+
+#if ANDROID
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
+        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
+#endif
+
         double exitX = App.BankSlideDir < 0 ? -500 : 500;
-        await this.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
-        this.TranslationX = 0;
+        await RootGrid.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
+        RootGrid.TranslationX = 0;
         await Navigation.PopModalAsync(animated: false);
     }
 

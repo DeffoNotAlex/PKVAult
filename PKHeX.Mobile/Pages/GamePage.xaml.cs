@@ -53,7 +53,9 @@ public partial class GamePage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.KeyReceived        += OnGamepadKey;
+        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
         var sav = App.ActiveSave;
@@ -842,7 +844,13 @@ public partial class GamePage : ContentPage
         }
 
         App.BankSlideDir = dir;
-        // Push modal with no Shell animation — we handle the slide ourselves
+
+        // Explicitly unsubscribe now so BankPage has exclusive input while shown
+#if ANDROID
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
+        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
+#endif
+
         var bank = new BankPage();
         await Navigation.PushModalAsync(bank, animated: false);
     }
