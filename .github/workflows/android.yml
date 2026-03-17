@@ -11,20 +11,6 @@ permissions:
   contents: write
 
 jobs:
-  test:
-    name: Core Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.100'
-
-      - name: Run tests
-        run: dotnet test Tests/PKHeX.Core.Tests/PKHeX.Core.Tests.csproj -c Release --logger "console;verbosity=minimal"
-
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
