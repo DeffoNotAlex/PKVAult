@@ -52,14 +52,13 @@ ALL_FOLDERS = [
 # ── Slug helpers ──────────────────────────────────────────────────────────────
 
 def to_slug(name: str) -> str:
-    """Mirror the ToShowdownSlug() logic in GamePage.xaml.cs."""
-    return (
-        name.lower()
-        .replace("♀", "-f").replace("♂", "-m")
-        .replace(" ", "-").replace(".", "")
-        .replace("'", "").replace(":", "")
-        .replace("é", "e")
-    )
+    """Mirror the ToShowdownSlug() logic in GamePage.xaml.cs.
+    Showdown strips ALL non-alphanumeric characters — no hyphens from spaces,
+    no -f/-m gender suffixes. E.g. 'Mr. Mime' → 'mrmime', 'Nidoran♀' → 'nidoranf'.
+    """
+    import re
+    s = name.lower().replace("♀", "f").replace("♂", "m").replace("é", "e")
+    return re.sub(r"[^a-z0-9]", "", s)
 
 
 # ── Species list ──────────────────────────────────────────────────────────────

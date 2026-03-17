@@ -537,12 +537,15 @@ public partial class GamePage : ContentPage
         }
     }
 
-    private static string ToShowdownSlug(string speciesName) => speciesName
-        .ToLowerInvariant()
-        .Replace("♀", "-f").Replace("♂", "-m")
-        .Replace(" ", "-").Replace(".", "")
-        .Replace("'", "").Replace(":", "")
-        .Replace("é", "e");
+    private static string ToShowdownSlug(string speciesName)
+    {
+        // Showdown keys strip ALL non-alphanumeric characters — no hyphens from spaces,
+        // no "-f"/"-m" suffixes. E.g. "Mr. Mime" → "mrmime", "Nidoran♀" → "nidoranf".
+        var s = speciesName.ToLowerInvariant()
+            .Replace("♀", "f").Replace("♂", "m")
+            .Replace("é", "e");
+        return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
+    }
 
     private static string BuildSpriteShell(string src) => $$"""
         <!DOCTYPE html>
