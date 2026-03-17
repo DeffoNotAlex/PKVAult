@@ -70,6 +70,25 @@
 
             <BoxView HeightRequest="1" Color="#1E2D45" />
 
+            <!-- Radar adaptive scale -->
+            <Border x:Name="Row_Radar" StyleId="Toggle"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Adaptive Radar Scale"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Scale the stat chart to the Pokémon's best stat so weaker Pokémon fill more of the graph."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="RadarAdaptiveSwitch"
+                            Toggled="OnRadarAdaptiveToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
             <!-- Legality (read-only / disabled) -->
             <Grid ColumnDefinitions="*,Auto">
                 <VerticalStackLayout Grid.Column="0" Spacing="4">

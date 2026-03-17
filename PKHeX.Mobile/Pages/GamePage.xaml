@@ -41,6 +41,8 @@
                             BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
                     <Button Text="Settings" Clicked="OnSettingsClicked"
                             BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
+                    <Button Text="💾 Save"  Clicked="OnSaveClicked"
+                            BackgroundColor="#1A3A1A" TextColor="#80FF80" FontSize="13" Padding="14,8" />
                     <Button Text="Export"   Clicked="OnExportClicked"
                             BackgroundColor="#2D1B69" TextColor="#C0A0FF" FontSize="13" Padding="14,8" />
                     <Button Text="☰ Menu"   Clicked="OnMenuClicked"

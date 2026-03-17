@@ -11,6 +11,9 @@ public partial class App : Application
     /// <summary>Original filename of the loaded save, used for export.</summary>
     public static string ActiveSaveFileName { get; set; } = "save.bin";
 
+    /// <summary>SAF content URI of the loaded save, used for write-back.</summary>
+    public static string ActiveSaveFileUri { get; set; } = "";
+
     public App()
     {
         InitializeComponent();

@@ -25,6 +25,7 @@ public partial class GamePage : ContentPage
 
     // Radar animation
     private float[]                  _radarCurrent = new float[6];
+    private float                    _radarVisMax  = 255f;
     private CancellationTokenSource? _radarAnimCts;
 
     public GamePage()
@@ -223,9 +224,15 @@ public partial class GamePage : ContentPage
         canvas.Clear(SKColors.Transparent);
         if (_previewPk is null) return;
 
-        const int   n      = 6;
-        const float visMax = 255f;
-        int[] ringValues = [50, 100, 150, 200, 255];
+        const int n    = 6;
+        float visMax   = _radarVisMax;
+        int[] ringValues = [
+            (int)(visMax * 0.20f),
+            (int)(visMax * 0.40f),
+            (int)(visMax * 0.60f),
+            (int)(visMax * 0.80f),
+            (int)visMax,
+        ];
 
         string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
 
@@ -316,6 +323,11 @@ public partial class GamePage : ContentPage
 
     private void StartRadarAnimation(float[] target)
     {
+        bool adaptive = Preferences.Default.Get(SettingsPage.KeyRadarAdaptive, false);
+        _radarVisMax = adaptive
+            ? Math.Max(target.Max() / 0.85f, 150f)
+            : 255f;
+
         _radarAnimCts?.Cancel();
         _radarAnimCts = new CancellationTokenSource();
         var ct    = _radarAnimCts.Token;
@@ -618,6 +630,26 @@ public partial class GamePage : ContentPage
 
     private async void OnSettingsClicked(object sender, EventArgs e)
         => await Shell.Current.GoToAsync(nameof(SettingsPage));
+
+    private async void OnSaveClicked(object sender, EventArgs e)
+    {
+        if (_sav is null) return;
+        if (string.IsNullOrEmpty(App.ActiveSaveFileUri))
+        {
+            await DisplayAlertAsync("Save failed", "No original file location found. Use Export instead.", "OK");
+            return;
+        }
+        try
+        {
+            var data = _sav.Write().ToArray();
+            await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri);
+            await DisplayAlertAsync("Saved", $"Written back to {App.ActiveSaveFileName}.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Save failed", ex.Message, "OK");
+        }
+    }
 
     private async void OnExportClicked(object sender, EventArgs e)
     {

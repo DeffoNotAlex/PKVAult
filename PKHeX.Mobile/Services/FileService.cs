@@ -33,4 +33,22 @@ public sealed class FileService : IFileService
             File = new ShareFile(path),
         });
     }
+
+    public async Task WriteBackAsync(byte[] data, string fileUri)
+    {
+#if ANDROID
+        await Task.Run(() =>
+        {
+            var context = Android.App.Application.Context;
+            var uri = global::Android.Net.Uri.Parse(fileUri)
+                ?? throw new InvalidOperationException("Invalid file URI.");
+            using var stream = context.ContentResolver?.OpenOutputStream(uri, "wt")
+                ?? throw new InvalidOperationException("Could not open output stream.");
+            stream.Write(data, 0, data.Length);
+            stream.Flush();
+        });
+#else
+        await File.WriteAllBytesAsync(fileUri, data);
+#endif
+    }
 }

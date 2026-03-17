@@ -15,4 +15,9 @@ public interface IFileService
     /// Exports data to the platform share sheet under the given file name.
     /// </summary>
     Task ExportFileAsync(byte[] data, string fileName);
+
+    /// <summary>
+    /// Overwrites the original file at the given SAF URI with new data.
+    /// </summary>
+    Task WriteBackAsync(byte[] data, string fileUri);
 }

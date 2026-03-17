@@ -6,8 +6,9 @@ namespace PKHeX.Mobile.Pages;
 
 public partial class SettingsPage : ContentPage
 {
-    public const string KeyLanguage = "language";
-    public const string KeyShinySprites = "shiny_sprites";
+    public const string KeyLanguage      = "language";
+    public const string KeyShinySprites  = "shiny_sprites";
+    public const string KeyRadarAdaptive = "radar_adaptive";
 
     private static readonly string[] LanguageCodes = ["ja", "en", "fr", "it", "de", "es", "es-419", "ko", "zh-Hans", "zh-Hant"];
     private static readonly string[] LanguageNames = ["日本語", "English", "Français", "Italiano", "Deutsch", "Español", "Español (LATAM)", "한국어", "中文 (简)", "中文 (繁)"];
@@ -35,7 +36,8 @@ public partial class SettingsPage : ContentPage
         var idx = Array.IndexOf(LanguageCodes, lang);
         LanguagePicker.SelectedIndex = idx >= 0 ? idx : 1; // default English
 
-        ShinySwitch.IsToggled = Preferences.Default.Get(KeyShinySprites, true);
+        ShinySwitch.IsToggled         = Preferences.Default.Get(KeyShinySprites, true);
+        RadarAdaptiveSwitch.IsToggled = Preferences.Default.Get(KeyRadarAdaptive, false);
 
         _loading = false;
 
@@ -53,7 +55,7 @@ public partial class SettingsPage : ContentPage
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Folders];
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders];
     }
 
     private void UpdateHighlight()
@@ -131,6 +133,9 @@ public partial class SettingsPage : ContentPage
                 ShinySwitch.IsToggled = !ShinySwitch.IsToggled;
                 break;
             case 2:
+                RadarAdaptiveSwitch.IsToggled = !RadarAdaptiveSwitch.IsToggled;
+                break;
+            case 3:
                 _ = Shell.Current.GoToAsync(nameof(FolderManagerPage));
                 break;
         }
@@ -149,6 +154,12 @@ public partial class SettingsPage : ContentPage
         if (_loading) return;
         Preferences.Default.Set(KeyShinySprites, e.Value);
         SpriteName.AllowShinySprite = e.Value;
+    }
+
+    private void OnRadarAdaptiveToggled(object sender, ToggledEventArgs e)
+    {
+        if (_loading) return;
+        Preferences.Default.Set(KeyRadarAdaptive, e.Value);
     }
 
     /// <summary>

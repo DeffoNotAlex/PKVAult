@@ -90,6 +90,7 @@ public partial class MainPage : ContentPage
 
             App.ActiveSave = sav;
             App.ActiveSaveFileName = entry.FileName;
+            App.ActiveSaveFileUri  = entry.FileUri;
             _selectedSave = entry;
 
             // Mark new active card
