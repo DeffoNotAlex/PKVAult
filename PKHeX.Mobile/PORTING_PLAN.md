@@ -107,6 +107,20 @@ Priority order: Database → QR → Settings → Mystery Gift DB
 
 ---
 
+## Phase 4e — Pokémon Bank (implemented, refinements pending)
+
+Core feature is working: unlimited boxes (30 slots each), deposit/withdraw with ghost sprites, L1/R1 to switch between game boxes and bank, right stick to scroll bank boxes, box renaming, JSON persistence.
+
+**To-do / refinements:**
+- [ ] **Animation polish** — entry/exit slide can feel abrupt on slower devices; consider easing tuning or a brief fade-over on top of the translate
+- [ ] **UI refinement** — bank header style doesn't match the game box header; unify font sizes, button shapes, and color palette
+- [ ] **Box wallpaper backgrounds** — placeholder dark clear for now; revisit with a properly scaled single-image background per bank box
+- [ ] **Slot count indicator** — show occupied/total count per box (e.g. "12 / 30") in the header subtitle
+- [ ] **Long-press context menu** — quick actions (withdraw, clone, delete) without entering full move mode
+- [ ] **Cross-save deposit** — currently deposits clear the source game slot immediately; add a confirmation step when depositing from a different save than the one open
+
+---
+
 ## Phase 5 — Polish & Platform UX
 - [ ] Touch UX — replace hover previews with tap-and-hold; context menus → bottom sheets
 - [ ] Responsive layout — tablet shows PKM editor alongside box view simultaneously
