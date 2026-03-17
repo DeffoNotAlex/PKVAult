@@ -15,7 +15,8 @@ public partial class BankPage : ContentPage
     private readonly GameStrings              _strings = GameInfo.GetStrings("en");
 
     // Box wallpaper sprite sheet (4 cols × 6 rows, each tile 160×160, stride 172px, offset 4px)
-    private static SKBitmap? _wallpaperSheet;
+    private static SKBitmap?   _wallpaperSheet;
+    private static SKBitmap?[] _wallpaperTiles = new SKBitmap?[24];
     private const int WallpaperCols   = 4;
     private const int WallpaperTileW  = 160;
     private const int WallpaperTileH  = 160;
@@ -48,10 +49,8 @@ public partial class BankPage : ContentPage
         GamepadRouter.KeyReceived      += OnGamepadKey;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
-        // Enter from the opposite side of where the game exited
-        // L1 (BankSlideDir=-1): game exited right → bank enters from LEFT (-800)
-        // R1 (BankSlideDir=+1): game exited left  → bank enters from RIGHT (+800)
-        this.TranslationX = App.BankSlideDir < 0 ? -800 : 800;
+        // Slide in — L1 enters from left, R1 enters from right
+        this.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
         await this.TranslateTo(0, 0, 260, Easing.CubicInOut);
 
         // Load wallpaper sheet once
@@ -136,15 +135,17 @@ public partial class BankPage : ContentPage
     private static SKBitmap? GetWallpaperTile(int boxIndex)
     {
         if (_wallpaperSheet is null) return null;
-        int idx = boxIndex % 24; // 24 wallpapers in the sheet
-        int col = idx % WallpaperCols;
-        int row = idx / WallpaperCols;
+        int idx = boxIndex % 24;
+        if (_wallpaperTiles[idx] is { } cached) return cached;
+        int col  = idx % WallpaperCols;
+        int row  = idx / WallpaperCols;
         int srcX = col * WallpaperStride + WallpaperOffset;
         int srcY = row * WallpaperStride + WallpaperOffset;
-        var src = new SKRectI(srcX, srcY, srcX + WallpaperTileW, srcY + WallpaperTileH);
+        var src  = new SKRectI(srcX, srcY, srcX + WallpaperTileW, srcY + WallpaperTileH);
         var tile = new SKBitmap(WallpaperTileW, WallpaperTileH);
-        using var canvas = new SKCanvas(tile);
-        canvas.DrawBitmap(_wallpaperSheet, src, new SKRect(0, 0, WallpaperTileW, WallpaperTileH));
+        using var tileCanvas = new SKCanvas(tile);
+        tileCanvas.DrawBitmap(_wallpaperSheet, src, new SKRect(0, 0, WallpaperTileW, WallpaperTileH));
+        _wallpaperTiles[idx] = tile;
         return tile;
     }
 
@@ -152,14 +153,12 @@ public partial class BankPage : ContentPage
     {
         var canvas = e.Surface.Canvas;
 
-        // Draw tiled wallpaper background for this box
+        // Draw wallpaper background scaled to fill for this box
         var wallpaper = GetWallpaperTile(_boxIndex);
         if (wallpaper != null)
         {
-            using var bgPaint = new SKPaint { FilterQuality = SKFilterQuality.Low };
-            for (float ty = 0; ty < e.Info.Height; ty += wallpaper.Height)
-                for (float tx = 0; tx < e.Info.Width; tx += wallpaper.Width)
-                    canvas.DrawBitmap(wallpaper, tx, ty, bgPaint);
+            using var bgPaint = new SKPaint { FilterQuality = SKFilterQuality.Medium };
+            canvas.DrawBitmap(wallpaper, SKRect.Create(0, 0, e.Info.Width, e.Info.Height), bgPaint);
             // Dim overlay so sprites remain readable
             canvas.DrawRect(0, 0, e.Info.Width, e.Info.Height,
                 new SKPaint { Color = new SKColor(0, 0, 10, 160) });
@@ -459,13 +458,11 @@ public partial class BankPage : ContentPage
             _movePk   = null;
         }
 
-        // Exit back in the direction the bank entered from (reverse of entry)
-        // L1 path: bank entered from LEFT → exits back LEFT (-800)
-        // R1 path: bank entered from RIGHT → exits back RIGHT (+800)
-        double exitX = App.BankSlideDir < 0 ? -800 : 800;
+        // Slide out in reverse direction, then pop with no Shell animation
+        double exitX = App.BankSlideDir < 0 ? -500 : 500;
         await this.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
         this.TranslationX = 0;
-        await Shell.Current.GoToAsync("..");
+        await Navigation.PopModalAsync(animated: false);
     }
 
     // ──────────────────────────────────────────────

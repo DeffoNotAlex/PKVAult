@@ -841,13 +841,10 @@ public partial class GamePage : ContentPage
             _movePk   = null;
         }
 
-        // L1 (dir=-1): game exits RIGHT (+800), bank will enter from LEFT
-        // R1 (dir=+1): game exits LEFT  (-800), bank will enter from RIGHT
         App.BankSlideDir = dir;
-        double exitX = dir < 0 ? 800 : -800;
-        await this.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
-        this.TranslationX = 0;
-        await Shell.Current.GoToAsync(nameof(BankPage));
+        // Push modal with no Shell animation — we handle the slide ourselves
+        var bank = new BankPage();
+        await Navigation.PushModalAsync(bank, animated: false);
     }
 
     private async Task RunLegalityBadgesAsync(PKM[] snapshot)
