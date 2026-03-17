@@ -5,22 +5,37 @@
              x:Class="PKHeX.Mobile.Pages.GamePage"
              Shell.NavBarIsVisible="False">
 
-    <!-- Root: top screen (stats) / bottom screen (box grid) -->
-    <Grid RowDefinitions="*,*" RowSpacing="2" BackgroundColor="#050510">
+    <!-- Root: toolbar / top screen / bottom screen -->
+    <Grid RowDefinitions="Auto,*,*" RowSpacing="2" BackgroundColor="#050510">
+
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!--  PERSISTENT TOOLBAR — always visible                  -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*"
+              BackgroundColor="#080812" Padding="6,4" ColumnSpacing="6">
+            <Button Grid.Column="0" Text="💾 Save"
+                    Clicked="OnSaveClicked"
+                    BackgroundColor="#1A3A1A" TextColor="#80FF80"
+                    FontSize="12" Padding="0,6" HorizontalOptions="Fill" />
+            <Button Grid.Column="1" Text="⬆ Export"
+                    Clicked="OnExportClicked"
+                    BackgroundColor="#2D1B69" TextColor="#C0A0FF"
+                    FontSize="12" Padding="0,6" HorizontalOptions="Fill" />
+        </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SCREEN — idle: trainer info  /  selected: stats  -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="1">
 
             <!-- Background image spanning full top section -->
             <Image Source="sprite_bg.jpg" Aspect="AspectFill" />
 
             <!-- ── IDLE STATE ── -->
-            <Grid x:Name="TopIdlePanel" RowDefinitions="*,Auto" Padding="14,10">
+            <Grid x:Name="TopIdlePanel" Padding="14,10">
 
                 <!-- Trainer summary + hint -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <Grid ColumnDefinitions="*,Auto">
                     <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="4">
                         <Label x:Name="TrainerNameLabel"
                                TextColor="#E0E8FF" FontSize="18" FontAttributes="Bold" />
@@ -30,24 +45,8 @@
                     <Label Grid.Column="1"
                            TextColor="#303850" FontSize="10"
                            HorizontalOptions="End" VerticalOptions="End"
-                           Text="A: select  B: back&#10;X: search  Y: move/gifts&#10;⊙: settings  ▶: export&#10;L/R: prev / next box" />
+                           Text="A: select  B: back&#10;X: search  Y: move/gifts&#10;⊙: save  ▶: export&#10;L/R: prev / next box" />
                 </Grid>
-
-                <!-- Nav buttons -->
-                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center" Spacing="10" Margin="0,0,0,4">
-                    <Button Text="Search"   Clicked="OnSearchClicked"
-                            BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
-                    <Button Text="Gifts"    Clicked="OnGiftsClicked"
-                            BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
-                    <Button Text="Settings" Clicked="OnSettingsClicked"
-                            BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
-                    <Button Text="💾 Save"  Clicked="OnSaveClicked"
-                            BackgroundColor="#1A3A1A" TextColor="#80FF80" FontSize="13" Padding="14,8" />
-                    <Button Text="Export"   Clicked="OnExportClicked"
-                            BackgroundColor="#2D1B69" TextColor="#C0A0FF" FontSize="13" Padding="14,8" />
-                    <Button Text="☰ Menu"   Clicked="OnMenuClicked"
-                            BackgroundColor="#1D3A70" TextColor="#A0C0FF" FontSize="13" Padding="14,8" />
-                </HorizontalStackLayout>
 
             </Grid>
 
@@ -109,7 +108,7 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  BOTTOM SCREEN — box grid                             -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,*" BackgroundColor="#0A0A14">
+        <Grid Grid.Row="2" RowDefinitions="Auto,*" BackgroundColor="#0A0A14">
 
             <!-- Box navigation header -->
             <Grid Grid.Row="0" ColumnDefinitions="52,*,52"

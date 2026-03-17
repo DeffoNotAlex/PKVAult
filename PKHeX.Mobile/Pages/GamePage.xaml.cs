@@ -22,6 +22,8 @@ public partial class GamePage : ContentPage
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
     private bool _spriteWebViewReady; // true after first full HTML load
+    private bool _showLegalityBadges;
+    private bool?[] _legalityCache = [];
 
     // Move mode
     private bool _moveMode;
@@ -71,6 +73,7 @@ public partial class GamePage : ContentPage
 
         // Always reset species key so radar re-reads preferences (e.g. after returning from Settings)
         _previewSpecies = -1;
+        _showLegalityBadges = Preferences.Default.Get(SettingsPage.KeyLegalityBadge, false);
         LoadBox(_boxIndex);
     }
 
@@ -102,9 +105,11 @@ public partial class GamePage : ContentPage
                 || _currentBox[_selectedSlot].Species == 0))
                 _selectedSlot = -1;
 
+            _legalityCache = new bool?[_currentBox.Length];
             await _sprites.PreloadBoxAsync(_currentBox);
             BoxCanvas.InvalidateSurface();
             UpdateTopPanel();
+            if (_showLegalityBadges) _ = RunLegalityBadgesAsync(_currentBox);
         }
         finally { _loadingBox = false; }
     }
@@ -219,6 +224,16 @@ public partial class GamePage : ContentPage
                     };
                     canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
                 }
+            }
+
+            // Legality badge — small dot in top-right corner
+            if (_showLegalityBadges && i < _legalityCache.Length && _legalityCache[i] is bool legal)
+            {
+                using var badgePaint = new SKPaint { IsAntialias = true };
+                badgePaint.Color = legal ? new SKColor(60, 220, 110, 230) : new SKColor(220, 60, 60, 230);
+                float bx = x + slotSize - pad - 5f;
+                float by = y + pad + 5f;
+                canvas.DrawCircle(bx, by, 4.5f, badgePaint);
             }
         }
     }
@@ -594,8 +609,8 @@ public partial class GamePage : ContentPage
                 { EnterMoveMode(); break; }
                 OnGiftsClicked(this, EventArgs.Empty);
                 break;
-            case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
-            case Android.Views.Keycode.ButtonStart:  OnExportClicked(this, EventArgs.Empty);  break;
+            case Android.Views.Keycode.ButtonSelect: OnSaveClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonStart:  OnExportClicked(this, EventArgs.Empty); break;
         }
     }
 #endif
@@ -702,7 +717,18 @@ public partial class GamePage : ContentPage
 
         CancelMoveMode();
         DeselectSlot();
+        _previewSpecies = -1; // force sprite reload after swap
         LoadBox(_boxIndex);
+    }
+
+    private async Task RunLegalityBadgesAsync(PKM[] snapshot)
+    {
+        var results = await Task.Run(() =>
+            snapshot.Select(pk => pk.Species == 0 ? (bool?)null
+                                                   : (bool?)new PKHeX.Core.LegalityAnalysis(pk).Valid)
+                    .ToArray());
+        _legalityCache = results;
+        MainThread.BeginInvokeOnMainThread(() => BoxCanvas.InvalidateSurface());
     }
 
     /// <summary>Mark slot with gold outline (does not change the top panel display).</summary>

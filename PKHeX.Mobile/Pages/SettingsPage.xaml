@@ -89,18 +89,22 @@
 
             <BoxView HeightRequest="1" Color="#1E2D45" />
 
-            <!-- Legality (read-only / disabled) -->
-            <Grid ColumnDefinitions="*,Auto">
-                <VerticalStackLayout Grid.Column="0" Spacing="4">
-                    <Label Text="Show Legality Badge"
-                           FontAttributes="Bold" FontSize="15"
-                           TextColor="#EEEEFF" />
-                    <Label Text="Display a ✓/✗ legality indicator on each Pokémon in the box view. (Phase 5)"
-                           FontSize="12" TextColor="#8888BB" />
-                </VerticalStackLayout>
-                <Switch Grid.Column="1" x:Name="LegalitySwitch"
-                        IsEnabled="False" VerticalOptions="Center" />
-            </Grid>
+            <!-- Legality badges -->
+            <Border x:Name="Row_Legality" StyleId="Toggle"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Show Legality Badges"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Display a green/red dot on each Pokémon in the box view."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="LegalitySwitch"
+                            Toggled="OnLegalitySwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>
