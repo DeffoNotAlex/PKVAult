@@ -23,6 +23,10 @@ public partial class GamePage : ContentPage
     private bool _loadingBox;
     private bool _spriteWebViewReady; // true after first full HTML load
 
+    // Radar animation
+    private float[]                  _radarCurrent = new float[6];
+    private CancellationTokenSource? _radarAnimCts;
+
     public GamePage()
     {
         InitializeComponent();
@@ -217,30 +221,36 @@ public partial class GamePage : ContentPage
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
-        if (_previewPk is not { } pk) return;
+        if (_previewPk is null) return;
 
-        const int n = 6;
-        // GetStats returns [HP, ATK, DEF, SPA, SPD, SPE]
-        var s = pk.GetStats(pk.PersonalInfo);
-        // Clockwise from top: HP, Atk, Def, Spe, SpD, SpA
+        const int   n      = 6;
+        const float visMax = 255f;
+        int[] ringValues = [50, 100, 150, 200, 255];
+
         string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
-        int[]    values = [s[0], s[1], s[2], s[5], s[4], s[3]];
 
         float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.24f;
         float cx = e.Info.Width  / 2f;
         float cy = e.Info.Height / 2f;
         float r  = Math.Min(cx, cy) - margin;
 
-        // Dynamic scale: best stat reaches 85% of radius.
-        // Floor at 60 so even unevolved low-level Pokémon have a visible shape.
-        float visMax = Math.Max(values.Max() / 0.85f, 60f);
-
-        // Background grid rings
+        // Background grid rings with labels on the HP axis (top)
         using var ringPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
-        for (int ring = 1; ring <= 4; ring++)
+        float ringLabelSz = Math.Max(11f, r * 0.10f);
+        using var ringFont  = new SKFont(SKTypeface.Default, ringLabelSz);
+        using var ringLabelPaint = new SKPaint { Color = new SKColor(80, 100, 150, 180), IsAntialias = true };
+
+        for (int ri = 0; ri < ringValues.Length; ri++)
         {
-            ringPaint.Color = new SKColor(35, 50, 90, (byte)(60 + ring * 18));
-            DrawHexPath(canvas, cx, cy, r * ring / 4f, n, ringPaint);
+            float frac = ringValues[ri] / visMax;
+            float rr   = r * frac;
+            ringPaint.Color = new SKColor(35, 50, 90, (byte)(50 + ri * 20));
+            DrawHexPath(canvas, cx, cy, rr, n, ringPaint);
+
+            // Label on the HP axis (straight up, angle = -π/2)
+            float lx = cx;
+            float ly = cy - rr - ringLabelSz * 0.3f;
+            canvas.DrawText(ringValues[ri].ToString(), lx, ly, SKTextAlign.Center, ringFont, ringLabelPaint);
         }
 
         // Axes
@@ -251,12 +261,12 @@ public partial class GamePage : ContentPage
             canvas.DrawLine(cx, cy, cx + r * MathF.Cos(angle), cy + r * MathF.Sin(angle), axisPaint);
         }
 
-        // Stat polygon
+        // Stat polygon — uses interpolated _radarCurrent
         using var statPath = new SKPath();
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(values[i] / visMax, 0f, 1f);
+            float v  = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
             float px = cx + r * v * MathF.Cos(angle);
             float py = cy + r * v * MathF.Sin(angle);
             if (i == 0) statPath.MoveTo(px, py); else statPath.LineTo(px, py);
@@ -273,11 +283,11 @@ public partial class GamePage : ContentPage
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(values[i] / visMax, 0f, 1f);
+            float v  = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
             canvas.DrawCircle(cx + r * v * MathF.Cos(angle), cy + r * v * MathF.Sin(angle), 4.5f, dotPaint);
         }
 
-        // Labels and values at each axis tip
+        // Labels and stat values at each axis tip
         float textR   = r + margin * 0.52f;
         float labelSz = Math.Max(16f, r * 0.15f);
         float valueSz = Math.Max(20f, r * 0.19f);
@@ -292,9 +302,46 @@ public partial class GamePage : ContentPage
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
             float lx = cx + textR * MathF.Cos(angle);
             float ly = cy + textR * MathF.Sin(angle);
-            canvas.DrawText(labels[i],          lx, ly,                 SKTextAlign.Center, labelFont, labelPaint);
-            canvas.DrawText(values[i].ToString(), lx, ly + valueSz * 1.05f, SKTextAlign.Center, valueFont, valuePaint);
+            canvas.DrawText(labels[i], lx, ly, SKTextAlign.Center, labelFont, labelPaint);
+            canvas.DrawText(((int)_radarCurrent[i]).ToString(), lx, ly + valueSz * 1.05f, SKTextAlign.Center, valueFont, valuePaint);
         }
+    }
+
+    private static float[] GetRadarStats(PKM pk)
+    {
+        var s = pk.GetStats(pk.PersonalInfo);
+        // Clockwise from top: HP, Atk, Def, Spe, SpD, SpA
+        return [(float)s[0], (float)s[1], (float)s[2], (float)s[5], (float)s[4], (float)s[3]];
+    }
+
+    private void StartRadarAnimation(float[] target)
+    {
+        _radarAnimCts?.Cancel();
+        _radarAnimCts = new CancellationTokenSource();
+        var ct    = _radarAnimCts.Token;
+        var start = _radarCurrent.ToArray();
+
+        _ = Task.Run(async () =>
+        {
+            const int durationMs = 380;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            while (!ct.IsCancellationRequested)
+            {
+                float raw  = (float)sw.ElapsedMilliseconds / durationMs;
+                float t    = Math.Clamp(raw, 0f, 1f);
+                // Ease in-out cubic
+                float ease = t < 0.5f ? 4 * t * t * t : 1 - MathF.Pow(-2 * t + 2, 3) / 2;
+
+                for (int i = 0; i < 6; i++)
+                    _radarCurrent[i] = start[i] + (target[i] - start[i]) * ease;
+
+                MainThread.BeginInvokeOnMainThread(() => RadarCanvas.InvalidateSurface());
+
+                if (t >= 1f) break;
+                await Task.Delay(16, ct).ConfigureAwait(false);
+            }
+        }, ct);
     }
 
     private static void DrawHexPath(SKCanvas canvas, float cx, float cy, float r, int n, SKPaint paint)
@@ -514,7 +561,7 @@ public partial class GamePage : ContentPage
         }
 
         PreviewCanvas.InvalidateSurface();
-        RadarCanvas.InvalidateSurface();
+        StartRadarAnimation(GetRadarStats(pk));
     }
 
     private void ShowIdlePanel()
