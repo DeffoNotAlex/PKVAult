@@ -352,8 +352,12 @@ public partial class PkmEditorPage : ContentPage
         LegalityVerdictLabel.TextColor = Color.FromArgb("#888888");
         LegalityIssuesList.Children.Clear();
 
-        var pk     = _pk;
-        var result = await Task.Run(() => new LegalityAnalysis(pk));
+        var pk = _pk;
+        var (result, report) = await Task.Run(() =>
+        {
+            var la = new LegalityAnalysis(pk);
+            return (la, la.Report(verbose: false));
+        });
         _legalityResult = result;
 
         bool valid = result.Valid;
@@ -364,46 +368,43 @@ public partial class PkmEditorPage : ContentPage
         LegalityVerdictLabel.Text      = valid ? "✓  Legal" : "✗  Illegal";
         LegalityVerdictLabel.TextColor = valid ? Color.FromArgb("#44EE88") : Color.FromArgb("#FF5555");
 
-        int validCount = 0;
-        foreach (var check in result.Results)
+        if (!valid)
         {
-            if (check.Judgement == Severity.Valid) { validCount++; continue; }
-            if (check.Judgement == Severity.Unevaluated) continue;
-
-            var (icon, color) = check.Judgement switch
+            // report contains one issue per line (already localised by PKHeX.Core)
+            foreach (var line in report.Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
-                Severity.Invalid => ("✗", Color.FromArgb("#FF5555")),
-                Severity.Fishy   => ("⚠", Color.FromArgb("#FFBB44")),
-                _                => ("·", Color.FromArgb("#666688")),
-            };
+                var text = line.Trim();
+                if (string.IsNullOrEmpty(text)) continue;
+                LegalityIssuesList.Children.Add(new Label
+                {
+                    Text      = text,
+                    TextColor = Color.FromArgb("#FF5555"),
+                    FontSize  = 12,
+                    Margin    = new Thickness(0, 1),
+                });
+            }
+
+            int validCount = 0;
+            foreach (var check in result.Results)
+                if (check.Valid) validCount++;
+            int invalidCount = result.Results.Count - validCount;
 
             LegalityIssuesList.Children.Add(new Label
             {
-                Text      = $"{icon}  {check.Comment}",
-                TextColor = color,
-                FontSize  = 12,
-                Margin    = new Thickness(0, 1),
-            });
-        }
-
-        if (valid)
-        {
-            LegalityIssuesList.Children.Add(new Label
-            {
-                Text      = $"All {validCount} checks passed.",
-                TextColor = Color.FromArgb("#44AA66"),
-                FontSize  = 12,
-                Margin    = new Thickness(0, 4),
-            });
-        }
-        else if (validCount > 0)
-        {
-            LegalityIssuesList.Children.Add(new Label
-            {
-                Text      = $"  {validCount} checks passed.",
+                Text      = $"  {invalidCount} issue(s) · {validCount} checks passed.",
                 TextColor = Color.FromArgb("#446688"),
                 FontSize  = 11,
                 Margin    = new Thickness(0, 8, 0, 0),
+            });
+        }
+        else
+        {
+            LegalityIssuesList.Children.Add(new Label
+            {
+                Text      = $"All {result.Results.Count} checks passed.",
+                TextColor = Color.FromArgb("#44AA66"),
+                FontSize  = 12,
+                Margin    = new Thickness(0, 4),
             });
         }
     }
