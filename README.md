@@ -1,6 +1,6 @@
-# PK Vault
+# PKVault
 
-**PK Vault** is a Pokémon save editor for Android, built on top of [PKHeX](https://github.com/kwsch/PKHeX) — the most complete Pokémon core-series save editor available.
+**PKVault** is a Pokémon save editor for Android, built on top of [PKHeX](https://github.com/kwsch/PKHeX) — the most complete Pokémon core-series save editor available.
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
@@ -54,7 +54,7 @@
 
 ## Building
 
-PK Vault is a .NET MAUI application targeting Android, built with .NET 10.
+PKVault is a .NET MAUI application targeting Android, built with .NET 10.
 
 ```bash
 # Build the Android APK
@@ -76,7 +76,7 @@ CI automatically publishes a signed APK to [GitHub Releases](../../releases) on 
 
 ```
 PKHeX.Core/           # Core library — all game logic, legality, save parsing (no GUI deps)
-PKHeX.Mobile/         # .NET MAUI Android app (PK Vault)
+PKHeX.Mobile/         # .NET MAUI Android app (PKVault)
   Pages/              # ContentPages: MainPage, GamePage, SettingsPage, FolderManagerPage, ...
   Services/           # IFileService, SaveDirectoryService, ISaveFilePicker
   Platforms/Android/  # Android-specific: MainActivity, AndroidFilePicker, GamepadRouter
