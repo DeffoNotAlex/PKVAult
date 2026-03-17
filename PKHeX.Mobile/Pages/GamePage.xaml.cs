@@ -590,7 +590,8 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonY:
                 if (_moveMode) { CancelMoveMode(); break; }
-                if (_selectedSlot >= 0) { EnterMoveMode(); break; }
+                if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
+                { EnterMoveMode(); break; }
                 OnGiftsClicked(this, EventArgs.Empty);
                 break;
             case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
@@ -673,11 +674,12 @@ public partial class GamePage : ContentPage
 
     private void EnterMoveMode()
     {
-        if (_selectedSlot < 0 || _sav is null) return;
-        if (_currentBox[_selectedSlot].Species == 0) return;
-        _movePk         = _currentBox[_selectedSlot].Clone();
+        if (_sav is null) return;
+        if (_cursorSlot >= _currentBox.Length) return;
+        if (_currentBox[_cursorSlot].Species == 0) return;
+        _movePk         = _currentBox[_cursorSlot].Clone();
         _moveSourceBox  = _boxIndex;
-        _moveSourceSlot = _selectedSlot;
+        _moveSourceSlot = _cursorSlot;
         _moveMode       = true;
         BoxCanvas.InvalidateSurface();
     }
