@@ -63,6 +63,8 @@ public partial class GamePage : ContentPage
             BoxCountLabel.Text    = $"{sav.BoxCount} boxes · {sav.SlotCount} slots";
         }
 
+        // Always reset species key so radar re-reads preferences (e.g. after returning from Settings)
+        _previewSpecies = -1;
         LoadBox(_boxIndex);
     }
 

@@ -467,6 +467,21 @@ public partial class PkmEditorPage : ContentPage
         if (_pk is null || App.ActiveSave is null) return;
         ApplyChanges();
         App.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
+
+        // Write back to original file if a URI is available
+        if (!string.IsNullOrEmpty(App.ActiveSaveFileUri))
+        {
+            try
+            {
+                var data = App.ActiveSave.Write().ToArray();
+                await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Write-back failed", ex.Message, "OK");
+            }
+        }
+
         await Shell.Current.GoToAsync("..");
     }
 
