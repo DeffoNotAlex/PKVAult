@@ -98,6 +98,12 @@ public partial class FolderManagerPage : ContentPage
                 MoveCursor(+1); break;
             case Android.Views.Keycode.ButtonX:
                 RemoveFocused(); break;
+            case Android.Views.Keycode.ButtonL1:
+            case Android.Views.Keycode.Button5:
+                OnAddFolderClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonR1:
+            case Android.Views.Keycode.Button6:
+                OnAddFileClicked(this, EventArgs.Empty); break;
         }
     }
 #endif

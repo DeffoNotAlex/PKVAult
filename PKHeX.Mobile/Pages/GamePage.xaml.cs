@@ -220,19 +220,31 @@ public partial class GamePage : ContentPage
     //  Rendering — hexagonal stat radar (top-right)
     // ──────────────────────────────────────────────
 
+    // HP=red, Atk=orange, Def=yellow, Spe=teal, SpD=blue, SpA=purple
+    private static readonly SKColor[] StatColors =
+    [
+        new SKColor(255,  80,  80),   // HP
+        new SKColor(255, 150,  50),   // Atk
+        new SKColor(240, 210,  50),   // Def
+        new SKColor( 50, 210, 160),   // Spe
+        new SKColor( 80, 140, 255),   // SpD
+        new SKColor(185,  90, 255),   // SpA
+    ];
+
     private void OnRadarPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
         if (_previewPk is null) return;
 
-        const int n    = 6;
-        float visMax   = _radarVisMax;
-        int[] ringValues = [
-            (int)(visMax * 0.20f),
-            (int)(visMax * 0.40f),
-            (int)(visMax * 0.60f),
-            (int)(visMax * 0.80f),
+        const int n  = 6;
+        float visMax = _radarVisMax;
+
+        int[] ringValues =
+        [
+            (int)(visMax * 0.25f),
+            (int)(visMax * 0.50f),
+            (int)(visMax * 0.75f),
             (int)visMax,
         ];
 
@@ -243,76 +255,99 @@ public partial class GamePage : ContentPage
         float cy = e.Info.Height / 2f;
         float r  = Math.Min(cx, cy) - margin;
 
-        // Background grid rings with labels on the HP axis (top)
-        using var ringPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
-        float ringLabelSz = Math.Max(11f, r * 0.10f);
-        using var ringFont  = new SKFont(SKTypeface.Default, ringLabelSz);
-        using var ringLabelPaint = new SKPaint { Color = new SKColor(80, 100, 150, 180), IsAntialias = true };
+        // ── Grid rings ──────────────────────────────────────────────────
+        using var ringPaint      = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
+        float ringLabelSz        = Math.Max(10f, r * 0.09f);
+        using var ringFont       = new SKFont(SKTypeface.Default, ringLabelSz);
+        using var ringLabelPaint = new SKPaint { Color = new SKColor(80, 100, 150, 160), IsAntialias = true };
 
         for (int ri = 0; ri < ringValues.Length; ri++)
         {
             float frac = ringValues[ri] / visMax;
             float rr   = r * frac;
-            ringPaint.Color = new SKColor(35, 50, 90, (byte)(50 + ri * 20));
+            ringPaint.Color = new SKColor(35, 50, 90, (byte)(40 + ri * 25));
             DrawHexPath(canvas, cx, cy, rr, n, ringPaint);
 
-            // Label on the HP axis (straight up, angle = -π/2)
             float lx = cx;
-            float ly = cy - rr - ringLabelSz * 0.3f;
+            float ly = cy - rr - ringLabelSz * 0.25f;
             canvas.DrawText(ringValues[ri].ToString(), lx, ly, SKTextAlign.Center, ringFont, ringLabelPaint);
         }
 
-        // Axes
-        using var axisPaint = new SKPaint { Color = new SKColor(35, 45, 80, 100), StrokeWidth = 1f, IsAntialias = true };
+        // ── Colored axes ────────────────────────────────────────────────
+        using var axisPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            axisPaint.Color = StatColors[i].WithAlpha(70);
             canvas.DrawLine(cx, cy, cx + r * MathF.Cos(angle), cy + r * MathF.Sin(angle), axisPaint);
         }
 
-        // Stat polygon — uses interpolated _radarCurrent
+        // ── Pre-compute vertex positions ────────────────────────────────
+        float[] vx = new float[n];
+        float[] vy = new float[n];
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float v  = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
+            vx[i] = cx + r * v * MathF.Cos(angle);
+            vy[i] = cy + r * v * MathF.Sin(angle);
+        }
+
+        // ── Colored wedge fills (triangle per stat from center) ─────────
+        using var wedgePaint = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            int j = (i + 1) % n;
+            using var wedgePath = new SKPath();
+            wedgePath.MoveTo(cx, cy);
+            wedgePath.LineTo(vx[i], vy[i]);
+            wedgePath.LineTo(vx[j], vy[j]);
+            wedgePath.Close();
+            wedgePaint.Color = StatColors[i].WithAlpha(90);
+            canvas.DrawPath(wedgePath, wedgePaint);
+        }
+
+        // ── Outline stroke ───────────────────────────────────────────────
         using var statPath = new SKPath();
         for (int i = 0; i < n; i++)
         {
-            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
-            float px = cx + r * v * MathF.Cos(angle);
-            float py = cy + r * v * MathF.Sin(angle);
-            if (i == 0) statPath.MoveTo(px, py); else statPath.LineTo(px, py);
+            if (i == 0) statPath.MoveTo(vx[i], vy[i]);
+            else        statPath.LineTo(vx[i], vy[i]);
         }
         statPath.Close();
-
-        using var fillPaint   = new SKPaint { Color = new SKColor(79, 128, 255, 115), Style = SKPaintStyle.Fill,   IsAntialias = true };
-        using var strokePaint = new SKPaint { Color = new SKColor(120, 175, 255, 235), Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true };
-        canvas.DrawPath(statPath, fillPaint);
+        using var strokePaint = new SKPaint
+        {
+            Color = new SKColor(220, 235, 255, 200),
+            Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true,
+        };
         canvas.DrawPath(statPath, strokePaint);
 
-        // Vertex dots
-        using var dotPaint = new SKPaint { Color = new SKColor(160, 205, 255), IsAntialias = true };
+        // ── Colored vertex dots ──────────────────────────────────────────
+        using var dotPaint = new SKPaint { IsAntialias = true };
         for (int i = 0; i < n; i++)
         {
-            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
-            float v  = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
-            canvas.DrawCircle(cx + r * v * MathF.Cos(angle), cy + r * v * MathF.Sin(angle), 4.5f, dotPaint);
+            dotPaint.Color = StatColors[i];
+            canvas.DrawCircle(vx[i], vy[i], 5f, dotPaint);
         }
 
-        // Labels and stat values at each axis tip
+        // ── Axis labels (name + value) ───────────────────────────────────
         float textR   = r + margin * 0.52f;
-        float labelSz = Math.Max(16f, r * 0.15f);
-        float valueSz = Math.Max(20f, r * 0.19f);
-
-        using var labelFont = new SKFont(SKTypeface.Default, labelSz);
-        using var valueFont = new SKFont(SKTypeface.Default, valueSz) { Embolden = true };
-        using var labelPaint = new SKPaint { Color = new SKColor(110, 130, 180), IsAntialias = true };
-        using var valuePaint = new SKPaint { Color = new SKColor(225, 235, 255), IsAntialias = true };
+        float labelSz = Math.Max(14f, r * 0.14f);
+        float valueSz = Math.Max(18f, r * 0.18f);
+        using var labelFont  = new SKFont(SKTypeface.Default, labelSz);
+        using var valueFont  = new SKFont(SKTypeface.Default, valueSz) { Embolden = true };
+        using var namePaint  = new SKPaint { IsAntialias = true };
+        using var valuePaint = new SKPaint { IsAntialias = true };
 
         for (int i = 0; i < n; i++)
         {
             float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
             float lx = cx + textR * MathF.Cos(angle);
             float ly = cy + textR * MathF.Sin(angle);
-            canvas.DrawText(labels[i], lx, ly, SKTextAlign.Center, labelFont, labelPaint);
-            canvas.DrawText(((int)_radarCurrent[i]).ToString(), lx, ly + valueSz * 1.05f, SKTextAlign.Center, valueFont, valuePaint);
+            namePaint.Color  = StatColors[i].WithAlpha(180);
+            valuePaint.Color = StatColors[i];
+            canvas.DrawText(labels[i],                        lx, ly,                  SKTextAlign.Center, labelFont, namePaint);
+            canvas.DrawText(((int)_radarCurrent[i]).ToString(), lx, ly + valueSz * 1.1f, SKTextAlign.Center, valueFont, valuePaint);
         }
     }
 
@@ -327,7 +362,7 @@ public partial class GamePage : ContentPage
     {
         bool adaptive = Preferences.Default.Get(SettingsPage.KeyRadarAdaptive, false);
         _radarVisMax = adaptive
-            ? Math.Max(target.Max() / 0.85f, 150f)
+            ? Math.Max(target.Max() / 0.78f, 80f)   // targets ~78% fill for highest stat
             : 255f;
 
         _radarAnimCts?.Cancel();
