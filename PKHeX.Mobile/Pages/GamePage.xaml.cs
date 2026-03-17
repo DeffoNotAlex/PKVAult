@@ -499,7 +499,7 @@ public partial class GamePage : ContentPage
     }
 
     // ──────────────────────────────────────────────
-    //  Animated sprite (Pokémon Showdown CDN)
+    //  Animated sprite (cached from Showdown CDN)
     // ──────────────────────────────────────────────
 
     private async void LoadAnimatedSprite(PKM pk)
@@ -508,27 +508,30 @@ public partial class GamePage : ContentPage
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
 
-        var slug = ToShowdownSlug(name);
-        var folder   = pk.IsShiny ? "ani-shiny" : "ani";
-        var primary  = $"https://play.pokemonshowdown.com/sprites/{folder}/{slug}.gif";
-        var fallback = $"https://play.pokemonshowdown.com/sprites/gen5ani/{slug}.gif";
+        var slug  = ToShowdownSlug(name);
+        var shiny = pk.IsShiny;
+
+        // Fetch from disk cache or download; falls back to static canvas if unavailable
+        var dataUri = await Services.SpriteCacheService.GetDataUriAsync(slug, shiny);
+        if (dataUri is null)
+        {
+            // Nothing cached and download failed — show static sprite, don't break WebView state
+            PreviewCanvas.IsVisible = true;
+            PreviewCanvas.InvalidateSurface();
+            return;
+        }
 
         if (!_spriteWebViewReady)
         {
-            SpriteWebView.Source = new HtmlWebViewSource { Html = BuildSpriteShell(primary, fallback) };
+            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;
-            _spriteWebViewReady = true;
+            _spriteWebViewReady     = true;
         }
         else
         {
-            // Subsequent loads: update only the img src via JS — background stays
             var js = $$"""
-                (function(){
-                  var img=document.getElementById('s');
-                  img.onerror=function(){if(img.src!=='{{fallback}}')img.src='{{fallback}}'};
-                  img.src='{{primary}}';
-                })();
+                document.getElementById('s').src='{{dataUri}}';
                 """;
             await SpriteWebView.EvaluateJavaScriptAsync(js);
         }
@@ -541,15 +544,14 @@ public partial class GamePage : ContentPage
         .Replace("'", "").Replace(":", "")
         .Replace("é", "e");
 
-    private static string BuildSpriteShell(string primary, string fallback) => $$"""
+    private static string BuildSpriteShell(string src) => $$"""
         <!DOCTYPE html>
         <html><head>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
-        <img id="s" src="{{primary}}"
-             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))"
-             onerror="if(this.src!=='{{fallback}}')this.src='{{fallback}}'">
+        <img id="s" src="{{src}}"
+             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
         </body></html>
         """;
 
