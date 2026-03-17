@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="PKHeX.Mobile.Pages.BankPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#050518">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="#050518">
+
+        <!-- ── Header ── -->
+        <Grid Grid.Row="0" ColumnDefinitions="52,*,52"
+              BackgroundColor="#0A0A20" Padding="4,8">
+            <Button Grid.Column="0" x:Name="PrevBankBtn" Text="◀"
+                    Clicked="OnPrevBox"
+                    BackgroundColor="#1A2040" TextColor="#A0B0FF"
+                    FontSize="14" FontAttributes="Bold" Padding="0" />
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                <Label x:Name="BankNameLabel"
+                       TextColor="White" FontSize="16" FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+                <Label x:Name="BoxIndexLabel"
+                       TextColor="#404870" FontSize="10"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <Button Grid.Column="2" x:Name="NextBankBtn" Text="▶"
+                    Clicked="OnNextBox"
+                    BackgroundColor="#1A2040" TextColor="#A0B0FF"
+                    FontSize="14" FontAttributes="Bold" Padding="0" />
+        </Grid>
+
+        <!-- ── Mode banner ── -->
+        <Border Grid.Row="1" x:Name="ModeBanner"
+                BackgroundColor="#0D1A0D" Stroke="Transparent"
+                Padding="10,6" IsVisible="False">
+            <Label x:Name="ModeLabel"
+                   TextColor="#44CC66" FontSize="13" FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+        </Border>
+
+        <!-- ── Bank grid ── -->
+        <skia:SKCanvasView Grid.Row="2" x:Name="BankCanvas"
+                           PaintSurface="OnBankPaintSurface">
+            <skia:SKCanvasView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBankTapped" />
+            </skia:SKCanvasView.GestureRecognizers>
+        </skia:SKCanvasView>
+
+        <!-- ── Info bar ── -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto"
+              BackgroundColor="#080818" Padding="12,6">
+            <Label x:Name="HoverLabel"
+                   TextColor="#8899CC" FontSize="12"
+                   VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="R-stick: box  L1/R1: swap  Y: grab  A: drop  ⊙: rename  B: back"
+                   TextColor="#252540" FontSize="9"
+                   VerticalOptions="Center" />
+        </Grid>
+
+    </Grid>
+</ContentPage>

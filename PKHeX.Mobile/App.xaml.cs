@@ -14,6 +14,16 @@ public partial class App : Application
     /// <summary>SAF content URI of the loaded save, used for write-back.</summary>
     public static string ActiveSaveFileUri { get; set; } = "";
 
+    // ── Cross-page Pokémon move (box ↔ bank) ──────────────────────
+    /// <summary>PKM currently being carried across a bank/box swap.</summary>
+    public static PKHeX.Core.PKM? PendingMove      { get; set; }
+    /// <summary>Box index the move originated from.</summary>
+    public static int  PendingSourceBox             { get; set; } = -1;
+    /// <summary>Slot index the move originated from.</summary>
+    public static int  PendingSourceSlot            { get; set; } = -1;
+    /// <summary>True when the move originated from the bank (withdraw), false when from game box (deposit).</summary>
+    public static bool PendingFromBank              { get; set; }
+
     public App()
     {
         InitializeComponent();

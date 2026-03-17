@@ -12,7 +12,10 @@ public static class GamepadRouter
 {
     public static event Action<Keycode, KeyEventActions>? KeyReceived;
 
-    /// <summary>Called by MainActivity before base handling.</summary>
+    /// <summary>Fired when the right stick crosses the scroll threshold. -1 = prev box, +1 = next box.</summary>
+    public static event Action<int>? BoxScrollRequested;
+
+    /// <summary>Called by MainActivity for digital button/key events.</summary>
     public static bool Dispatch(Keycode keyCode, KeyEventActions action)
     {
         if (KeyReceived is null)
@@ -21,7 +24,7 @@ public static class GamepadRouter
         // Normalise common aliases so pages only handle canonical codes
         keyCode = keyCode switch
         {
-            Keycode.DpadCenter  => Keycode.ButtonA,   // D-pad click = A
+            Keycode.DpadCenter   => Keycode.ButtonA,  // D-pad click = A
             Keycode.ButtonThumbl => Keycode.ButtonA,  // left-stick click = A on some pads
             _ => keyCode,
         };
@@ -29,5 +32,8 @@ public static class GamepadRouter
         KeyReceived.Invoke(keyCode, action);
         return true;
     }
+
+    /// <summary>Called by MainActivity when the right stick crosses the scroll threshold.</summary>
+    public static void DispatchBoxScroll(int direction) => BoxScrollRequested?.Invoke(direction);
 }
 #endif

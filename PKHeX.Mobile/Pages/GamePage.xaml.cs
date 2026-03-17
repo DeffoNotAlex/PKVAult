@@ -53,7 +53,8 @@ public partial class GamePage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
-        GamepadRouter.KeyReceived += OnGamepadKey;
+        GamepadRouter.KeyReceived        += OnGamepadKey;
+        GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
         var sav = App.ActiveSave;
         if (sav is null) return;
@@ -75,6 +76,16 @@ public partial class GamePage : ContentPage
             BoxCountLabel.Text    = $"{sav.BoxCount} boxes · {sav.SlotCount} slots";
         }
 
+        // If returning from bank with a withdrawn Pokémon, enter move mode
+        if (App.PendingMove != null && App.PendingFromBank)
+        {
+            _movePk          = App.PendingMove;
+            _moveSourceBox   = -1; // originated from bank
+            _moveSourceSlot  = -1;
+            _moveMode        = true;
+            App.PendingMove  = null;
+        }
+
         // Always reset species key so radar re-reads preferences (e.g. after returning from Settings)
         _previewSpecies = -1;
         _showLegalityBadges = Preferences.Default.Get(SettingsPage.KeyLegalityBadge, false);
@@ -85,9 +96,19 @@ public partial class GamePage : ContentPage
     {
         base.OnDisappearing();
 #if ANDROID
-        GamepadRouter.KeyReceived -= OnGamepadKey;
+        GamepadRouter.KeyReceived        -= OnGamepadKey;
+        GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
     }
+
+#if ANDROID
+    private void OnBoxScroll(int dir)
+        => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (dir < 0) OnPrevBox(this, EventArgs.Empty);
+            else         OnNextBox(this, EventArgs.Empty);
+        });
+#endif
 
     // ──────────────────────────────────────────────
     //  Box loading
@@ -185,7 +206,28 @@ public partial class GamePage : ContentPage
                 else              { drawH = inner; drawW = inner * aspect; }
                 float sx = x + pad + (inner - drawW) / 2f;
                 float sy = y + pad + (inner - drawH) / 2f;
-                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
+
+                // Ghost (30% opacity) at source slot so you remember what you're moving
+                bool isSource = _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
+                byte alpha = isSource ? (byte)70 : (byte)255;
+                using var spritePaint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
+                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), spritePaint);
+            }
+
+            // Ghost of grabbed Pokémon shown at cursor slot as drop preview
+            if (_moveMode && isCursor && _movePk != null
+                && !(_moveSourceBox == _boxIndex && i == _moveSourceSlot))
+            {
+                var ghost   = _sprites.GetSprite(_movePk);
+                float inner = slotSize - pad * 2;
+                float aspect = ghost.Width > 0 ? (float)ghost.Width / ghost.Height : 1f;
+                float drawW, drawH;
+                if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
+                else              { drawH = inner; drawW = inner * aspect; }
+                float sx = x + pad + (inner - drawW) / 2f;
+                float sy = y + pad + (inner - drawH) / 2f;
+                using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
+                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
             }
 
             if (isCursor)
@@ -621,12 +663,8 @@ public partial class GamePage : ContentPage
                 break;
 
             case Android.Views.Keycode.ButtonL1:
-            case Android.Views.Keycode.Button5:
-                OnPrevBox(this, EventArgs.Empty); break;
-
             case Android.Views.Keycode.ButtonR1:
-            case Android.Views.Keycode.Button6:
-                OnNextBox(this, EventArgs.Empty); break;
+                _ = SwapToBank(); break;
 
             case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonY:
@@ -757,6 +795,7 @@ public partial class GamePage : ContentPage
     {
         _moveMode = false;
         _movePk   = null;
+        App.PendingSourceBox = -1; // release bank reference if cancelled
         BoxCanvas.InvalidateSurface();
     }
 
@@ -764,15 +803,49 @@ public partial class GamePage : ContentPage
     {
         if (_movePk is null || _sav is null) return;
 
-        // Swap: destination goes to source slot, grabbed Pokémon goes to destination
-        var destPk = _currentBox[_cursorSlot];
-        _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
-        _sav.SetBoxSlotAtIndex(destPk,  _moveSourceBox, _moveSourceSlot);
+        if (_moveSourceBox == -1)
+        {
+            // Withdraw from bank: place in game slot, then clear the bank slot
+            _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
+            if (App.PendingSourceBox >= 0)
+            {
+                new Services.BankService().ClearSlot(App.PendingSourceBox, App.PendingSourceSlot);
+                App.PendingSourceBox = -1;
+            }
+        }
+        else
+        {
+            // Box-to-box swap
+            var destPk = _currentBox[_cursorSlot];
+            _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
+            _sav.SetBoxSlotAtIndex(destPk, _moveSourceBox, _moveSourceSlot);
+        }
 
         CancelMoveMode();
         DeselectSlot();
-        _previewSpecies = -1; // force sprite reload after swap
+        _previewSpecies = -1;
         LoadBox(_boxIndex);
+    }
+
+    private async Task SwapToBank()
+    {
+        if (_moveMode && _movePk != null)
+        {
+            App.PendingMove     = _movePk;
+            App.PendingFromBank = _moveSourceBox == -1; // preserve withdraw-in-progress flag
+            if (!App.PendingFromBank)
+            {
+                // Deposit: record game source so bank can clear it on confirm
+                App.PendingSourceBox  = _moveSourceBox;
+                App.PendingSourceSlot = _moveSourceSlot;
+            }
+            _moveMode = false;
+            _movePk   = null;
+        }
+
+        await this.TranslateTo(-800, 0, 260, Easing.CubicInOut);
+        this.TranslationX = 0;
+        await Shell.Current.GoToAsync(nameof(BankPage));
     }
 
     private async Task RunLegalityBadgesAsync(PKM[] snapshot)

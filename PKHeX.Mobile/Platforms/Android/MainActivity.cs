@@ -51,6 +51,7 @@ public class MainActivity : MauiAppCompatActivity
     // Previous analog axis positions for edge detection
     private float _prevHatX, _prevHatY;
     private float _prevLX,   _prevLY;
+    private float _prevRX;   // right stick horizontal
 
     private const float AxisThreshold = 0.45f;
 
@@ -80,10 +81,22 @@ public class MainActivity : MauiAppCompatActivity
             FireAxis(e.GetAxisValue(Axis.X),    ref _prevLX,   Keycode.DpadLeft, Keycode.DpadRight);
             FireAxis(e.GetAxisValue(Axis.Y),    ref _prevLY,   Keycode.DpadUp,   Keycode.DpadDown);
 
+            // Right stick horizontal → box scroll
+            FireRightStick(e.GetAxisValue(Axis.Z), ref _prevRX);
+
             return true;
         }
 
         return base.DispatchGenericMotionEvent(e);
+    }
+
+    private static void FireRightStick(float value, ref float prev)
+    {
+        if      (value < -AxisThreshold && prev >= -AxisThreshold)
+            GamepadRouter.DispatchBoxScroll(-1);
+        else if (value >  AxisThreshold && prev <=  AxisThreshold)
+            GamepadRouter.DispatchBoxScroll(+1);
+        prev = value;
     }
 
     /// <summary>
