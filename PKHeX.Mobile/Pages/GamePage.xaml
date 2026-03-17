@@ -12,15 +12,15 @@
         <!--  PERSISTENT TOOLBAR — always visible                  -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid Grid.Row="0" ColumnDefinitions="*,*"
-              BackgroundColor="#080812" Padding="6,4" ColumnSpacing="6">
-            <Button Grid.Column="0" Text="💾 Save"
+              BackgroundColor="#060610" Padding="6,2" ColumnSpacing="6">
+            <Button x:Name="SaveBtn" Grid.Column="0" Text="💾 Save"
                     Clicked="OnSaveClicked"
-                    BackgroundColor="#1A3A1A" TextColor="#80FF80"
-                    FontSize="12" Padding="0,6" HorizontalOptions="Fill" />
-            <Button Grid.Column="1" Text="⬆ Export"
+                    BackgroundColor="#1A3A1A" TextColor="#60CC60"
+                    FontSize="11" Padding="0,4" HorizontalOptions="Fill" />
+            <Button x:Name="ExportBtn" Grid.Column="1" Text="⬆ Export"
                     Clicked="OnExportClicked"
-                    BackgroundColor="#2D1B69" TextColor="#C0A0FF"
-                    FontSize="12" Padding="0,6" HorizontalOptions="Fill" />
+                    BackgroundColor="#221550" TextColor="#9080CC"
+                    FontSize="11" Padding="0,4" HorizontalOptions="Fill" />
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->

@@ -25,6 +25,10 @@ public partial class GamePage : ContentPage
     private bool _showLegalityBadges;
     private bool?[] _legalityCache = [];
 
+    // Toolbar focus
+    private bool _toolbarFocused;
+    private int  _toolbarCursor; // 0 = Save, 1 = Export
+
     // Move mode
     private bool _moveMode;
     private PKM? _movePk;
@@ -572,6 +576,26 @@ public partial class GamePage : ContentPage
 
     private void HandleGamepadKey(Android.Views.Keycode keyCode)
     {
+        // Toolbar focus mode intercepts all input
+        if (_toolbarFocused)
+        {
+            switch (keyCode)
+            {
+                case Android.Views.Keycode.DpadLeft:
+                    _toolbarCursor = 0; UpdateToolbarHighlight(); break;
+                case Android.Views.Keycode.DpadRight:
+                    _toolbarCursor = 1; UpdateToolbarHighlight(); break;
+                case Android.Views.Keycode.DpadDown:
+                case Android.Views.Keycode.ButtonB:
+                    _toolbarFocused = false; UpdateToolbarHighlight(); break;
+                case Android.Views.Keycode.ButtonA:
+                    if (_toolbarCursor == 0) OnSaveClicked(this, EventArgs.Empty);
+                    else                     OnExportClicked(this, EventArgs.Empty);
+                    _toolbarFocused = false; UpdateToolbarHighlight(); break;
+            }
+            return;
+        }
+
         switch (keyCode)
         {
             case Android.Views.Keycode.DpadUp:    MoveCursor(-Columns); break;
@@ -621,11 +645,29 @@ public partial class GamePage : ContentPage
         if (delta == +1 && _cursorSlot % Columns == Columns - 1) return;
 
         int next = _cursorSlot + delta;
+
+        // Up from top row → focus toolbar
+        if (next < 0)
+        {
+            _toolbarFocused = true;
+            _toolbarCursor  = 0;
+            UpdateToolbarHighlight();
+            return;
+        }
+
         if ((uint)next >= (uint)_currentBox.Length) return;
 
         _cursorSlot = next;
         UpdateTopPanel();
         BoxCanvas.InvalidateSurface();
+    }
+
+    private void UpdateToolbarHighlight()
+    {
+        bool sf = _toolbarFocused && _toolbarCursor == 0;
+        bool ef = _toolbarFocused && _toolbarCursor == 1;
+        SaveBtn.BackgroundColor   = sf ? Color.FromArgb("#2A6A2A") : Color.FromArgb("#1A3A1A");
+        ExportBtn.BackgroundColor = ef ? Color.FromArgb("#4A2A90") : Color.FromArgb("#221550");
     }
 
     // ──────────────────────────────────────────────

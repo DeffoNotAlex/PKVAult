@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Views;
+using AndroidX.Core.View;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile;
@@ -20,6 +21,29 @@ namespace PKHeX.Mobile;
 public class MainActivity : MauiAppCompatActivity
 {
     public const int RequestPickDirectory = 9001;
+
+    protected override void OnCreate(Android.OS.Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        SetImmersiveMode();
+    }
+
+    public override void OnWindowFocusChanged(bool hasFocus)
+    {
+        base.OnWindowFocusChanged(hasFocus);
+        if (hasFocus) SetImmersiveMode();
+    }
+
+    private void SetImmersiveMode()
+    {
+        if (Window?.DecorView is null) return;
+        WindowCompat.SetDecorFitsSystemWindows(Window, false);
+        var ctrl = WindowCompat.GetInsetsController(Window, Window.DecorView);
+        ctrl.Hide(WindowInsetsCompat.Type.StatusBars());
+        ctrl.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
+    }
+
+
     public const int RequestPickFile      = 9002;
     public static event Action<Android.Net.Uri?>? DirectoryPickResult;
     public static event Action<Android.Net.Uri?>? FilePickResult;
