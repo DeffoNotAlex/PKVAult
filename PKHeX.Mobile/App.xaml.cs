@@ -24,6 +24,9 @@ public partial class App : Application
     /// <summary>True when the move originated from the bank (withdraw), false when from game box (deposit).</summary>
     public static bool PendingFromBank              { get; set; }
 
+    /// <summary>Direction of the last bank swap: -1 = L1 (bank enters from left), +1 = R1 (bank enters from right).</summary>
+    public static int  BankSlideDir                 { get; set; } = -1;
+
     public App()
     {
         InitializeComponent();

@@ -10,9 +10,17 @@ public partial class BankPage : ContentPage
     private const int Columns = 6;
     private const int Rows    = 5;
 
-    private readonly BankService             _bank    = new();
+    private readonly BankService              _bank    = new();
     private readonly FileSystemSpriteRenderer _sprites = new();
-    private readonly GameStrings             _strings = GameInfo.GetStrings("en");
+    private readonly GameStrings              _strings = GameInfo.GetStrings("en");
+
+    // Box wallpaper sprite sheet (4 cols × 6 rows, each tile 160×160, stride 172px, offset 4px)
+    private static SKBitmap? _wallpaperSheet;
+    private const int WallpaperCols   = 4;
+    private const int WallpaperTileW  = 160;
+    private const int WallpaperTileH  = 160;
+    private const int WallpaperStride = 172;
+    private const int WallpaperOffset = 4;
 
     private PKM?[] _currentSlots = new PKM?[BankService.SlotsPerBox];
     private int    _boxIndex;
@@ -40,9 +48,14 @@ public partial class BankPage : ContentPage
         GamepadRouter.KeyReceived      += OnGamepadKey;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
-        // Slide in from right
-        this.TranslationX = 800;
+        // Enter from the opposite side of where the game exited
+        // L1 (BankSlideDir=-1): game exited right → bank enters from LEFT (-800)
+        // R1 (BankSlideDir=+1): game exited left  → bank enters from RIGHT (+800)
+        this.TranslationX = App.BankSlideDir < 0 ? -800 : 800;
         await this.TranslateTo(0, 0, 260, Easing.CubicInOut);
+
+        // Load wallpaper sheet once
+        _wallpaperSheet ??= await LoadWallpaperSheetAsync();
 
         // If arriving with a pending deposit, enter deposit mode display
         UpdateModeBanner();
@@ -110,10 +123,51 @@ public partial class BankPage : ContentPage
     //  Rendering
     // ──────────────────────────────────────────────
 
+    private static async Task<SKBitmap?> LoadWallpaperSheetAsync()
+    {
+        try
+        {
+            await using var stream = await FileSystem.OpenAppPackageFileAsync("boxwallpapers.png");
+            return SKBitmap.Decode(stream);
+        }
+        catch { return null; }
+    }
+
+    private static SKBitmap? GetWallpaperTile(int boxIndex)
+    {
+        if (_wallpaperSheet is null) return null;
+        int idx = boxIndex % 24; // 24 wallpapers in the sheet
+        int col = idx % WallpaperCols;
+        int row = idx / WallpaperCols;
+        int srcX = col * WallpaperStride + WallpaperOffset;
+        int srcY = row * WallpaperStride + WallpaperOffset;
+        var src = new SKRectI(srcX, srcY, srcX + WallpaperTileW, srcY + WallpaperTileH);
+        var tile = new SKBitmap(WallpaperTileW, WallpaperTileH);
+        using var canvas = new SKCanvas(tile);
+        canvas.DrawBitmap(_wallpaperSheet, src, new SKRect(0, 0, WallpaperTileW, WallpaperTileH));
+        return tile;
+    }
+
     private void OnBankPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(5, 5, 24));
+
+        // Draw tiled wallpaper background for this box
+        var wallpaper = GetWallpaperTile(_boxIndex);
+        if (wallpaper != null)
+        {
+            using var bgPaint = new SKPaint { FilterQuality = SKFilterQuality.Low };
+            for (float ty = 0; ty < e.Info.Height; ty += wallpaper.Height)
+                for (float tx = 0; tx < e.Info.Width; tx += wallpaper.Width)
+                    canvas.DrawBitmap(wallpaper, tx, ty, bgPaint);
+            // Dim overlay so sprites remain readable
+            canvas.DrawRect(0, 0, e.Info.Width, e.Info.Height,
+                new SKPaint { Color = new SKColor(0, 0, 10, 160) });
+        }
+        else
+        {
+            canvas.Clear(new SKColor(5, 5, 24));
+        }
         if (_currentSlots.Length == 0) return;
 
         float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
@@ -405,7 +459,11 @@ public partial class BankPage : ContentPage
             _movePk   = null;
         }
 
-        await this.TranslateTo(800, 0, 260, Easing.CubicInOut);
+        // Exit back in the direction the bank entered from (reverse of entry)
+        // L1 path: bank entered from LEFT → exits back LEFT (-800)
+        // R1 path: bank entered from RIGHT → exits back RIGHT (+800)
+        double exitX = App.BankSlideDir < 0 ? -800 : 800;
+        await this.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
         this.TranslationX = 0;
         await Shell.Current.GoToAsync("..");
     }

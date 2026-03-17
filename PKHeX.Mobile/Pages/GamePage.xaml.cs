@@ -62,8 +62,8 @@ public partial class GamePage : ContentPage
         bool freshSave = _sav != sav;
         _sav = sav;
 
-        if (freshSave)
-            _spriteWebViewReady = false;
+        // Always reset so WebView reloads cleanly after any navigation away
+        _spriteWebViewReady = false;
 
         if (freshSave)
         {
@@ -662,9 +662,8 @@ public partial class GamePage : ContentPage
                 else OnMenuClicked(this, EventArgs.Empty);
                 break;
 
-            case Android.Views.Keycode.ButtonL1:
-            case Android.Views.Keycode.ButtonR1:
-                _ = SwapToBank(); break;
+            case Android.Views.Keycode.ButtonL1: _ = SwapToBank(-1); break;
+            case Android.Views.Keycode.ButtonR1: _ = SwapToBank(+1); break;
 
             case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonY:
@@ -827,15 +826,14 @@ public partial class GamePage : ContentPage
         LoadBox(_boxIndex);
     }
 
-    private async Task SwapToBank()
+    private async Task SwapToBank(int dir)
     {
         if (_moveMode && _movePk != null)
         {
             App.PendingMove     = _movePk;
-            App.PendingFromBank = _moveSourceBox == -1; // preserve withdraw-in-progress flag
+            App.PendingFromBank = _moveSourceBox == -1;
             if (!App.PendingFromBank)
             {
-                // Deposit: record game source so bank can clear it on confirm
                 App.PendingSourceBox  = _moveSourceBox;
                 App.PendingSourceSlot = _moveSourceSlot;
             }
@@ -843,7 +841,11 @@ public partial class GamePage : ContentPage
             _movePk   = null;
         }
 
-        await this.TranslateTo(-800, 0, 260, Easing.CubicInOut);
+        // L1 (dir=-1): game exits RIGHT (+800), bank will enter from LEFT
+        // R1 (dir=+1): game exits LEFT  (-800), bank will enter from RIGHT
+        App.BankSlideDir = dir;
+        double exitX = dir < 0 ? 800 : -800;
+        await this.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
         this.TranslationX = 0;
         await Shell.Current.GoToAsync(nameof(BankPage));
     }
