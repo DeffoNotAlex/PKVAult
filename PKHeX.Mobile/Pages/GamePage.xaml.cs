@@ -90,7 +90,7 @@ public partial class GamePage : ContentPage
             TrainerNameLabel.Text   = sav.OT;
             SaveGameLabel.Text     = $"Pokémon {sav.Version}  ·  Gen {sav.Generation}";
             TrainerTIDLabel.Text   = sav.TrainerTID7.ToString();
-            TrainerBoxesLabel.Text = sav.BoxCount.ToString();
+            TrainerPokedexLabel.Text = sav.BoxCount.ToString();
             TrainerPlaytimeLabel.Text = sav.PlayTimeString;
 
             // Set trainer circle game icon

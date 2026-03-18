@@ -76,7 +76,38 @@ public partial class MainPage : ContentPage
             }
         }
 
+        // Show hero preview for the focused card
+        UpdateHeroPreview();
         UpdateActionHighlight();
+    }
+
+    // ── Hero preview ──────────────────────────────────────────────────────────
+
+    private void UpdateHeroPreview()
+    {
+        if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
+        {
+            HeroPreview.IsVisible = false;
+            return;
+        }
+
+        var card = _saveCards[_cardCursor];
+        HeroPreview.IsVisible = true;
+
+        // Badge
+        HeroBadgeText.Text = card.GameShortName;
+        HeroBadgeGrad0.Color = card.GameColorDark;
+        HeroBadgeGrad1.Color = card.GameColorLight;
+
+        // Trainer info
+        HeroTrainerName.Text = card.TrainerName;
+        HeroGameLabel.Text = card.VersionLabel;
+        HeroTID.Text = card.Entry.TrainerID.ToString();
+        HeroBoxes.Text = card.Entry.BoxCount.ToString();
+        HeroPlaytime.Text = card.Entry.PlayTime;
+
+        // Active pill
+        HeroActivePill.IsVisible = card.IsLoaded;
     }
 
     // ── Save loading ─────────────────────────────────────────────────────────
@@ -96,6 +127,7 @@ public partial class MainPage : ContentPage
             var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
             if (active != null) active.IsLoaded = true;
 
+            UpdateHeroPreview();
             UpdateActionHighlight();
         }
     }
@@ -170,7 +202,7 @@ public partial class MainPage : ContentPage
         var focusBg = Color.FromArgb("#182242");
         var focusStroke = Color.FromArgb("#3B8BFF");
         var normalBg = Color.FromArgb("#131B35");
-        var normalStroke = Color.FromArgb("#0D0D0D0D");
+        var normalStroke = Color.FromArgb("#0DFFFFFF");
 
         // Primary button focus
         bool primaryFocused = _focusSection == 1 && _actionCursor == 0;
@@ -181,7 +213,7 @@ public partial class MainPage : ContentPage
         {
             bool focused = _focusSection == 1 && _actionCursor == i + 1;
             _actionTiles[i].BackgroundColor = focused ? focusBg : normalBg;
-            _actionTiles[i].Stroke = focused ? focusStroke : Color.FromArgb("#0D0D0D0D");
+            _actionTiles[i].Stroke = focused ? focusStroke : Color.FromArgb("#0DFFFFFF");
         }
     }
 
@@ -225,7 +257,6 @@ public partial class MainPage : ContentPage
     {
         if (dir < 0 && _focusSection == 1)
         {
-            // Action bar → save list
             _focusSection = 0;
             if (_saveCards.Count > 0 && _cardCursor < 0)
                 _cardCursor = 0;
@@ -239,7 +270,6 @@ public partial class MainPage : ContentPage
         }
         else if (dir > 0 && _focusSection == 0)
         {
-            // Save list → action bar
             _focusSection = 1;
             _actionCursor = 0;
             _gpNavigating = true;
@@ -255,12 +285,10 @@ public partial class MainPage : ContentPage
         {
             if (_actionCursor > 0)
             {
-                // Tiles → primary button
                 _actionCursor = 0;
             }
             else
             {
-                // Primary button → jump back to save list
                 CycleZone(-1);
                 return;
             }
@@ -273,6 +301,7 @@ public partial class MainPage : ContentPage
             SaveCardsList.SelectedItem = _saveCards[_cardCursor];
             _gpNavigating = false;
             SaveCardsList.ScrollTo(_cardCursor, -1, ScrollToPosition.MakeVisible, false);
+            UpdateHeroPreview();
         }
         UpdateActionHighlight();
     }
@@ -288,10 +317,10 @@ public partial class MainPage : ContentPage
                 SaveCardsList.SelectedItem = _saveCards[_cardCursor];
                 _gpNavigating = false;
                 SaveCardsList.ScrollTo(_cardCursor, -1, ScrollToPosition.MakeVisible, false);
+                UpdateHeroPreview();
             }
             else
             {
-                // Bottom of save list → jump to action bar
                 CycleZone(1);
                 return;
             }
@@ -299,11 +328,7 @@ public partial class MainPage : ContentPage
         else
         {
             if (_actionCursor == 0)
-            {
-                // Primary button → first tile
                 _actionCursor = 1;
-            }
-            // Already on tiles — stay (no further down)
         }
         UpdateActionHighlight();
     }
@@ -335,7 +360,6 @@ public partial class MainPage : ContentPage
                 var card = _saveCards[_cardCursor];
                 if (card.IsLoaded)
                 {
-                    // Already active — open boxes directly
                     ActivatePrimaryButton();
                 }
                 else
@@ -355,7 +379,7 @@ public partial class MainPage : ContentPage
 
     // ── SaveCardViewModel ────────────────────────────────────────────────────
 
-    private sealed class SaveCardViewModel : INotifyPropertyChanged
+    internal sealed class SaveCardViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)
@@ -374,7 +398,6 @@ public partial class MainPage : ContentPage
         public string DetailLine { get; }
         public string GameShortName { get; }
 
-        // Theme-aware colors for gradient badge
         public Color GameColorDark { get; }
         public Color GameColorLight { get; }
 
@@ -452,7 +475,7 @@ public partial class MainPage : ContentPage
             _               => null,
         };
 
-        private static string GetGameShortName(GameVersion v) => v switch
+        internal static string GetGameShortName(GameVersion v) => v switch
         {
             GameVersion.RD  => "Red",
             GameVersion.BU  => "Blue",

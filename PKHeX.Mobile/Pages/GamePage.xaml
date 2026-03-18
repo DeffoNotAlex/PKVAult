@@ -56,9 +56,9 @@
                                    TextColor="#EDF0FF" />
                         </VerticalStackLayout>
                         <VerticalStackLayout>
-                            <Label Text="BOXES" FontFamily="NunitoBold" FontSize="9"
+                            <Label Text="POKÉDEX" FontFamily="NunitoBold" FontSize="9"
                                    TextColor="#3D4A6E" CharacterSpacing="0.8" />
-                            <Label x:Name="TrainerBoxesLabel"
+                            <Label x:Name="TrainerPokedexLabel"
                                    FontFamily="NunitoExtraBold" FontSize="14"
                                    TextColor="#EDF0FF" />
                         </VerticalStackLayout>
