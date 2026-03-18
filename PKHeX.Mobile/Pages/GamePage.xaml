@@ -13,7 +13,10 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid Grid.Row="0" BackgroundColor="#070C1A">
 
-            <!-- Background canvas (gradients, ambient glow) -->
+            <!-- Background image -->
+            <Image Source="sprite_bg.jpg" Aspect="AspectFill" />
+
+            <!-- Background canvas overlay (gradients, ambient glow) -->
             <skia:SKCanvasView x:Name="TopBgCanvas"
                                PaintSurface="OnTopBgPaint" />
 

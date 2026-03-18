@@ -19,7 +19,7 @@ public partial class GamePage : ContentPage
     private PKM[] _currentBox = [];
     private int _boxIndex;
     private int _cursorSlot;
-    private int _selectedSlot = -1;   // gold outline (A-confirmed), -1 = none
+    private int _selectedSlot = -1;   // selected outline (A-confirmed), -1 = none
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
@@ -166,7 +166,7 @@ public partial class GamePage : ContentPage
             int filled = _currentBox.Count(pk => pk.Species != 0);
             IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
 
-            // Clear gold outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
+            // Clear selected outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
                 || _currentBox[_selectedSlot].Species == 0))
                 _selectedSlot = -1;
@@ -297,7 +297,7 @@ public partial class GamePage : ContentPage
             if (_moveMode && isCursor)
                 DrawGreenCursor(canvas, rect, radius, pulseGreen);
             else if (isSelected)
-                DrawGoldCursor(canvas, rect, radius);
+                DrawSelectedCursor(canvas, rect, radius);
             else if (isCursor)
                 DrawBlueCursor(canvas, rect, radius, pulseBlue);
 
@@ -370,15 +370,15 @@ public partial class GamePage : ContentPage
         canvas.DrawRoundRect(glowRect, 11, 11, glowPaint);
     }
 
-    private static void DrawGoldCursor(SKCanvas canvas, SKRect rect, float radius)
+    private static void DrawSelectedCursor(SKCanvas canvas, SKRect rect, float radius)
     {
-        // Static — no pulse
-        using var fillPaint = new SKPaint { Color = new SKColor(200, 170, 80, 38), IsAntialias = true };
+        // Static (no pulse) — brighter blue-white to distinguish from navigation cursor
+        using var fillPaint = new SKPaint { Color = new SKColor(107, 171, 255, 30), IsAntialias = true };
         canvas.DrawRoundRect(rect, radius, radius, fillPaint);
         using var strokePaint = new SKPaint
         {
-            Color = SKColor.Parse("#C8AA50"), Style = SKPaintStyle.Stroke,
-            StrokeWidth = 1.5f, IsAntialias = true,
+            Color = new SKColor(160, 200, 255), Style = SKPaintStyle.Stroke,
+            StrokeWidth = 2f, IsAntialias = true,
         };
         canvas.DrawRoundRect(rect, radius, radius, strokePaint);
 
@@ -386,7 +386,7 @@ public partial class GamePage : ContentPage
         using var outerPaint = new SKPaint
         {
             Style = SKPaintStyle.Stroke,
-            Color = new SKColor(200, 170, 80, 77),
+            Color = new SKColor(107, 171, 255, 77),
             StrokeWidth = 2f, IsAntialias = true,
         };
         canvas.DrawRoundRect(outerRect, 13, 13, outerPaint);
@@ -394,7 +394,7 @@ public partial class GamePage : ContentPage
         var glowRect = new SKRect(rect.Left - 1, rect.Top - 1, rect.Right + 1, rect.Bottom + 1);
         using var glowPaint = new SKPaint
         {
-            Color = new SKColor(200, 170, 80, 51),
+            Color = new SKColor(59, 139, 255, 51),
             ImageFilter = SKImageFilter.CreateBlur(7, 7),
             IsAntialias = true,
         };
@@ -718,12 +718,16 @@ public partial class GamePage : ContentPage
     private void OnTopBgPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(7, 12, 26)); // BgDeep
+        canvas.Clear(SKColors.Transparent); // Let background image show through
 
         float w = e.Info.Width;
         float h = e.Info.Height;
 
-        // Radial glow — game accent color at 8% opacity
+        // Semi-transparent dark overlay so text is readable over the background image
+        using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 140) };
+        canvas.DrawRect(0, 0, w, h, dimPaint);
+
+        // Radial glow — game accent color at low opacity
         var gameColor = _sav != null
             ? Theme.GameColors.Get(_sav.Version).Light
             : new SKColor(59, 139, 255);
@@ -734,21 +738,13 @@ public partial class GamePage : ContentPage
             SKShaderTileMode.Clamp);
         canvas.DrawRect(0, 0, w, h, glowPaint1);
 
-        // Radial glow — AccentPurple at 6%
+        // Radial glow — AccentPurple
         using var glowPaint2 = new SKPaint();
         glowPaint2.Shader = SKShader.CreateRadialGradient(
             new SKPoint(w * 0.8f, h * 0.3f), Math.Min(w, h) * 0.45f,
             [new SKColor(167, 139, 250, 15), SKColors.Transparent],
             SKShaderTileMode.Clamp);
         canvas.DrawRect(0, 0, w, h, glowPaint2);
-
-        // Linear gradient overlay
-        using var overlayPaint = new SKPaint();
-        overlayPaint.Shader = SKShader.CreateLinearGradient(
-            new SKPoint(0, 0), new SKPoint(w * 0.7f, h),
-            [new SKColor(7, 12, 26, 0), new SKColor(13, 21, 48, 80)],
-            SKShaderTileMode.Clamp);
-        canvas.DrawRect(0, 0, w, h, overlayPaint);
     }
 
     // ──────────────────────────────────────────────
@@ -1133,7 +1129,7 @@ public partial class GamePage : ContentPage
     }
 
     // ──────────────────────────────────────────────
-    //  Selection state machine (gold outline only)
+    //  Selection state machine (selected outline only)
     // ──────────────────────────────────────────────
 
     // ──────────────────────────────────────────────
@@ -1217,7 +1213,7 @@ public partial class GamePage : ContentPage
         MainThread.BeginInvokeOnMainThread(() => BoxCanvas.InvalidateSurface());
     }
 
-    /// <summary>Mark slot with gold outline (does not change the top panel display).</summary>
+    /// <summary>Mark slot with selected outline (does not change the top panel display).</summary>
     private void SelectSlot(int slot)
     {
         if (_currentBox[slot].Species == 0) return;
@@ -1225,7 +1221,7 @@ public partial class GamePage : ContentPage
         BoxCanvas.InvalidateSurface();
     }
 
-    /// <summary>Clear gold outline.</summary>
+    /// <summary>Clear selected outline.</summary>
     private void DeselectSlot()
     {
         _selectedSlot = -1;
