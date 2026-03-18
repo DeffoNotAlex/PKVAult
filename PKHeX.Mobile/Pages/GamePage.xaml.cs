@@ -724,7 +724,7 @@ public partial class GamePage : ContentPage
         float h = e.Info.Height;
 
         // Semi-transparent dark overlay so text is readable over the background image
-        using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 140) };
+        using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 60) };
         canvas.DrawRect(0, 0, w, h, dimPaint);
 
         // Radial glow — game accent color at low opacity
