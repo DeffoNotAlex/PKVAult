@@ -145,7 +145,7 @@
 
                     <!-- 4 move rows -->
                     <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
@@ -162,7 +162,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
@@ -179,7 +179,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
@@ -196,7 +196,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
@@ -306,7 +306,7 @@
                 <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="3">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#34D990"
@@ -317,7 +317,7 @@
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#6BABFF"
@@ -328,7 +328,7 @@
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#FF6B9D"
