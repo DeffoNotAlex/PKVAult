@@ -9,82 +9,226 @@
     <Grid RowDefinitions="*,*" RowSpacing="2" BackgroundColor="#050510">
 
         <!-- ══════════════════════════════════════════════════════ -->
-        <!--  TOP SCREEN — idle: trainer info  /  selected: stats  -->
+        <!--  TOP SCREEN — idle: trainer info  /  selected: detail  -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" BackgroundColor="#070C1A">
 
-            <!-- Background image spanning full top section -->
-            <Image Source="sprite_bg.jpg" Aspect="AspectFill" />
+            <!-- Background canvas (gradients, ambient glow) -->
+            <skia:SKCanvasView x:Name="TopBgCanvas"
+                               PaintSurface="OnTopBgPaint" />
 
-            <!-- ── IDLE STATE ── -->
-            <Grid x:Name="TopIdlePanel" Padding="14,10">
+            <!-- ── IDLE STATE — Trainer Card ── -->
+            <Grid x:Name="TopIdlePanel" Padding="20,14"
+                  ColumnDefinitions="Auto,16,*,Auto,16,Auto">
 
-                <!-- Trainer summary + hint -->
-                <Grid ColumnDefinitions="*,Auto">
-                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="4">
-                        <Label x:Name="TrainerNameLabel"
-                               TextColor="#E0E8FF" FontSize="18" FontAttributes="Bold" />
-                        <Label x:Name="SaveGameLabel"  TextColor="#7080B0" FontSize="13" />
-                        <Label x:Name="BoxCountLabel"  TextColor="#7080B0" FontSize="13" />
-                    </VerticalStackLayout>
-                    <Label Grid.Column="1"
-                           TextColor="#303850" FontSize="10"
-                           HorizontalOptions="End" VerticalOptions="End"
-                           Text="A: select  B: back&#10;X: search  Y: move/gifts&#10;▶: save/export menu&#10;L/R: prev / next box" />
-                </Grid>
+                <!-- Trainer circle (game icon inside) -->
+                <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 70"
+                        Stroke="#0FFFFFFF" StrokeThickness="2"
+                        WidthRequest="100" HeightRequest="100"
+                        VerticalOptions="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop x:Name="TrainerCircleGrad0" Color="#26394880" Offset="0" />
+                            <GradientStop x:Name="TrainerCircleGrad1" Color="#1AA78BFA" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Image x:Name="TrainerGameIcon" Aspect="AspectFit"
+                           WidthRequest="60" HeightRequest="60"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
 
+                <!-- Trainer info -->
+                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="4">
+                    <Label x:Name="TrainerNameLabel"
+                           FontFamily="NunitoExtraBold" FontSize="22"
+                           TextColor="#EDF0FF" />
+                    <Label x:Name="SaveGameLabel"
+                           FontFamily="Nunito" FontSize="13"
+                           TextColor="#8892B5" />
+                    <!-- Stat row: TID / Pokédex / Playtime -->
+                    <HorizontalStackLayout Spacing="20" Margin="0,6,0,0">
+                        <VerticalStackLayout>
+                            <Label Text="TID" FontFamily="NunitoBold" FontSize="9"
+                                   TextColor="#3D4A6E" CharacterSpacing="0.8" />
+                            <Label x:Name="TrainerTIDLabel"
+                                   FontFamily="NunitoExtraBold" FontSize="14"
+                                   TextColor="#EDF0FF" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout>
+                            <Label Text="BOXES" FontFamily="NunitoBold" FontSize="9"
+                                   TextColor="#3D4A6E" CharacterSpacing="0.8" />
+                            <Label x:Name="TrainerBoxesLabel"
+                                   FontFamily="NunitoExtraBold" FontSize="14"
+                                   TextColor="#EDF0FF" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout>
+                            <Label Text="PLAYTIME" FontFamily="NunitoBold" FontSize="9"
+                                   TextColor="#3D4A6E" CharacterSpacing="0.8" />
+                            <Label x:Name="TrainerPlaytimeLabel"
+                                   FontFamily="NunitoExtraBold" FontSize="14"
+                                   TextColor="#EDF0FF" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Vertical divider -->
+                <BoxView Grid.Column="3" WidthRequest="1" HeightRequest="90"
+                         VerticalOptions="Center"
+                         Color="#0FFFFFFF" />
+
+                <!-- Box info (right-aligned) -->
+                <VerticalStackLayout Grid.Column="5" VerticalOptions="Center" Spacing="2">
+                    <Label Text="CURRENT BOX" FontFamily="NunitoBold" FontSize="9"
+                           TextColor="#3D4A6E" CharacterSpacing="1"
+                           HorizontalTextAlignment="End" />
+                    <Label x:Name="IdleBoxNameLabel"
+                           FontFamily="QuicksandExtraBold" FontSize="18"
+                           TextColor="#EDF0FF"
+                           HorizontalTextAlignment="End" />
+                    <Label x:Name="IdleBoxFillLabel"
+                           FontFamily="Nunito" FontSize="11"
+                           TextColor="#8892B5"
+                           HorizontalTextAlignment="End" />
+                </VerticalStackLayout>
             </Grid>
 
-            <!-- ── SELECTED STATE ── -->
+            <!-- ── SELECTED STATE — 3-column Pokémon detail ── -->
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
-                  ColumnDefinitions="2*,3*">
+                  ColumnDefinitions="3*,4*,3.5*" Padding="8,6">
 
-                <!-- Left: animated sprite (transparent canvas / dark WebView) -->
-                <Grid Grid.Column="0">
-                    <skia:SKCanvasView x:Name="PreviewCanvas"
-                                       PaintSurface="OnPreviewPaint" />
-                    <WebView x:Name="SpriteWebView"
-                             BackgroundColor="Transparent"
-                             IsVisible="False" />
+                <!-- Column 1: Type badges + Sprite + Name plate -->
+                <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="6">
+                    <!-- Type badges -->
+                    <HorizontalStackLayout x:Name="TypeBadgeRow" Grid.Row="0"
+                                           HorizontalOptions="Center" Spacing="5"
+                                           Margin="0,4,0,0" />
+
+                    <!-- Animated sprite (WebView) / static fallback (Canvas) -->
+                    <Grid Grid.Row="1">
+                        <skia:SKCanvasView x:Name="PreviewCanvas"
+                                           PaintSurface="OnPreviewPaint" />
+                        <WebView x:Name="SpriteWebView"
+                                 BackgroundColor="Transparent"
+                                 IsVisible="False" />
+                    </Grid>
+
+                    <!-- Name plate -->
+                    <VerticalStackLayout Grid.Row="2" HorizontalOptions="Center"
+                                         Spacing="1" Margin="0,0,0,6">
+                        <Label x:Name="DetailSpeciesName"
+                               FontFamily="NunitoExtraBold" FontSize="15"
+                               TextColor="#EDF0FF"
+                               HorizontalTextAlignment="Center" />
+                        <Label x:Name="DetailLevelNature"
+                               FontFamily="Nunito" FontSize="10"
+                               TextColor="#8892B5"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
                 </Grid>
 
-                <!-- Right: floating semi-transparent stats panel (always square) -->
-                <Border Grid.Column="1"
-                        x:Name="StatsPanelBorder"
-                        BackgroundColor="#CC0D0D1F"
-                        StrokeShape="RoundRectangle 14"
-                        Stroke="#22FFFFFF"
-                        Margin="6,8,8,8"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center"
-                        SizeChanged="OnStatsPanelSizeChanged">
-                    <Grid RowDefinitions="*,Auto,Auto" Padding="6,4">
+                <!-- Column 2: Stat radar -->
+                <skia:SKCanvasView Grid.Column="1"
+                                   x:Name="RadarCanvas"
+                                   PaintSurface="OnRadarPaint"
+                                   Margin="4" />
 
-                        <skia:SKCanvasView Grid.Row="0"
-                                           x:Name="RadarCanvas"
-                                           PaintSurface="OnRadarPaint" />
+                <!-- Column 3: Moves + Ability/Item -->
+                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
+                                     Spacing="4" Padding="8,14,14,14">
+                    <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
+                           TextColor="#3D4A6E" CharacterSpacing="1.2"
+                           Margin="0,0,0,4" />
 
-                        <Label Grid.Row="1"
-                               x:Name="SelectedSpeciesLabel"
-                               TextColor="#EEEEFF" FontSize="12" FontAttributes="Bold"
-                               HorizontalOptions="Center" HorizontalTextAlignment="Center"
-                               Margin="0,2,0,0" />
+                    <!-- 4 move rows -->
+                    <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
+                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            Padding="8,6">
+                        <Grid ColumnDefinitions="10,*,Auto">
+                            <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
+                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                <Label x:Name="MoveName0" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="#EDF0FF" />
+                                <Label x:Name="MoveCat0" FontFamily="Nunito" FontSize="9"
+                                       TextColor="#3D4A6E" />
+                            </VerticalStackLayout>
+                            <Label x:Name="MovePP0" Grid.Column="2"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="#8892B5" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
+                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            Padding="8,6">
+                        <Grid ColumnDefinitions="10,*,Auto">
+                            <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
+                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                <Label x:Name="MoveName1" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="#EDF0FF" />
+                                <Label x:Name="MoveCat1" FontFamily="Nunito" FontSize="9"
+                                       TextColor="#3D4A6E" />
+                            </VerticalStackLayout>
+                            <Label x:Name="MovePP1" Grid.Column="2"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="#8892B5" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
+                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            Padding="8,6">
+                        <Grid ColumnDefinitions="10,*,Auto">
+                            <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
+                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                <Label x:Name="MoveName2" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="#EDF0FF" />
+                                <Label x:Name="MoveCat2" FontFamily="Nunito" FontSize="9"
+                                       TextColor="#3D4A6E" />
+                            </VerticalStackLayout>
+                            <Label x:Name="MovePP2" Grid.Column="2"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="#8892B5" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
+                            BackgroundColor="#FFFFFF05" Stroke="#FFFFFF08" StrokeThickness="1"
+                            Padding="8,6">
+                        <Grid ColumnDefinitions="10,*,Auto">
+                            <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
+                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                <Label x:Name="MoveName3" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="#EDF0FF" />
+                                <Label x:Name="MoveCat3" FontFamily="Nunito" FontSize="9"
+                                       TextColor="#3D4A6E" />
+                            </VerticalStackLayout>
+                            <Label x:Name="MovePP3" Grid.Column="2"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="#8892B5" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
 
-                        <HorizontalStackLayout Grid.Row="2"
-                                               HorizontalOptions="Center"
-                                               Spacing="10" Margin="0,6,0,6">
-                            <Button Text="✎ Edit"
-                                    Clicked="OnEditClicked"
-                                    BackgroundColor="#3A1A60" TextColor="#D0A0FF"
-                                    FontSize="13" Padding="18,9" />
-                            <Button Text="✕ Back"
-                                    Clicked="OnDeselectClicked"
-                                    BackgroundColor="#1A1A30" TextColor="#6060A0"
-                                    FontSize="12" Padding="12,7" />
-                        </HorizontalStackLayout>
+                    <!-- Divider -->
+                    <BoxView HeightRequest="1" Color="#0AFFFFFF" Margin="0,4" />
 
+                    <!-- Ability / Item -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout>
+                            <Label Text="ABILITY" FontFamily="NunitoBold" FontSize="8"
+                                   TextColor="#3D4A6E" CharacterSpacing="0.6" />
+                            <Label x:Name="DetailAbility" FontFamily="NunitoBold" FontSize="11"
+                                   TextColor="#EDF0FF" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="ITEM" FontFamily="NunitoBold" FontSize="8"
+                                   TextColor="#3D4A6E" CharacterSpacing="0.6" />
+                            <Label x:Name="DetailItem" FontFamily="NunitoBold" FontSize="11"
+                                   TextColor="#EDF0FF" />
+                        </VerticalStackLayout>
                     </Grid>
-                </Border>
+                </VerticalStackLayout>
 
             </Grid>
 
@@ -93,32 +237,105 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  BOTTOM SCREEN — box grid                             -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,*" BackgroundColor="#0A0A14">
+        <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
 
             <!-- Box navigation header -->
-            <Grid Grid.Row="0" ColumnDefinitions="52,*,52"
-                  BackgroundColor="#0D0D1F" Padding="4,6">
-                <Button Grid.Column="0" Text="◀ L"
-                        x:Name="PrevBoxBtn" Clicked="OnPrevBox"
-                        BackgroundColor="#1A2040" TextColor="#A0B0FF"
-                        FontSize="13" FontAttributes="Bold" Padding="0" />
-                <Label  Grid.Column="1" x:Name="BoxNameLabel"
-                        HorizontalOptions="Center" VerticalOptions="Center"
-                        TextColor="White" FontSize="16" FontAttributes="Bold" />
-                <Button Grid.Column="2" Text="R ▶"
-                        x:Name="NextBoxBtn" Clicked="OnNextBox"
-                        BackgroundColor="#1A2040" TextColor="#A0B0FF"
-                        FontSize="13" FontAttributes="Bold" Padding="0" />
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto"
+                  Padding="16,12,16,8">
+                <!-- L button -->
+                <Border x:Name="PrevBoxBtn" StrokeShape="RoundRectangle 10"
+                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPrevBox" />
+                    </Border.GestureRecognizers>
+                    <Label Text="◀" FontSize="14" TextColor="#8892B5"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+
+                <!-- Box title -->
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                    <Label x:Name="BoxNameLabel"
+                           FontFamily="QuicksandExtraBold" FontSize="18"
+                           TextColor="#EDF0FF"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="L / R" FontFamily="Nunito" FontSize="9"
+                           TextColor="#283456"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <!-- R button -->
+                <Border x:Name="NextBoxBtn" Grid.Column="2"
+                        StrokeShape="RoundRectangle 10"
+                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnNextBox" />
+                    </Border.GestureRecognizers>
+                    <Label Text="▶" FontSize="14" TextColor="#8892B5"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
             </Grid>
 
             <!-- Box canvas -->
             <skia:SKCanvasView Grid.Row="1"
                                x:Name="BoxCanvas"
-                               PaintSurface="OnBoxPaintSurface">
+                               PaintSurface="OnBoxPaintSurface"
+                               EnableTouchEvents="False">
                 <skia:SKCanvasView.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBoxTapped" />
                 </skia:SKCanvasView.GestureRecognizers>
             </skia:SKCanvasView>
+
+            <!-- Info bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
+                <!-- Slot info -->
+                <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                    <Label x:Name="InfoSpeciesNum"
+                           FontFamily="Nunito" FontSize="12"
+                           TextColor="#3D4A6E" />
+                    <Label x:Name="InfoSpeciesName"
+                           FontFamily="NunitoBold" FontSize="12"
+                           TextColor="#8892B5" />
+                </HorizontalStackLayout>
+
+                <!-- Gamepad hints -->
+                <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
+                                   TextColor="#34D990"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9"
+                                   TextColor="#FFD93D"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Grab" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9"
+                                   TextColor="#FF6B9D"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Back" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+            </Grid>
 
         </Grid>
 

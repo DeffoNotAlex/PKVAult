@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
+using PKHeX.Mobile.Theme;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 
@@ -34,6 +36,18 @@ public partial class GamePage : ContentPage
     private PKM? _movePk;
     private int  _moveSourceBox;
     private int  _moveSourceSlot;
+
+    // Cursor pulse animation
+    private readonly Stopwatch _cursorTimer = Stopwatch.StartNew();
+    private IDispatcherTimer? _pulseTimer;
+
+    // Pre-computed grid layout (recalculated on canvas size change)
+    private SKRect[] _slotRects = [];
+    private float _gridSlotSize;
+    private float _gridOffsetX;
+    private float _gridOffsetY;
+    private int _lastCanvasW;
+    private int _lastCanvasH;
 
     // Radar animation
     private float[]                  _radarCurrent = new float[6];
@@ -73,9 +87,17 @@ public partial class GamePage : ContentPage
             _cursorSlot  = 0;
             DeselectSlot();
 
-            TrainerNameLabel.Text = sav.OT;
-            SaveGameLabel.Text    = $"{sav.Version} — Gen {sav.Generation}";
-            BoxCountLabel.Text    = $"{sav.BoxCount} boxes · {sav.SlotCount} slots";
+            TrainerNameLabel.Text   = sav.OT;
+            SaveGameLabel.Text     = $"Pokémon {sav.Version}  ·  Gen {sav.Generation}";
+            TrainerTIDLabel.Text   = sav.TrainerTID7.ToString();
+            TrainerBoxesLabel.Text = sav.BoxCount.ToString();
+            TrainerPlaytimeLabel.Text = sav.PlayTimeString;
+
+            // Set trainer circle game icon
+            var iconFile = GetTrainerIconFile(sav.Version);
+            if (iconFile != null)
+                TrainerGameIcon.Source = ImageSource.FromStream(
+                    ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
         }
 
         // If returning from bank with a withdrawn Pokémon, enter move mode
@@ -91,6 +113,16 @@ public partial class GamePage : ContentPage
         // Always reset species key so radar re-reads preferences (e.g. after returning from Settings)
         _previewSpecies = -1;
         _showLegalityBadges = Preferences.Default.Get(SettingsPage.KeyLegalityBadge, false);
+
+        // Start cursor pulse timer (~60fps)
+        if (_pulseTimer is null)
+        {
+            _pulseTimer = Dispatcher.CreateTimer();
+            _pulseTimer.Interval = TimeSpan.FromMilliseconds(16);
+            _pulseTimer.Tick += (_, _) => BoxCanvas.InvalidateSurface();
+        }
+        _pulseTimer.Start();
+
         LoadBox(_boxIndex);
     }
 
@@ -101,6 +133,7 @@ public partial class GamePage : ContentPage
         GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
+        _pulseTimer?.Stop();
     }
 
 #if ANDROID
@@ -122,10 +155,16 @@ public partial class GamePage : ContentPage
         _loadingBox = true;
         try
         {
-            _currentBox    = _sav.GetBoxData(box);
-            BoxNameLabel.Text = _sav is IBoxDetailName named
+            _currentBox = _sav.GetBoxData(box);
+            var boxName = _sav is IBoxDetailName named
                 ? named.GetBoxName(box)
                 : $"Box {box + 1}";
+            BoxNameLabel.Text = boxName;
+
+            // Update idle panel box info
+            IdleBoxNameLabel.Text = boxName;
+            int filled = _currentBox.Count(pk => pk.Species != 0);
+            IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
 
             // Clear gold outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
@@ -136,6 +175,7 @@ public partial class GamePage : ContentPage
             await _sprites.PreloadBoxAsync(_currentBox);
             BoxCanvas.InvalidateSurface();
             UpdateTopPanel();
+            UpdateInfoBar();
             if (_showLegalityBadges) _ = RunLegalityBadgesAsync(_currentBox);
         }
         finally { _loadingBox = false; }
@@ -165,125 +205,238 @@ public partial class GamePage : ContentPage
     //  Rendering — box grid (bottom screen)
     // ──────────────────────────────────────────────
 
-    private void OnBoxPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+    private void RecalcGridLayout(int canvasW, int canvasH)
     {
-        var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(10, 10, 20));
-        if (_currentBox.Length == 0) return;
+        if (canvasW == _lastCanvasW && canvasH == _lastCanvasH && _slotRects.Length == Columns * Rows)
+            return;
+        _lastCanvasW = canvasW;
+        _lastCanvasH = canvasH;
 
-        float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
-        float offX = ((float)e.Info.Width  - slotSize * Columns) / 2f;
-        float offY = ((float)e.Info.Height - slotSize * Rows)    / 2f;
+        const float gap = 6f;
+        const float padX = 14f, padY = 4f;
 
-        const float pad    = 4f;
-        const float radius = 8f;
+        float availW = canvasW - padX * 2 - gap * (Columns - 1);
+        float availH = canvasH - padY * 2 - gap * (Rows - 1);
+        float slotSize = MathF.Min(availW / Columns, availH / Rows);
 
-        for (int i = 0; i < _currentBox.Length; i++)
+        float gridW = slotSize * Columns + gap * (Columns - 1);
+        float gridH = slotSize * Rows + gap * (Rows - 1);
+        float offX = (canvasW - gridW) / 2f;
+        float offY = (canvasH - gridH) / 2f;
+
+        _gridSlotSize = slotSize;
+        _gridOffsetX = offX;
+        _gridOffsetY = offY;
+
+        _slotRects = new SKRect[Columns * Rows];
+        for (int i = 0; i < _slotRects.Length; i++)
         {
             int col = i % Columns;
             int row = i / Columns;
-            float x = offX + col * slotSize;
-            float y = offY + row * slotSize;
+            float x = offX + col * (slotSize + gap);
+            float y = offY + row * (slotSize + gap);
+            _slotRects[i] = new SKRect(x, y, x + slotSize, y + slotSize);
+        }
+    }
+
+    private void OnBoxPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(7, 12, 26)); // BgDeep
+        if (_currentBox.Length == 0) return;
+
+        RecalcGridLayout(e.Info.Width, e.Info.Height);
+
+        const float radius = 10f;
+
+        // Pulse values
+        float tBlue = (float)(_cursorTimer.Elapsed.TotalMilliseconds % 1800) / 1800f;
+        float pulseBlue = 0.5f + 0.5f * MathF.Sin(tBlue * MathF.PI * 2);
+        float tGreen = (float)(_cursorTimer.Elapsed.TotalMilliseconds % 1400) / 1400f;
+        float pulseGreen = 0.5f + 0.5f * MathF.Sin(tGreen * MathF.PI * 2);
+
+        for (int i = 0; i < _currentBox.Length && i < _slotRects.Length; i++)
+        {
+            var rect = _slotRects[i];
             var pk = _currentBox[i];
+            bool isCursor = i == _cursorSlot;
+            bool isSelected = i == _selectedSlot && !_moveMode;
+            bool isSource = _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
+            bool filled = pk.Species != 0;
 
-            bool isCursor   = i == _cursorSlot;
-            bool isSelected = i == _selectedSlot;
-
-            var bgColor = isSelected
-                ? new SKColor(80, 60, 20, 220)
-                : isCursor
-                ? new SKColor(30, 50, 100, 220)
-                : new SKColor(20, 20, 40, 180);
-
+            // ── Slot background ──
+            var bgColor = filled ? new SKColor(0x11, 0x1C, 0x33) : new SKColor(0x0E, 0x15, 0x29);
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
-            canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, bgPaint);
+            canvas.DrawRoundRect(rect, radius, radius, bgPaint);
 
-            if (pk.Species != 0)
+            // Slot border (white 3%)
+            using var borderPaint = new SKPaint
+            {
+                Color = new SKColor(255, 255, 255, 8),
+                Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true,
+            };
+            canvas.DrawRoundRect(rect, radius, radius, borderPaint);
+
+            // ── Sprite ──
+            if (filled)
             {
                 var sprite = _sprites.GetSprite(pk);
-                float inner  = slotSize - pad * 2;
-                float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
-                float drawW, drawH;
-                if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
-                else              { drawH = inner; drawW = inner * aspect; }
-                float sx = x + pad + (inner - drawW) / 2f;
-                float sy = y + pad + (inner - drawH) / 2f;
-
-                // Ghost (30% opacity) at source slot so you remember what you're moving
-                bool isSource = _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
+                float spriteScale = isCursor ? 0.75f : 0.70f; // 108% when cursor'd (0.70*1.08≈0.75)
                 byte alpha = isSource ? (byte)70 : (byte)255;
-                using var spritePaint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
-                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), spritePaint);
+                DrawSprite(canvas, sprite, rect, spriteScale, alpha);
             }
 
-            // Ghost of grabbed Pokémon shown at cursor slot as drop preview
-            if (_moveMode && isCursor && _movePk != null
-                && !(_moveSourceBox == _boxIndex && i == _moveSourceSlot))
+            // Ghost of grabbed Pokémon at cursor as drop preview
+            if (_moveMode && isCursor && _movePk != null && !isSource)
             {
-                var ghost   = _sprites.GetSprite(_movePk);
-                float inner = slotSize - pad * 2;
-                float aspect = ghost.Width > 0 ? (float)ghost.Width / ghost.Height : 1f;
-                float drawW, drawH;
-                if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
-                else              { drawH = inner; drawW = inner * aspect; }
-                float sx = x + pad + (inner - drawW) / 2f;
-                float sy = y + pad + (inner - drawH) / 2f;
-                using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
-                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
+                var ghost = _sprites.GetSprite(_movePk);
+                DrawSprite(canvas, ghost, rect, 0.70f, 110);
             }
 
-            if (isCursor)
-            {
-                using var p = new SKPaint
-                {
-                    Color = new SKColor(80, 160, 255, 230),
-                    Style = SKPaintStyle.Stroke, StrokeWidth = 3f, IsAntialias = true,
-                };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
-            }
+            // ── Cursor system ──
+            if (_moveMode && isCursor)
+                DrawGreenCursor(canvas, rect, radius, pulseGreen);
+            else if (isSelected)
+                DrawGoldCursor(canvas, rect, radius);
+            else if (isCursor)
+                DrawBlueCursor(canvas, rect, radius, pulseBlue);
 
-            if (isSelected)
-            {
-                using var p = new SKPaint
-                {
-                    Color = new SKColor(200, 170, 80, 160),
-                    Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true,
-                };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
-            }
-
-            if (_moveMode)
-            {
-                if (isCursor)
-                {
-                    using var p = new SKPaint
-                    {
-                        Color = new SKColor(60, 220, 110, 240),
-                        Style = SKPaintStyle.Stroke, StrokeWidth = 3.5f, IsAntialias = true,
-                    };
-                    canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
-                }
-                else if (_moveSourceBox == _boxIndex && i == _moveSourceSlot)
-                {
-                    using var p = new SKPaint
-                    {
-                        Color = new SKColor(220, 80, 60, 190),
-                        Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true,
-                    };
-                    canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
-                }
-            }
-
-            // Legality badge — small dot in top-right corner
+            // ── Legality badge ──
             if (_showLegalityBadges && i < _legalityCache.Length && _legalityCache[i] is bool legal)
             {
-                using var badgePaint = new SKPaint { IsAntialias = true };
-                badgePaint.Color = legal ? new SKColor(60, 220, 110, 230) : new SKColor(220, 60, 60, 230);
-                float bx = x + slotSize - pad - 5f;
-                float by = y + pad + 5f;
-                canvas.DrawCircle(bx, by, 4.5f, badgePaint);
+                var dotColor = legal ? new SKColor(60, 220, 110, 230) : new SKColor(255, 82, 82, 230);
+                using var glowPaint = new SKPaint
+                {
+                    Color = dotColor.WithAlpha(80), IsAntialias = true,
+                    ImageFilter = SKImageFilter.CreateBlur(4, 4),
+                };
+                float bx = rect.Right - 8f;
+                float by = rect.Top + 8f;
+                canvas.DrawCircle(bx, by, 5f, glowPaint);
+                using var dotPaint = new SKPaint { Color = dotColor, IsAntialias = true };
+                canvas.DrawCircle(bx, by, 3f, dotPaint);
             }
         }
+    }
+
+    private static void DrawSprite(SKCanvas canvas, SKBitmap sprite, SKRect slotRect, float scale, byte alpha)
+    {
+        float inner = slotRect.Width * scale;
+        float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
+        float drawW, drawH;
+        if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
+        else { drawH = inner; drawW = inner * aspect; }
+        float sx = slotRect.MidX - drawW / 2f;
+        float sy = slotRect.MidY - drawH / 2f;
+        using var paint = new SKPaint { Color = SKColors.White.WithAlpha(alpha), FilterQuality = SKFilterQuality.None };
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), paint);
+    }
+
+    private static void DrawBlueCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
+    {
+        // Layer 1: Fill + border
+        using var fillPaint = new SKPaint { Color = new SKColor(59, 139, 255, 31), IsAntialias = true };
+        canvas.DrawRoundRect(rect, radius, radius, fillPaint);
+        using var strokePaint = new SKPaint
+        {
+            Color = SKColor.Parse("#5CA0FF"), Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1.5f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(rect, radius, radius, strokePaint);
+
+        // Layer 2: Outer glow ring
+        float expand = 4f;
+        var outerRect = new SKRect(rect.Left - expand, rect.Top - expand, rect.Right + expand, rect.Bottom + expand);
+        float outerScale = 1f + 0.02f * pulse;
+        canvas.Save();
+        canvas.Scale(outerScale, outerScale, rect.MidX, rect.MidY);
+        using var outerPaint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            Color = new SKColor(92, 160, 255, (byte)(89 + 77 * pulse)),
+            StrokeWidth = 2f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(outerRect, 13, 13, outerPaint);
+        canvas.Restore();
+
+        // Layer 3: Inner blur glow
+        var glowRect = new SKRect(rect.Left - 1, rect.Top - 1, rect.Right + 1, rect.Bottom + 1);
+        using var glowPaint = new SKPaint
+        {
+            Color = new SKColor(59, 139, 255, (byte)(46 + 31 * pulse)),
+            ImageFilter = SKImageFilter.CreateBlur(6, 6),
+            IsAntialias = true,
+        };
+        canvas.DrawRoundRect(glowRect, 11, 11, glowPaint);
+    }
+
+    private static void DrawGoldCursor(SKCanvas canvas, SKRect rect, float radius)
+    {
+        // Static — no pulse
+        using var fillPaint = new SKPaint { Color = new SKColor(200, 170, 80, 38), IsAntialias = true };
+        canvas.DrawRoundRect(rect, radius, radius, fillPaint);
+        using var strokePaint = new SKPaint
+        {
+            Color = SKColor.Parse("#C8AA50"), Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1.5f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(rect, radius, radius, strokePaint);
+
+        var outerRect = new SKRect(rect.Left - 4, rect.Top - 4, rect.Right + 4, rect.Bottom + 4);
+        using var outerPaint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            Color = new SKColor(200, 170, 80, 77),
+            StrokeWidth = 2f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(outerRect, 13, 13, outerPaint);
+
+        var glowRect = new SKRect(rect.Left - 1, rect.Top - 1, rect.Right + 1, rect.Bottom + 1);
+        using var glowPaint = new SKPaint
+        {
+            Color = new SKColor(200, 170, 80, 51),
+            ImageFilter = SKImageFilter.CreateBlur(7, 7),
+            IsAntialias = true,
+        };
+        canvas.DrawRoundRect(glowRect, 11, 11, glowPaint);
+    }
+
+    private static void DrawGreenCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
+    {
+        // Layer 1
+        using var fillPaint = new SKPaint { Color = new SKColor(60, 220, 110, 26), IsAntialias = true };
+        canvas.DrawRoundRect(rect, radius, radius, fillPaint);
+        using var strokePaint = new SKPaint
+        {
+            Color = SKColor.Parse("#3CDC6E"), Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1.5f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(rect, radius, radius, strokePaint);
+
+        // Layer 2: Outer glow ring (pulsing)
+        float expand = 4f;
+        var outerRect = new SKRect(rect.Left - expand, rect.Top - expand, rect.Right + expand, rect.Bottom + expand);
+        float outerScale = 1f + 0.02f * pulse;
+        canvas.Save();
+        canvas.Scale(outerScale, outerScale, rect.MidX, rect.MidY);
+        using var outerPaint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            Color = new SKColor(60, 220, 110, (byte)(89 + 77 * pulse)),
+            StrokeWidth = 2f, IsAntialias = true,
+        };
+        canvas.DrawRoundRect(outerRect, 13, 13, outerPaint);
+        canvas.Restore();
+
+        // Layer 3: Inner blur glow
+        var glowRect = new SKRect(rect.Left - 1, rect.Top - 1, rect.Right + 1, rect.Bottom + 1);
+        using var glowPaint = new SKPaint
+        {
+            Color = new SKColor(60, 220, 110, (byte)(38 + 26 * pulse)),
+            ImageFilter = SKImageFilter.CreateBlur(7, 7),
+            IsAntialias = true,
+        };
+        canvas.DrawRoundRect(glowRect, 11, 11, glowPaint);
     }
 
     // ──────────────────────────────────────────────
@@ -559,16 +712,173 @@ public partial class GamePage : ContentPage
         """;
 
     // ──────────────────────────────────────────────
-    //  Stats panel — keep square on resize
+    //  Top screen background (gradient glow)
     // ──────────────────────────────────────────────
 
-    private void OnStatsPanelSizeChanged(object sender, EventArgs e)
+    private void OnTopBgPaint(object sender, SKPaintSurfaceEventArgs e)
     {
-        var side = Math.Min(StatsPanelBorder.Width, StatsPanelBorder.Height);
-        if (side <= 0) return;
-        StatsPanelBorder.WidthRequest  = side;
-        StatsPanelBorder.HeightRequest = side;
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(7, 12, 26)); // BgDeep
+
+        float w = e.Info.Width;
+        float h = e.Info.Height;
+
+        // Radial glow — game accent color at 8% opacity
+        var gameColor = _sav != null
+            ? Theme.GameColors.Get(_sav.Version).Light
+            : new SKColor(59, 139, 255);
+        using var glowPaint1 = new SKPaint();
+        glowPaint1.Shader = SKShader.CreateRadialGradient(
+            new SKPoint(w * 0.2f, h * 0.5f), Math.Min(w, h) * 0.5f,
+            [gameColor.WithAlpha(20), SKColors.Transparent],
+            SKShaderTileMode.Clamp);
+        canvas.DrawRect(0, 0, w, h, glowPaint1);
+
+        // Radial glow — AccentPurple at 6%
+        using var glowPaint2 = new SKPaint();
+        glowPaint2.Shader = SKShader.CreateRadialGradient(
+            new SKPoint(w * 0.8f, h * 0.3f), Math.Min(w, h) * 0.45f,
+            [new SKColor(167, 139, 250, 15), SKColors.Transparent],
+            SKShaderTileMode.Clamp);
+        canvas.DrawRect(0, 0, w, h, glowPaint2);
+
+        // Linear gradient overlay
+        using var overlayPaint = new SKPaint();
+        overlayPaint.Shader = SKShader.CreateLinearGradient(
+            new SKPoint(0, 0), new SKPoint(w * 0.7f, h),
+            [new SKColor(7, 12, 26, 0), new SKColor(13, 21, 48, 80)],
+            SKShaderTileMode.Clamp);
+        canvas.DrawRect(0, 0, w, h, overlayPaint);
     }
+
+    // ──────────────────────────────────────────────
+    //  Type badges
+    // ──────────────────────────────────────────────
+
+    private void UpdateTypeBadges(PKM pk)
+    {
+        TypeBadgeRow.Children.Clear();
+        var types = new List<int> { pk.PersonalInfo.Type1 };
+        if (pk.PersonalInfo.Type2 != pk.PersonalInfo.Type1)
+            types.Add(pk.PersonalInfo.Type2);
+
+        foreach (var typeId in types)
+        {
+            var typeName = typeId < _strings.types.Length ? _strings.types[typeId] : "???";
+            var color = Theme.TypeColors.Map.TryGetValue(typeName, out var c)
+                ? Color.FromUint((uint)((c.Alpha << 24) | (c.Red << 16) | (c.Green << 8) | c.Blue))
+                : Color.FromArgb("#A8A878");
+
+            var badge = new Border
+            {
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+                BackgroundColor = color,
+                Stroke = Colors.Transparent,
+                Padding = new Thickness(10, 2),
+                Content = new Label
+                {
+                    Text = typeName.ToUpperInvariant(),
+                    FontFamily = "NunitoExtraBold",
+                    FontSize = 9,
+                    TextColor = Colors.White,
+                    CharacterSpacing = 0.5,
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalTextAlignment = TextAlignment.Center,
+                },
+            };
+            TypeBadgeRow.Children.Add(badge);
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Move rows
+    // ──────────────────────────────────────────────
+
+    private void UpdateMoveRows(PKM pk)
+    {
+        var moveNames = new[] { MoveName0, MoveName1, MoveName2, MoveName3 };
+        var moveCats = new[] { MoveCat0, MoveCat1, MoveCat2, MoveCat3 };
+        var movePPs = new[] { MovePP0, MovePP1, MovePP2, MovePP3 };
+        var moveDots = new[] { MoveDot0, MoveDot1, MoveDot2, MoveDot3 };
+        var moveRows = new[] { MoveRow0, MoveRow1, MoveRow2, MoveRow3 };
+
+        int[] moves = [pk.Move1, pk.Move2, pk.Move3, pk.Move4];
+        int[] pps = [pk.Move1_PP, pk.Move2_PP, pk.Move3_PP, pk.Move4_PP];
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (moves[i] == 0)
+            {
+                moveRows[i].IsVisible = false;
+                continue;
+            }
+            moveRows[i].IsVisible = true;
+
+            var moveName = moves[i] < _strings.movelist.Length
+                ? _strings.movelist[moves[i]] : $"Move {moves[i]}";
+            moveNames[i].Text = moveName;
+            movePPs[i].Text = $"PP {pps[i]}";
+
+            // Move type dot color
+            var ctx = _sav?.Context ?? EntityContext.Gen9;
+            var moveType = MoveInfo.GetType((ushort)moves[i], ctx);
+            var moveTypeName = moveType < _strings.types.Length
+                ? _strings.types[moveType] : "Normal";
+            if (Theme.TypeColors.Map.TryGetValue(moveTypeName, out var typeColor))
+                moveDots[i].Fill = new SolidColorBrush(
+                    Color.FromUint((uint)((typeColor.Alpha << 24) | (typeColor.Red << 16) | (typeColor.Green << 8) | typeColor.Blue)));
+
+            // Category placeholder
+            moveCats[i].Text = "";
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Trainer icon helper
+    // ──────────────────────────────────────────────
+
+    private static string? GetTrainerIconFile(GameVersion v) => v switch
+    {
+        GameVersion.RD  => "red_vc.png",
+        GameVersion.BU  => "blue_vc.png",
+        GameVersion.GN  => "green_vc.png",
+        GameVersion.YW  => "yellow_vc.png",
+        GameVersion.GD  => "gold_vc.png",
+        GameVersion.SI  => "silver_vc.png",
+        GameVersion.C   => "crystal.png",
+        GameVersion.D   => "diamond.png",
+        GameVersion.P   => "pearl.png",
+        GameVersion.R   => "ruby.png",
+        GameVersion.S   => "sapphire.png",
+        GameVersion.E   => "emerald.png",
+        GameVersion.FR  => "fire_red.png",
+        GameVersion.LG  => "leaf_green.png",
+        GameVersion.Pt  => "platinum.png",
+        GameVersion.HG  => "heartgold.png",
+        GameVersion.SS  => "soulsilver.png",
+        GameVersion.B   => "black.png",
+        GameVersion.W   => "white.png",
+        GameVersion.B2  => "black2.png",
+        GameVersion.W2  => "white2.png",
+        GameVersion.X   => "x.png",
+        GameVersion.Y   => "y.png",
+        GameVersion.OR  => "omega_ruby.png",
+        GameVersion.AS  => "alpha_sapphire.png",
+        GameVersion.SN  => "sun.png",
+        GameVersion.MN  => "moon.png",
+        GameVersion.US  => "ultra_sun.png",
+        GameVersion.UM  => "ultra_moon.png",
+        GameVersion.GP  => "lets_go_pikachu.jpg",
+        GameVersion.GE  => "lets_go_eevee.jpg",
+        GameVersion.SW  => "sword.png",
+        GameVersion.SH  => "shield.png",
+        GameVersion.BD  => "brilliant_diamond.jpg",
+        GameVersion.SP  => "shining_pearl.jpg",
+        GameVersion.PLA => "legends_arceus.jpg",
+        GameVersion.SL  => "scarlet.jpg",
+        GameVersion.VL  => "violet.jpg",
+        _               => null,
+    };
 
     // ──────────────────────────────────────────────
     //  Touch input
@@ -581,13 +891,17 @@ public partial class GamePage : ContentPage
         var point = e.GetPosition(view);
         if (point is null) return;
 
-        float slotSize = (float)Math.Min(view.Width / Columns, view.Height / Rows);
-        float offX = (float)(view.Width  - slotSize * Columns) / 2f;
-        float offY = (float)(view.Height - slotSize * Rows)    / 2f;
+        // Use density to convert dp touch coords to pixel coords
+        float density = (float)DeviceDisplay.MainDisplayInfo.Density;
+        float px = (float)point.Value.X * density;
+        float py = (float)point.Value.Y * density;
 
-        int col   = (int)((point.Value.X - offX) / slotSize);
-        int row   = (int)((point.Value.Y - offY) / slotSize);
-        int index = row * Columns + col;
+        // Hit-test against pre-computed slot rects
+        int index = -1;
+        for (int i = 0; i < _slotRects.Length && i < _currentBox.Length; i++)
+        {
+            if (_slotRects[i].Contains(px, py)) { index = i; break; }
+        }
 
         if ((uint)index >= (uint)_currentBox.Length) return;
 
@@ -600,6 +914,7 @@ public partial class GamePage : ContentPage
         }
 
         UpdateTopPanel();
+        UpdateInfoBar();
 
         if (_currentBox[index].Species != 0)
         {
@@ -695,6 +1010,7 @@ public partial class GamePage : ContentPage
 
         _cursorSlot = next;
         UpdateTopPanel();
+        UpdateInfoBar();
         BoxCanvas.InvalidateSurface();
     }
 
@@ -724,6 +1040,32 @@ public partial class GamePage : ContentPage
     //  Top panel — follows cursor
     // ──────────────────────────────────────────────
 
+    private void UpdateInfoBar()
+    {
+        if (_currentBox.Length == 0)
+        {
+            InfoSpeciesNum.Text = "";
+            InfoSpeciesName.Text = "Empty box";
+            return;
+        }
+
+        var pk = _cursorSlot < _currentBox.Length ? _currentBox[_cursorSlot] : null;
+        if (pk?.Species > 0)
+        {
+            var name = pk.Species < _strings.specieslist.Length
+                ? _strings.specieslist[pk.Species] : pk.Species.ToString();
+            InfoSpeciesNum.Text = $"#{pk.Species:000}";
+            InfoSpeciesName.Text = _moveMode
+                ? $"Moving {name}..."
+                : $"{name} · Lv.{pk.CurrentLevel}";
+        }
+        else
+        {
+            InfoSpeciesNum.Text = "";
+            InfoSpeciesName.Text = "Empty slot";
+        }
+    }
+
     private void UpdateTopPanel()
     {
         if (_currentBox.Length == 0) return;
@@ -743,9 +1085,23 @@ public partial class GamePage : ContentPage
         var natureName = (int)pk.Nature < _strings.natures.Length
             ? _strings.natures[(int)pk.Nature] : "";
 
-        SelectedSpeciesLabel.Text =
-            $"#{pk.Species:000} {speciesName}  •  Lv.{pk.CurrentLevel}" +
-            (pk.IsShiny ? "  ✦" : "") + $"  {natureName}";
+        // Name plate
+        DetailSpeciesName.Text = speciesName + (pk.IsShiny ? "  ✦" : "");
+        DetailLevelNature.Text = $"Lv.{pk.CurrentLevel}  ·  {natureName}";
+
+        // Type badges
+        UpdateTypeBadges(pk);
+
+        // Moves
+        UpdateMoveRows(pk);
+
+        // Ability / Item
+        var abilityName = pk.Ability < _strings.abilitylist.Length
+            ? _strings.abilitylist[pk.Ability] : "—";
+        DetailAbility.Text = abilityName;
+        var itemName = pk.HeldItem > 0 && pk.HeldItem < _strings.itemlist.Length
+            ? _strings.itemlist[pk.HeldItem] : "None";
+        DetailItem.Text = itemName;
 
         TopIdlePanel.IsVisible     = false;
         TopSelectedPanel.IsVisible = true;
@@ -759,7 +1115,6 @@ public partial class GamePage : ContentPage
         }
         else if (_spriteWebViewReady)
         {
-            // Restore visibility after passing through an empty slot (ShowIdlePanel hides the WebView)
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;
         }

@@ -4,137 +4,304 @@
              x:Class="PKHeX.Mobile.MainPage"
              Title="PKHeX"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#0B0F1E">
+             BackgroundColor="#070C1A">
 
-    <Grid RowDefinitions="*,Auto" Padding="12,8">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto" Padding="0">
 
-        <!-- Save cards section -->
-        <CollectionView x:Name="SaveCardsList" Grid.Row="0"
+        <!-- Row 0: Header -->
+        <Grid Padding="18,14,18,8" ColumnDefinitions="*,Auto">
+            <Label Text="SAVE FILES"
+                   FontFamily="Quicksand" FontSize="12"
+                   TextColor="#3D4A6E"
+                   CharacterSpacing="1.5"
+                   VerticalOptions="Center" />
+            <Border Grid.Column="1"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="#131B35"
+                    Stroke="#0D0D0D0D" StrokeThickness="1"
+                    Padding="10,4">
+                <Label x:Name="SaveCountLabel" Text="0 saves"
+                       FontFamily="Nunito" FontSize="10"
+                       TextColor="#8892B5" />
+            </Border>
+        </Grid>
+
+        <!-- Row 1: Save card list -->
+        <CollectionView x:Name="SaveCardsList" Grid.Row="1"
                         SelectionMode="Single"
                         BackgroundColor="Transparent"
+                        Margin="14,0"
                         SelectionChanged="OnSaveCardSelectionChanged">
             <CollectionView.EmptyView>
-                <Label Text="No saves found. Add folders in Settings → Manage Folders."
-                       TextColor="#8888BB" FontSize="14"
+                <Label Text="No saves found. Add folders in Settings."
+                       FontFamily="Nunito" FontSize="14"
+                       TextColor="#8892B5"
                        HorizontalOptions="Center" VerticalOptions="Center"
                        Margin="24,60" HorizontalTextAlignment="Center" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="0,0,0,4" StrokeShape="RoundRectangle 8" Padding="12,10"
-                            BackgroundColor="#111827"
-                            Stroke="Transparent" StrokeThickness="2">
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroupList>
-                                <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#111827" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                    <VisualState x:Name="Selected">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#141E30" />
-                                            <Setter Property="Stroke" Value="#2A4870" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateGroupList>
-                        </VisualStateManager.VisualStateGroups>
-                        <Border.Triggers>
-                            <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
-                                <Setter Property="Stroke" Value="#80B4FF" />
-                                <Setter Property="StrokeThickness" Value="2.5" />
-                                <Setter Property="BackgroundColor" Value="#141E3A" />
-                            </DataTrigger>
-                        </Border.Triggers>
-                        <Grid ColumnDefinitions="56,*,Auto">
-                            <!-- Game icon: real icon when available, colored badge fallback -->
-                            <Grid Grid.Column="0" WidthRequest="48" HeightRequest="48"
-                                  VerticalOptions="Center" HorizontalOptions="Start">
-                                <!-- Fallback badge (always underneath) -->
-                                <Border StrokeShape="RoundRectangle 6"
-                                        BackgroundColor="{Binding GameColor}"
-                                        IsVisible="{Binding HasNoIcon}" />
-                                <Label Text="{Binding GameShortName}" TextColor="White" FontAttributes="Bold"
-                                       FontSize="11" HorizontalOptions="Center" VerticalOptions="Center"
-                                       HorizontalTextAlignment="Center"
-                                       IsVisible="{Binding HasNoIcon}" />
-                                <!-- Real icon -->
-                                <Image Source="{Binding IconSource}"
-                                       Aspect="AspectFit"
-                                       IsVisible="{Binding HasIcon}" />
+                    <Grid Margin="0,0,0,8">
+                        <!-- Outer card border -->
+                        <Border x:Name="CardBorder"
+                                StrokeShape="RoundRectangle 14"
+                                BackgroundColor="#131B35"
+                                Stroke="Transparent" StrokeThickness="1.5"
+                                Padding="0">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="#131B35" />
+                                                <Setter Property="Stroke" Value="Transparent" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="#1C2850" />
+                                                <Setter Property="Stroke" Value="#3B8BFF" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
+                                    <Setter Property="Stroke" Value="#3B8BFF" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                    <Setter Property="BackgroundColor" Value="#1C2850" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Grid Padding="14,12" ColumnDefinitions="4,48,*,Auto">
+                                <!-- Accent stripe (left edge) -->
+                                <BoxView Grid.Column="0"
+                                         Color="{Binding GameColorLight}"
+                                         WidthRequest="3"
+                                         VerticalOptions="FillAndExpand"
+                                         Margin="-14,0,0,0"
+                                         IsVisible="{Binding IsLoaded}" />
+
+                                <!-- Game badge -->
+                                <Grid Grid.Column="1" WidthRequest="48" HeightRequest="48"
+                                      VerticalOptions="Center">
+                                    <!-- Gradient badge fallback -->
+                                    <Border StrokeShape="RoundRectangle 13"
+                                            Stroke="Transparent"
+                                            IsVisible="{Binding HasNoIcon}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="{Binding GameColorDark}" Offset="0" />
+                                                <GradientStop Color="{Binding GameColorLight}" Offset="1" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Label Text="{Binding GameShortName}" TextColor="White"
+                                               FontFamily="NunitoExtraBold" FontSize="11"
+                                               HorizontalOptions="Center" VerticalOptions="Center"
+                                               HorizontalTextAlignment="Center" />
+                                    </Border>
+                                    <!-- Real icon -->
+                                    <Border StrokeShape="RoundRectangle 13"
+                                            Stroke="Transparent"
+                                            IsVisible="{Binding HasIcon}">
+                                        <Image Source="{Binding IconSource}" Aspect="AspectFill" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- Info -->
+                                <VerticalStackLayout Grid.Column="2" Margin="12,0,0,0" Spacing="2"
+                                                     VerticalOptions="Center">
+                                    <Label Text="{Binding TrainerName}"
+                                           FontFamily="NunitoExtraBold" FontSize="16"
+                                           TextColor="#EDF0FF" />
+                                    <Label Text="{Binding VersionLabel}"
+                                           FontFamily="Nunito" FontSize="12"
+                                           TextColor="#8892B5" />
+                                    <Label Text="{Binding DetailLine}"
+                                           FontFamily="Nunito" FontSize="10.5"
+                                           TextColor="#3D4A6E" />
+                                </VerticalStackLayout>
+
+                                <!-- Active indicator -->
+                                <HorizontalStackLayout Grid.Column="3" Spacing="4"
+                                                       VerticalOptions="Center"
+                                                       IsVisible="{Binding IsLoaded}">
+                                    <Ellipse Fill="#34D990"
+                                             WidthRequest="9" HeightRequest="9"
+                                             VerticalOptions="Center" />
+                                </HorizontalStackLayout>
                             </Grid>
-                            <!-- Info -->
-                            <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" Spacing="2" VerticalOptions="Center">
-                                <Label Text="{Binding TrainerName}" FontAttributes="Bold" FontSize="15" TextColor="#EEEEFF" />
-                                <Label Text="{Binding VersionLabel}" FontSize="12" TextColor="#8888BB" />
-                                <Label Text="{Binding DetailLine}" FontSize="11" TextColor="#445566" />
-                            </VerticalStackLayout>
-                            <!-- Active indicator -->
-                            <Label Grid.Column="2" Text="● ACTIVE"
-                                   FontSize="10" FontAttributes="Bold"
-                                   TextColor="#4F80FF"
-                                   VerticalOptions="Center"
-                                   IsVisible="{Binding IsLoaded}" />
-                        </Grid>
-                    </Border>
+                        </Border>
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Action buttons and hint -->
-        <VerticalStackLayout Grid.Row="1" Spacing="4" Margin="0,8,0,0">
+        <!-- Row 2: Action bar -->
+        <VerticalStackLayout Grid.Row="2" Padding="14,10,14,14" Spacing="10">
 
-            <!-- Gamepad hint -->
-            <Label Text="↕ navigate  A select  B back"
-                   FontSize="10" TextColor="#404060"
-                   HorizontalOptions="End" Margin="0,0,0,4" />
-
-            <Border x:Name="Row_Load" StyleId="Navigate"
-                    BackgroundColor="#111827" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="0">
-                <Button Text="💾 Load from Boxes"
-                        Clicked="OnLoadBoxesClicked"
-                        BackgroundColor="Transparent" TextColor="#A0C0FF"
-                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
+            <!-- Primary "Open Boxes" button -->
+            <Border x:Name="Btn_OpenBoxes"
+                    StrokeShape="RoundRectangle 14"
+                    Stroke="Transparent" StrokeThickness="1.5"
+                    Padding="0" HeightRequest="48">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#3B8BFF" Offset="0" />
+                        <GradientStop Color="#4F6BF0" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnOpenBoxesTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="Open Boxes"
+                       FontFamily="NunitoExtraBold" FontSize="15"
+                       TextColor="White"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
             </Border>
 
-            <Border x:Name="Row_Search" StyleId="Navigate"
-                    BackgroundColor="#111827" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="0">
-                <Button Text="🔍 Search Pokémon"
-                        Clicked="OnSearchClicked"
-                        BackgroundColor="Transparent" TextColor="#A0C0FF"
-                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
-            </Border>
+            <!-- Secondary 4-tile grid -->
+            <Grid x:Name="SecondaryGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <!-- Search -->
+                <Border x:Name="Tile_Search" Grid.Column="0"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="#131B35"
+                        Stroke="#0D0D0D0D" StrokeThickness="1"
+                        Padding="0" HeightRequest="70">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSearchTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                                BackgroundColor="#A78BFA1F"
+                                WidthRequest="34" HeightRequest="34"
+                                HorizontalOptions="Center">
+                            <Label Text="🔍" FontSize="16"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Search" FontFamily="NunitoBold" FontSize="10"
+                               TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <Border x:Name="Row_Gifts" StyleId="Navigate"
-                    BackgroundColor="#111827" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="0">
-                <Button Text="🎁 Mystery Gifts"
-                        Clicked="OnGiftsClicked"
-                        BackgroundColor="Transparent" TextColor="#A0C0FF"
-                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
-            </Border>
+                <!-- Gifts -->
+                <Border x:Name="Tile_Gifts" Grid.Column="1"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="#131B35"
+                        Stroke="#0D0D0D0D" StrokeThickness="1"
+                        Padding="0" HeightRequest="70">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnGiftsTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                                BackgroundColor="#FF6B9D1F"
+                                WidthRequest="34" HeightRequest="34"
+                                HorizontalOptions="Center">
+                            <Label Text="🎁" FontSize="16"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10"
+                               TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <Border x:Name="Row_Export" StyleId="Action"
-                    BackgroundColor="#111827" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="0">
-                <Button Text="📤 Export Save"
-                        Clicked="OnExportClicked"
-                        BackgroundColor="Transparent" TextColor="#A0C0FF"
-                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
-            </Border>
+                <!-- Export -->
+                <Border x:Name="Tile_Export" Grid.Column="2"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="#131B35"
+                        Stroke="#0D0D0D0D" StrokeThickness="1"
+                        Padding="0" HeightRequest="70">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnExportTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                                BackgroundColor="#FF9F431F"
+                                WidthRequest="34" HeightRequest="34"
+                                HorizontalOptions="Center">
+                            <Label Text="📤" FontSize="16"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Export" FontFamily="NunitoBold" FontSize="10"
+                               TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <Border x:Name="Row_Settings" StyleId="Navigate"
-                    BackgroundColor="#111827" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="0">
-                <Button Text="⚙ Settings"
-                        Clicked="OnSettingsClicked"
-                        BackgroundColor="Transparent" TextColor="#A0C0FF"
-                        FontSize="15" Padding="12,10" HorizontalOptions="Fill" />
-            </Border>
+                <!-- Bank -->
+                <Border x:Name="Tile_Bank" Grid.Column="3"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="#131B35"
+                        Stroke="#0D0D0D0D" StrokeThickness="1"
+                        Padding="0" HeightRequest="70">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBankTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                                BackgroundColor="#34D9901F"
+                                WidthRequest="34" HeightRequest="34"
+                                HorizontalOptions="Center">
+                            <Label Text="🏦" FontSize="16"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
+                               TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Gamepad hints -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                <!-- A button -->
+                <HorizontalStackLayout Spacing="4">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                            WidthRequest="20" HeightRequest="20">
+                        <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
+                               TextColor="#34D990"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <!-- B button -->
+                <HorizontalStackLayout Spacing="4">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                            WidthRequest="20" HeightRequest="20">
+                        <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9"
+                               TextColor="#FF6B9D"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Back" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <!-- D-pad -->
+                <HorizontalStackLayout Spacing="4">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                            WidthRequest="20" HeightRequest="20">
+                        <Label Text="↕" FontFamily="NunitoExtraBold" FontSize="9"
+                               TextColor="#8892B5"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Navigate" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <!-- L/R -->
+                <HorizontalStackLayout Spacing="4">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
+                            WidthRequest="20" HeightRequest="20">
+                        <Label Text="LR" FontFamily="NunitoExtraBold" FontSize="8"
+                               TextColor="#8892B5"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Section" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
 
         </VerticalStackLayout>
 
