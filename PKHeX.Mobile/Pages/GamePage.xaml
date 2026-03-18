@@ -98,10 +98,16 @@
 
             <!-- ── SELECTED STATE — 3-column Pokémon detail ── -->
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
-                  ColumnDefinitions="3*,4*,3.5*" Padding="8,6">
+                  ColumnDefinitions="4*,3*,3.5*" Padding="8,6">
+
+                <!-- Column 0: Stat radar -->
+                <skia:SKCanvasView Grid.Column="0"
+                                   x:Name="RadarCanvas"
+                                   PaintSurface="OnRadarPaint"
+                                   Margin="4" />
 
                 <!-- Column 1: Type badges + Sprite + Name plate -->
-                <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="6">
+                <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" Margin="6">
                     <!-- Type badges -->
                     <HorizontalStackLayout x:Name="TypeBadgeRow" Grid.Row="0"
                                            HorizontalOptions="Center" Spacing="5"
@@ -129,12 +135,6 @@
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Grid>
-
-                <!-- Column 2: Stat radar -->
-                <skia:SKCanvasView Grid.Column="1"
-                                   x:Name="RadarCanvas"
-                                   PaintSurface="OnRadarPaint"
-                                   Margin="4" />
 
                 <!-- Column 3: Moves + Ability/Item -->
                 <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
@@ -320,7 +320,7 @@
                                 BackgroundColor="#FFFFFF0A" Stroke="#FFFFFF0F" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9"
-                                   TextColor="#FFD93D"
+                                   TextColor="#6BABFF"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
                         <Label Text="Grab" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
