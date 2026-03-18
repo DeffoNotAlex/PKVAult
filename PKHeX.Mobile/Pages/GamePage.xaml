@@ -100,11 +100,16 @@
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
                   ColumnDefinitions="4*,3*,3.5*" Padding="8,6">
 
-                <!-- Column 0: Stat radar -->
-                <skia:SKCanvasView Grid.Column="0"
-                                   x:Name="RadarCanvas"
-                                   PaintSurface="OnRadarPaint"
-                                   Margin="4" />
+                <!-- Column 0: Stat radar in frosted glass box -->
+                <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="#40101828"
+                        Stroke="#30FFFFFF"
+                        StrokeThickness="1"
+                        Margin="4">
+                    <skia:SKCanvasView x:Name="RadarCanvas"
+                                       PaintSurface="OnRadarPaint" />
+                </Border>
 
                 <!-- Column 1: Type badges + Sprite + Name plate -->
                 <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" Margin="6">
@@ -136,16 +141,16 @@
                     </VerticalStackLayout>
                 </Grid>
 
-                <!-- Column 3: Moves + Ability/Item -->
+                <!-- Column 2: Moves + Ability/Item -->
                 <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
                                      Spacing="4" Padding="8,14,14,14">
                     <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
-                           TextColor="#3D4A6E" CharacterSpacing="1.2"
+                           TextColor="#EDF0FF" CharacterSpacing="1.2"
                            Margin="0,0,0,4" />
 
                     <!-- 4 move rows -->
                     <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
@@ -158,11 +163,11 @@
                             </VerticalStackLayout>
                             <Label x:Name="MovePP0" Grid.Column="2"
                                    FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" VerticalOptions="Center" />
+                                   TextColor="#EDF0FF" VerticalOptions="Center" />
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
@@ -175,11 +180,11 @@
                             </VerticalStackLayout>
                             <Label x:Name="MovePP1" Grid.Column="2"
                                    FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" VerticalOptions="Center" />
+                                   TextColor="#EDF0FF" VerticalOptions="Center" />
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
@@ -192,11 +197,11 @@
                             </VerticalStackLayout>
                             <Label x:Name="MovePP2" Grid.Column="2"
                                    FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" VerticalOptions="Center" />
+                                   TextColor="#EDF0FF" VerticalOptions="Center" />
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#05FFFFFF" Stroke="#08FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
@@ -209,24 +214,24 @@
                             </VerticalStackLayout>
                             <Label x:Name="MovePP3" Grid.Column="2"
                                    FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" VerticalOptions="Center" />
+                                   TextColor="#EDF0FF" VerticalOptions="Center" />
                         </Grid>
                     </Border>
 
                     <!-- Divider -->
-                    <BoxView HeightRequest="1" Color="#0AFFFFFF" Margin="0,4" />
+                    <BoxView HeightRequest="1" Color="#30FFFFFF" Margin="0,4" />
 
                     <!-- Ability / Item -->
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                         <VerticalStackLayout>
                             <Label Text="ABILITY" FontFamily="NunitoBold" FontSize="8"
-                                   TextColor="#3D4A6E" CharacterSpacing="0.6" />
+                                   TextColor="#EDF0FF" CharacterSpacing="0.6" />
                             <Label x:Name="DetailAbility" FontFamily="NunitoBold" FontSize="11"
                                    TextColor="#EDF0FF" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1">
                             <Label Text="ITEM" FontFamily="NunitoBold" FontSize="8"
-                                   TextColor="#3D4A6E" CharacterSpacing="0.6" />
+                                   TextColor="#EDF0FF" CharacterSpacing="0.6" />
                             <Label x:Name="DetailItem" FontFamily="NunitoBold" FontSize="11"
                                    TextColor="#EDF0FF" />
                         </VerticalStackLayout>
