@@ -21,7 +21,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     private readonly DisplayManager? _displayManager;
     private readonly Display? _secondaryDisplay;
     private ThorPresentation? _presentation;
-    private View? _currentContent;
+    private Microsoft.Maui.Controls.View? _currentContent;
 
     public bool IsAvailable => _secondaryDisplay is not null;
 
