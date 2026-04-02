@@ -7,46 +7,42 @@ using PKHeX.Mobile.Services;
 namespace PKHeX.Mobile.Platforms.Android;
 
 /// <summary>
-/// AYN Thor dual-screen implementation using Android's Presentation API.
-/// The Thor has a second AMOLED display (1920×1080 landscape) accessible via
-/// <see cref="DisplayManager.GetDisplays()"/>. This class creates a
-/// <see cref="Presentation"/> window on that display and hosts MAUI content in it.
+/// AYN Thor dual-screen implementation.
 ///
-/// NOTE: This is a scaffold — the Thor's exact display routing behavior is unconfirmed.
-/// The Presentation API approach is the most likely path but may need adjustment
-/// once we have hardware to test against.
+/// The Thor exposes its second AMOLED (1920×1080 landscape) as a standard Android
+/// secondary display — the same mechanism as an HDMI monitor. It is NOT a foldable
+/// and does NOT use Jetpack WindowManager's WindowAreaController (which requires OEM
+/// firmware extensions that the Thor does not implement).
+///
+/// The correct API is DisplayManager.GetDisplays(DISPLAY_CATEGORY_PRESENTATION),
+/// which the Thor's firmware registers the second screen under. Content is hosted in
+/// an Android Presentation window on that display.
 /// </summary>
 public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 {
-    private readonly DisplayManager? _displayManager;
     private readonly Display? _secondaryDisplay;
     private ThorPresentation? _presentation;
-    private Microsoft.Maui.Controls.View? _currentContent;
+    private Microsoft.Maui.Controls.View? _pendingContent;
 
     public bool IsAvailable => _secondaryDisplay is not null;
 
     public ThorSecondaryDisplay()
     {
         var context = global::Android.App.Application.Context;
-        _displayManager = context.GetSystemService(Context.DisplayService) as DisplayManager;
+        var dm = context.GetSystemService(Context.DisplayService) as DisplayManager;
 
-        // Look for a secondary display beyond the default (index 0)
-        var displays = _displayManager?.GetDisplays();
-        if (displays is { Length: > 1 })
-            _secondaryDisplay = displays[1];
+        // Use DISPLAY_CATEGORY_PRESENTATION — the Thor registers its second screen
+        // under this category. This is more reliable than index-based access.
+        var displays = dm?.GetDisplays(DisplayManager.DisplayCategoryPresentation);
+        _secondaryDisplay = displays?.FirstOrDefault();
     }
 
-    public void SetContent(global::Microsoft.Maui.Controls.View content)
+    public void SetContent(Microsoft.Maui.Controls.View content)
     {
-        // Convert MAUI View → Android native View via the handler
-        // This requires the view to have a handler attached (i.e., it must be part of the visual tree
-        // or we need to create a handler manually). This is the part most likely to need adjustment.
-        _currentContent = content;
+        _pendingContent = content;
 
         if (_presentation is not null && content.Handler?.PlatformView is global::Android.Views.View nativeView)
-        {
             _presentation.SetContentView(nativeView);
-        }
     }
 
     public void Show()
@@ -56,60 +52,57 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         var activity = Platform.CurrentActivity;
         if (activity is null) return;
 
-        _presentation ??= new ThorPresentation(activity, _secondaryDisplay);
+        // Recreate presentation if dismissed
+        if (_presentation is null || !_presentation.IsShowing)
+        {
+            _presentation?.Dismiss();
+            _presentation = new ThorPresentation(activity, _secondaryDisplay, _pendingContent);
+        }
 
         try
         {
             _presentation.Show();
-
-            // If we have pending content, attach it
-            if (_currentContent?.Handler?.PlatformView is global::Android.Views.View nativeView)
-                _presentation.SetContentView(nativeView);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Presentation may fail if display is unavailable or permissions are missing.
-            // Fall through silently — the page will still render in single-screen mode.
+            System.Diagnostics.Debug.WriteLine($"[Thor] Presentation.Show() failed: {ex.Message}");
         }
     }
 
     public void Hide()
     {
-        try
-        {
-            _presentation?.Hide();
-        }
-        catch
-        {
-            // Ignore errors during teardown
-        }
+        try { _presentation?.Hide(); }
+        catch { /* ignore teardown errors */ }
     }
 
     public void Dispose()
     {
-        Hide();
-        _presentation?.Dismiss();
+        try { _presentation?.Dismiss(); }
+        catch { }
         _presentation = null;
     }
 
-    /// <summary>
-    /// Android Presentation subclass for the Thor's secondary display.
-    /// </summary>
     private sealed class ThorPresentation : Presentation
     {
-        public ThorPresentation(Context outerContext, Display display)
-            : base(outerContext, display)
+        private readonly Microsoft.Maui.Controls.View? _initialContent;
+
+        public ThorPresentation(Context context, Display display, Microsoft.Maui.Controls.View? initialContent)
+            : base(context, display)
         {
+            _initialContent = initialContent;
         }
 
         protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 
-            // Full-screen, no system bars on the secondary display
-            Window?.SetFlags(
-                WindowManagerFlags.Fullscreen,
-                WindowManagerFlags.Fullscreen);
+            // Full-screen, no system bars
+            Window?.AddFlags(WindowManagerFlags.Fullscreen);
+            Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+
+            // Attach content here — this is the correct time, not after Show()
+            if (_initialContent?.Handler?.PlatformView is global::Android.Views.View nativeView)
+                SetContentView(nativeView);
         }
     }
 }
