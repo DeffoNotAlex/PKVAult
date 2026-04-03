@@ -1,3 +1,5 @@
+using PKHeX.Core;
+
 namespace PKHeX.Mobile.Services;
 
 /// <summary>
@@ -7,6 +9,10 @@ namespace PKHeX.Mobile.Services;
 public sealed class SingleScreenFallback : ISecondaryDisplay
 {
     public bool IsAvailable => false;
-    public void Show(ContentPage page) { }
+    public void Show() { }
     public void Hide() { }
+    public void UpdateTrainer(SaveFile sav, string boxName, int filled, int total) { }
+    public void UpdateBoxInfo(string boxName, int filled, int total) { }
+    public void UpdatePokemon(PKM pk) { }
+    public void ClearPokemon() { }
 }

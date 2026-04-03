@@ -54,7 +54,13 @@ public partial class GamePage : ContentPage
     private float                    _radarVisMax  = 255f;
     private CancellationTokenSource? _radarAnimCts;
 
-    public GamePage() => InitializeComponent();
+    private readonly ISecondaryDisplay _secondary;
+
+    public GamePage(ISecondaryDisplay secondary)
+    {
+        _secondary = secondary;
+        InitializeComponent();
+    }
 
     // ──────────────────────────────────────────────
     //  Lifecycle
@@ -120,6 +126,7 @@ public partial class GamePage : ContentPage
         }
         _pulseTimer.Start();
 
+        _secondary.Show();
         LoadBox(_boxIndex);
     }
 
@@ -131,6 +138,7 @@ public partial class GamePage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
         _pulseTimer?.Stop();
+        _secondary.Hide();
     }
 
 #if ANDROID
@@ -162,6 +170,8 @@ public partial class GamePage : ContentPage
             IdleBoxNameLabel.Text = boxName;
             int filled = _currentBox.Count(pk => pk.Species != 0);
             IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
+
+            _secondary.UpdateTrainer(_sav!, boxName, filled, _currentBox.Length);
             // Clear selected outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
                 || _currentBox[_selectedSlot].Species == 0))
@@ -1113,7 +1123,7 @@ public partial class GamePage : ContentPage
 
         PreviewCanvas.InvalidateSurface();
         StartRadarAnimation(GetRadarStats(pk));
-
+        _secondary.UpdatePokemon(pk);
     }
 
     private void ShowIdlePanel()
@@ -1123,6 +1133,7 @@ public partial class GamePage : ContentPage
         PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
+        _secondary.ClearPokemon();
     }
 
     // ──────────────────────────────────────────────

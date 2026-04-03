@@ -29,6 +29,7 @@ public static class MauiProgram
             });
 
         builder.Services.AddSingleton<IFileService, FileService>();
+        builder.Services.AddTransient<Pages.GamePage>();
 
 #if ANDROID
         // Use Thor dual-screen if a secondary display is detected, otherwise fallback

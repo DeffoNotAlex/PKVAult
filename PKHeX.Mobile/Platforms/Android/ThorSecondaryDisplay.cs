@@ -4,6 +4,8 @@ using Android.Hardware.Display;
 using Android.Views;
 using Microsoft.Maui;
 using Microsoft.Maui.Platform;
+using PKHeX.Core;
+using PKHeX.Mobile.Pages;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Platforms.Android;
@@ -24,6 +26,7 @@ namespace PKHeX.Mobile.Platforms.Android;
 public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 {
     private readonly IServiceProvider _services;
+    private readonly SecondScreenPage _secondPage = new();
     private ThorPresentation?         _presentation;
     private Display?                  _cachedDisplay;
 
@@ -35,7 +38,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     /// </summary>
     public bool IsAvailable => ResolveDisplay() is not null;
 
-    public void Show(ContentPage page)
+    public void Show()
     {
         var display = ResolveDisplay();
         if (display is null) return;
@@ -48,7 +51,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
             return;
 
         _presentation?.Dismiss();
-        _presentation = new ThorPresentation(activity, display, page, _services);
+        _presentation = new ThorPresentation(activity, display, _secondPage, _services);
 
         try
         {
@@ -65,6 +68,18 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         try { _presentation?.Hide(); }
         catch { }
     }
+
+    public void UpdateTrainer(SaveFile sav, string boxName, int filled, int total)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateTrainer(sav, boxName, filled, total));
+
+    public void UpdateBoxInfo(string boxName, int filled, int total)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBoxInfo(boxName, filled, total));
+
+    public void UpdatePokemon(PKM pk)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdatePokemon(pk));
+
+    public void ClearPokemon()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ClearPokemon());
 
     public void Dispose()
     {
