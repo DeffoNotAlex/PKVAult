@@ -2,6 +2,8 @@ using Android.App;
 using Android.Content;
 using Android.Hardware.Display;
 using Android.Views;
+using Microsoft.Maui;
+using Microsoft.Maui.Platform;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Platforms.Android;
@@ -20,44 +22,39 @@ namespace PKHeX.Mobile.Platforms.Android;
 /// </summary>
 public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 {
-    private readonly Display? _secondaryDisplay;
-    private ThorPresentation? _presentation;
-    private Microsoft.Maui.Controls.View? _pendingContent;
+    private readonly Display?          _secondaryDisplay;
+    private readonly IServiceProvider  _services;
+    private ThorPresentation?          _presentation;
 
     public bool IsAvailable => _secondaryDisplay is not null;
 
-    public ThorSecondaryDisplay()
+    public ThorSecondaryDisplay(IServiceProvider services)
     {
-        var context = global::Android.App.Application.Context;
-        var dm = context.GetSystemService(Context.DisplayService) as DisplayManager;
+        _services = services;
 
-        // Use DISPLAY_CATEGORY_PRESENTATION — the Thor registers its second screen
-        // under this category. This is more reliable than index-based access.
-        var displays = dm?.GetDisplays(DisplayManager.DisplayCategoryPresentation);
+        var context = global::Android.App.Application.Context;
+        var dm      = context.GetSystemService(Context.DisplayService) as DisplayManager;
+
+        // DISPLAY_CATEGORY_PRESENTATION is the category the Thor registers its second screen
+        // under. More reliable than index-based access (which would be [1]).
+        var displays      = dm?.GetDisplays(DisplayManager.DisplayCategoryPresentation);
         _secondaryDisplay = displays?.FirstOrDefault();
     }
 
-    public void SetContent(Microsoft.Maui.Controls.View content)
-    {
-        _pendingContent = content;
-
-        if (_presentation is not null && content.Handler?.PlatformView is global::Android.Views.View nativeView)
-            _presentation.SetContentView(nativeView);
-    }
-
-    public void Show()
+    public void Show(ContentPage page)
     {
         if (_secondaryDisplay is null) return;
 
         var activity = Platform.CurrentActivity;
         if (activity is null) return;
 
-        // Recreate presentation if dismissed
-        if (_presentation is null || !_presentation.IsShowing)
-        {
-            _presentation?.Dismiss();
-            _presentation = new ThorPresentation(activity, _secondaryDisplay, _pendingContent);
-        }
+        // Reuse existing presentation if it is still showing — avoids re-inflating the page
+        // (which would fail with "View already has a parent" on the second call).
+        if (_presentation is not null && _presentation.IsShowing)
+            return;
+
+        _presentation?.Dismiss();
+        _presentation = new ThorPresentation(activity, _secondaryDisplay, page, _services);
 
         try
         {
@@ -82,27 +79,47 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         _presentation = null;
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    //  Inner Presentation
+    // ──────────────────────────────────────────────────────────────────────
+
     private sealed class ThorPresentation : Presentation
     {
-        private readonly Microsoft.Maui.Controls.View? _initialContent;
+        private readonly ContentPage      _page;
+        private readonly IServiceProvider _services;
 
-        public ThorPresentation(Context context, Display display, Microsoft.Maui.Controls.View? initialContent)
+        public ThorPresentation(
+            Context context,
+            Display display,
+            ContentPage page,
+            IServiceProvider services)
             : base(context, display)
         {
-            _initialContent = initialContent;
+            _page     = page;
+            _services = services;
         }
 
         protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 
-            // Full-screen, no system bars
+            // Full-screen, no system bars, keep display on
             Window?.AddFlags(WindowManagerFlags.Fullscreen);
             Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
 
-            // Attach content here — this is the correct time, not after Show()
-            if (_initialContent?.Handler?.PlatformView is global::Android.Views.View nativeView)
+            // Inflate the MAUI ContentPage into a native Android View.
+            // We create a MauiContext scoped to this Presentation's Android context
+            // so that display metrics (density, size) are correct for the second screen.
+            try
+            {
+                var mauiContext = new MauiContext(_services, Context!);
+                var nativeView  = _page.ToPlatform(mauiContext);
                 SetContentView(nativeView);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Thor] ToPlatform failed: {ex.Message}");
+            }
         }
     }
 }

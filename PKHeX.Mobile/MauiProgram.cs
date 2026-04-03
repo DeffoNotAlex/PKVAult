@@ -34,7 +34,7 @@ public static class MauiProgram
         // Use Thor dual-screen if a secondary display is detected, otherwise fallback
         builder.Services.AddSingleton<ISecondaryDisplay>(sp =>
         {
-            var thor = new Platforms.Android.ThorSecondaryDisplay();
+            var thor = new Platforms.Android.ThorSecondaryDisplay(sp);
             if (thor.IsAvailable)
                 return thor;
             thor.Dispose();

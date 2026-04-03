@@ -6,12 +6,12 @@
              Shell.NavBarIsVisible="False">
 
     <!-- Root: top screen / bottom screen, with floating menu overlay -->
-    <Grid RowDefinitions="*,*" RowSpacing="2" BackgroundColor="#050510">
+    <Grid x:Name="RootGrid" RowDefinitions="*,*" RowSpacing="2" BackgroundColor="#050510">
 
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SCREEN — idle: trainer info  /  selected: detail  -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="0" BackgroundColor="#070C1A">
+        <Grid x:Name="TopScreenPanel" Grid.Row="0" BackgroundColor="#070C1A">
 
             <!-- Background image -->
             <Image Source="sprite_bg.jpg" Aspect="AspectFill" />

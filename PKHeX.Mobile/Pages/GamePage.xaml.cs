@@ -54,9 +54,15 @@ public partial class GamePage : ContentPage
     private float                    _radarVisMax  = 255f;
     private CancellationTokenSource? _radarAnimCts;
 
+    // Dual-screen support (AYN Thor second display)
+    private readonly ISecondaryDisplay _display;
+    private readonly SecondScreenPage  _secondScreen = new();
+
     public GamePage()
     {
         InitializeComponent();
+        _display = IPlatformApplication.Current?.Services.GetService<ISecondaryDisplay>()
+                   ?? new SingleScreenFallback();
     }
 
     // ──────────────────────────────────────────────
@@ -87,10 +93,10 @@ public partial class GamePage : ContentPage
             _cursorSlot  = 0;
             DeselectSlot();
 
-            TrainerNameLabel.Text   = sav.OT;
-            SaveGameLabel.Text     = $"Pokémon {sav.Version}  ·  Gen {sav.Generation}";
-            TrainerTIDLabel.Text   = sav.TrainerTID7.ToString();
-            TrainerPokedexLabel.Text = sav.BoxCount.ToString();
+            TrainerNameLabel.Text     = sav.OT;
+            SaveGameLabel.Text        = $"Pokémon {sav.Version}  ·  Gen {sav.Generation}";
+            TrainerTIDLabel.Text      = sav.TrainerTID7.ToString();
+            TrainerPokedexLabel.Text  = sav.BoxCount.ToString();
             TrainerPlaytimeLabel.Text = sav.PlayTimeString;
 
             // Set trainer circle game icon
@@ -98,6 +104,22 @@ public partial class GamePage : ContentPage
             if (iconFile != null)
                 TrainerGameIcon.Source = ImageSource.FromStream(
                     ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
+        }
+
+        // Second display: show SecondScreenPage on Thor's AMOLED top screen.
+        // When available, collapse the top row in GamePage so the bottom fills the whole display.
+        if (_display.IsAvailable)
+        {
+            TopScreenPanel.IsVisible = false;
+            RootGrid.RowDefinitions[0].Height = new GridLength(0);
+            _display.Show(_secondScreen);
+            if (freshSave && _sav is not null)
+                _secondScreen.UpdateTrainer(_sav, "", 0, 0);
+        }
+        else
+        {
+            TopScreenPanel.IsVisible = true;
+            RootGrid.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
         }
 
         // If returning from bank with a withdrawn Pokémon, enter move mode
@@ -134,6 +156,7 @@ public partial class GamePage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
         _pulseTimer?.Stop();
+        _display.Hide();
     }
 
 #if ANDROID
@@ -165,6 +188,8 @@ public partial class GamePage : ContentPage
             IdleBoxNameLabel.Text = boxName;
             int filled = _currentBox.Count(pk => pk.Species != 0);
             IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
+            if (_display.IsAvailable)
+                _secondScreen.UpdateBoxInfo(boxName, filled, _currentBox.Length);
 
             // Clear selected outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
@@ -1117,6 +1142,9 @@ public partial class GamePage : ContentPage
 
         PreviewCanvas.InvalidateSurface();
         StartRadarAnimation(GetRadarStats(pk));
+
+        if (_display.IsAvailable)
+            _secondScreen.UpdatePokemon(pk);
     }
 
     private void ShowIdlePanel()
@@ -1126,6 +1154,9 @@ public partial class GamePage : ContentPage
         PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
+
+        if (_display.IsAvailable)
+            _secondScreen.ClearPokemon();
     }
 
     // ──────────────────────────────────────────────

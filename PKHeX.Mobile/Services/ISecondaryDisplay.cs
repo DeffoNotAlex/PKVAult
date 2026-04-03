@@ -2,20 +2,17 @@ namespace PKHeX.Mobile.Services;
 
 /// <summary>
 /// Abstraction for rendering content on a secondary display.
-/// On the AYN Thor, the top 1920×1080 screen is the secondary display.
-/// On single-screen devices, this falls back to rendering in the top Grid row.
+/// On the AYN Thor, the second AMOLED screen is exposed as a standard Android presentation display.
+/// On single-screen devices this is a no-op — GamePage owns its top row directly.
 /// </summary>
 public interface ISecondaryDisplay
 {
     /// <summary>Whether a physical secondary display is connected and available.</summary>
     bool IsAvailable { get; }
 
-    /// <summary>Set MAUI content (XAML views) to render on the secondary display.</summary>
-    void SetContent(View content);
+    /// <summary>Show the given ContentPage on the secondary display window.</summary>
+    void Show(ContentPage page);
 
-    /// <summary>Show the secondary display window (or make the content visible).</summary>
-    void Show();
-
-    /// <summary>Hide the secondary display window (or collapse the content).</summary>
+    /// <summary>Hide the secondary display window.</summary>
     void Hide();
 }
