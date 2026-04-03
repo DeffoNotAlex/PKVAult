@@ -32,15 +32,9 @@ public static class MauiProgram
         builder.Services.AddTransient<Pages.GamePage>();
 
 #if ANDROID
-        // Use Thor dual-screen if a secondary display is detected, otherwise fallback
-        builder.Services.AddSingleton<ISecondaryDisplay>(sp =>
-        {
-            var thor = new Platforms.Android.ThorSecondaryDisplay(sp);
-            if (thor.IsAvailable)
-                return thor;
-            thor.Dispose();
-            return new SingleScreenFallback();
-        });
+        // Always use ThorSecondaryDisplay on Android — display detection is lazy
+        // and deferred to Show(), so it works even if the second screen isn't ready at startup.
+        builder.Services.AddSingleton<ISecondaryDisplay, Platforms.Android.ThorSecondaryDisplay>();
 #else
         builder.Services.AddSingleton<ISecondaryDisplay, SingleScreenFallback>();
 #endif

@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Hardware.Display;
+using Android.Util;
 using Android.Views;
 using Microsoft.Maui;
 using Microsoft.Maui.Platform;
@@ -18,13 +19,13 @@ namespace PKHeX.Mobile.Platforms.Android;
 /// and does NOT use Jetpack WindowManager's WindowAreaController (which requires OEM
 /// firmware extensions that the Thor does not implement).
 ///
-/// Display detection tries DISPLAY_CATEGORY_PRESENTATION first, then falls back to
-/// GetDisplays()[1] (index-based) in case the Thor's firmware doesn't tag its second
-/// screen with the presentation category. Detection is deferred to Show() so it picks
-/// up the display even if it isn't ready at app startup.
+/// Display detection is deferred to Show() so it works even if the second screen
+/// isn't ready at app startup.
 /// </summary>
 public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 {
+    private const string Tag = "ThorDisplay";
+
     private readonly IServiceProvider _services;
     private readonly SecondScreenPage _secondPage = new();
     private ThorPresentation?         _presentation;
@@ -32,23 +33,30 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     public ThorSecondaryDisplay(IServiceProvider services) => _services = services;
 
-    /// <summary>
-    /// Returns true when a secondary display is detectable at check time.
-    /// Caches the result after the first successful detection.
-    /// </summary>
     public bool IsAvailable => ResolveDisplay() is not null;
 
     public void Show()
     {
         var display = ResolveDisplay();
-        if (display is null) return;
+        if (display is null)
+        {
+            Log.Warn(Tag, "Show() called but no secondary display detected — skipping.");
+            return;
+        }
 
         var activity = Platform.CurrentActivity;
-        if (activity is null) return;
+        if (activity is null)
+        {
+            Log.Warn(Tag, "Show() called but Platform.CurrentActivity is null.");
+            return;
+        }
 
         // Reuse existing presentation if still showing
         if (_presentation is not null && _presentation.IsShowing)
+        {
+            Log.Debug(Tag, "Show() — presentation already showing, skipping.");
             return;
+        }
 
         _presentation?.Dismiss();
         _presentation = new ThorPresentation(activity, display, _secondPage, _services);
@@ -56,10 +64,11 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         try
         {
             _presentation.Show();
+            Log.Info(Tag, $"Presentation shown on display id={display.DisplayId} name='{display.Name}'.");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[Thor] Presentation.Show() failed: {ex.Message}");
+            Log.Error(Tag, $"Presentation.Show() failed: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -89,7 +98,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  Display detection — lazy, with two-pass fallback
+    //  Display detection — lazy, with full diagnostic dump + two-pass fallback
     // ──────────────────────────────────────────────────────────────────────
 
     private Display? ResolveDisplay()
@@ -98,28 +107,38 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
         var context = global::Android.App.Application.Context;
         var dm      = context.GetSystemService(Context.DisplayService) as DisplayManager;
-        if (dm is null) return null;
+        if (dm is null)
+        {
+            Log.Error(Tag, "Could not obtain DisplayManager.");
+            return null;
+        }
+
+        // Dump every display the OS knows about so we can see what the Thor reports.
+        var all = dm.GetDisplays() ?? [];
+        Log.Info(Tag, $"GetDisplays() returned {all.Length} display(s):");
+        foreach (var d in all)
+            Log.Info(Tag, $"  id={d.DisplayId} name='{d.Name}' state={d.State} flags={d.Flags}");
 
         // Pass 1: devices that tag the second screen as a presentation display (HDMI, etc.)
         var presDisplays = dm.GetDisplays(DisplayManager.DisplayCategoryPresentation);
+        Log.Info(Tag, $"PRESENTATION category: {presDisplays?.Length ?? 0} display(s).");
         if (presDisplays?.Length > 0)
         {
             _cachedDisplay = presDisplays[0];
-            System.Diagnostics.Debug.WriteLine($"[Thor] Second display found via PRESENTATION category: id={_cachedDisplay.DisplayId}");
+            Log.Info(Tag, $"Using presentation display id={_cachedDisplay.DisplayId}.");
             return _cachedDisplay;
         }
 
-        // Pass 2: devices (like Thor) whose second built-in screen isn't tagged with the
-        // presentation category — fall back to index 1 in the full display list.
-        var allDisplays = dm.GetDisplays();
-        if (allDisplays?.Length > 1)
+        // Pass 2: devices (like Thor) whose second built-in screen isn't tagged — fall back
+        // to index 1 in the full display list.
+        if (all.Length > 1)
         {
-            _cachedDisplay = allDisplays[1];
-            System.Diagnostics.Debug.WriteLine($"[Thor] Second display found via GetDisplays()[1]: id={_cachedDisplay.DisplayId}");
+            _cachedDisplay = all[1];
+            Log.Info(Tag, $"Using fallback GetDisplays()[1] id={_cachedDisplay.DisplayId}.");
             return _cachedDisplay;
         }
 
-        System.Diagnostics.Debug.WriteLine("[Thor] No secondary display detected.");
+        Log.Warn(Tag, "No secondary display detected (only one display in GetDisplays()).");
         return null;
     }
 
@@ -157,11 +176,11 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
                 var nativeView  = _page.ToPlatform(mauiContext);
                 SetContentView(nativeView);
 
-                System.Diagnostics.Debug.WriteLine("[Thor] ContentPage inflated on second display.");
+                Log.Info(Tag, "ContentPage inflated on second display.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[Thor] ToPlatform failed: {ex.Message}\n{ex.StackTrace}");
+                Log.Error(Tag, $"ToPlatform failed: {ex.Message}\n{ex.StackTrace}");
             }
         }
     }
