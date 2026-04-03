@@ -5,6 +5,10 @@
         android:icon="@mipmap/appicon"
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true">
+        <!-- Required for spanning across both Thor screens (foldable / dual-screen spanning model) -->
+        <activity
+            android:name="com.projectpokemon.pkhex.MainActivity"
+            android:resizeableActivity="true" />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
