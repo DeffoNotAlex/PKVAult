@@ -48,7 +48,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
             return;
 
         _presentation?.Dismiss();
-        _presentation = new ThorPresentation(activity, display, page);
+        _presentation = new ThorPresentation(activity, display, page, _services);
 
         try
         {
@@ -114,12 +114,14 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     private sealed class ThorPresentation : Presentation
     {
-        private readonly ContentPage _page;
+        private readonly ContentPage      _page;
+        private readonly IServiceProvider _services;
 
-        public ThorPresentation(Activity activity, Display display, ContentPage page)
+        public ThorPresentation(Activity activity, Display display, ContentPage page, IServiceProvider services)
             : base(activity, display)
         {
-            _page = page;
+            _page     = page;
+            _services = services;
         }
 
         protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
@@ -129,15 +131,15 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
             Window?.AddFlags(WindowManagerFlags.Fullscreen);
             Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
 
-            // Use the Activity's existing MauiContext rather than creating a new one.
-            // A new MauiContext with the presentation's dialog context can fail to resolve
-            // fonts and other app resources that are registered against the Activity context.
+            // Use the Activity as the Android context (not the Presentation's dialog context)
+            // so that MAUI handlers can resolve fonts and drawables registered against the Activity.
             try
             {
-                var mauiContext = Platform.CurrentActivity?.GetMauiContext()
-                                  ?? throw new InvalidOperationException("No MAUI context on activity");
+                var activity = Platform.CurrentActivity
+                               ?? throw new InvalidOperationException("No current Activity");
 
-                var nativeView = _page.ToPlatform(mauiContext);
+                var mauiContext = new MauiContext(_services, activity);
+                var nativeView  = _page.ToPlatform(mauiContext);
                 SetContentView(nativeView);
 
                 System.Diagnostics.Debug.WriteLine("[Thor] ContentPage inflated on second display.");
