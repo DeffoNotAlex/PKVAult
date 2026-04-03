@@ -107,14 +107,16 @@ public partial class GamePage : ContentPage
         }
 
         // Second display: show SecondScreenPage on Thor's AMOLED top screen.
-        // When available, collapse the top row in GamePage so the bottom fills the whole display.
+        // IsAvailable does lazy detection — safe to call every time OnAppearing fires.
         if (_display.IsAvailable)
         {
             TopScreenPanel.IsVisible = false;
             RootGrid.RowDefinitions[0].Height = new GridLength(0);
             _display.Show(_secondScreen);
-            if (freshSave && _sav is not null)
-                _secondScreen.UpdateTrainer(_sav, "", 0, 0);
+            // Seed the second screen with trainer info once Show() has inflated the page
+            var savForSecond = _sav;
+            if (savForSecond is not null)
+                Dispatcher.Dispatch(() => _secondScreen.UpdateTrainer(savForSecond, "", 0, 0));
         }
         else
         {
