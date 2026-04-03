@@ -3,9 +3,6 @@ using Android.Content;
 using Android.Content.PM;
 using Android.Views;
 using AndroidX.Core.View;
-using AndroidX.Window.Java.Layout;
-using AndroidX.Window.Layout;
-using Java.Util.Concurrent;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile;
@@ -20,55 +17,15 @@ namespace PKHeX.Mobile;
         ConfigChanges.UiMode |
         ConfigChanges.ScreenLayout |
         ConfigChanges.SmallestScreenSize |
-        ConfigChanges.Density |
-        ConfigChanges.WindowLayout)]   // required for fold-state changes without recreation
+        ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
     public const int RequestPickDirectory = 9001;
-
-    // ── Jetpack WindowManager (dual-screen / foldable spanning detection) ─
-    // Fired on the main thread when the spanning / fold state changes.
-    // True = app is spanning both displays (FoldingFeature.IsSeparating is true).
-    public static event Action<bool>? SpanningChanged;
-
-    private WindowInfoTrackerCallbackAdapter? _windowTracker;
-    private readonly WindowLayoutCallback     _layoutCallback = new();
 
     protected override void OnCreate(Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         SetImmersiveMode();
-
-        _windowTracker = new WindowInfoTrackerCallbackAdapter(
-            WindowInfoTracker.Companion.GetOrCreate(this));
-    }
-
-    protected override void OnStart()
-    {
-        base.OnStart();
-        _windowTracker?.AddWindowLayoutInfoListener(
-            this,
-            Executors.NewSingleThreadExecutor()!,
-            _layoutCallback);
-    }
-
-    protected override void OnStop()
-    {
-        base.OnStop();
-        _windowTracker?.RemoveWindowLayoutInfoListener(_layoutCallback);
-    }
-
-    private sealed class WindowLayoutCallback : Java.Lang.Object, IConsumer
-    {
-        public void Accept(Java.Lang.Object t)
-        {
-            if (t is not WindowLayoutInfo info) return;
-            bool spanning = info.DisplayFeatures
-                .OfType<FoldingFeature>()
-                .Any(f => f.IsSeparating);
-            System.Diagnostics.Debug.WriteLine($"[WM] spanning={spanning}, features={info.DisplayFeatures.Count}");
-            MainThread.BeginInvokeOnMainThread(() => SpanningChanged?.Invoke(spanning));
-        }
     }
 
     public override void OnWindowFocusChanged(bool hasFocus)
