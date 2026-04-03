@@ -6,12 +6,12 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="#070C1A">
 
-    <Grid RowDefinitions="Auto,*" RowSpacing="2">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" RowSpacing="2">
 
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SECTION — Hero: PKHeX branding + active save     -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="0" BackgroundColor="#070C1A"
+        <Grid x:Name="HeroPanel" Grid.Row="0" BackgroundColor="#070C1A"
               MinimumHeightRequest="160" Padding="28,20,28,16">
 
             <Grid ColumnDefinitions="Auto,Auto,*" VerticalOptions="Center">

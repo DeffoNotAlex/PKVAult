@@ -12,10 +12,10 @@
         <ToolbarItem Text="Save" Clicked="OnSaveClicked" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="0" BackgroundColor="#0B0F1E">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto" Padding="0" BackgroundColor="#0B0F1E">
 
         <!-- Row 0: Header: sprite + species/level + back button -->
-        <Grid Grid.Row="0" ColumnDefinitions="80,*,Auto" Padding="8"
+        <Grid x:Name="HeaderPanel" Grid.Row="0" ColumnDefinitions="80,*,Auto" Padding="8"
               BackgroundColor="#0D1121">
             <skia:SKCanvasView Grid.Column="0"
                                x:Name="SpriteCanvas"

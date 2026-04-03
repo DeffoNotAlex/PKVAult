@@ -26,8 +26,11 @@ public partial class PkmEditorPage : ContentPage
     public string? BoxIndexParam  { set => int.TryParse(value, out _boxIndex); }
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
 
-    public PkmEditorPage()
+    private readonly ISecondaryDisplay _secondary;
+
+    public PkmEditorPage(ISecondaryDisplay secondary)
     {
+        _secondary = secondary;
         InitializeComponent();
 
         // Natures
@@ -93,10 +96,21 @@ public partial class PkmEditorPage : ContentPage
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
 
+        _secondary.Show();
+        bool dual = _secondary.IsAvailable;
+        HeaderPanel.IsVisible             = !dual;
+        RootGrid.RowDefinitions[0].Height = dual ? new GridLength(0) : GridLength.Auto;
+
         if (App.ActiveSave is null) return;
 
         _pk = App.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
         await _sprites.PreloadBoxAsync([_pk]);
+
+        if (_pk.Species > 0)
+            _secondary.UpdatePokemon(_pk);
+        else
+            _secondary.ClearPokemon();
+
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
         UpdateRowHighlight();

@@ -145,7 +145,6 @@ public partial class GamePage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
         _pulseTimer?.Stop();
-        _secondary.Hide();
     }
 
 #if ANDROID
