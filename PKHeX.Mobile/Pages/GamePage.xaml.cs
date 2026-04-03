@@ -127,6 +127,13 @@ public partial class GamePage : ContentPage
         _pulseTimer.Start();
 
         _secondary.Show();
+
+        // When the second screen is active, collapse the top panel so the
+        // box grid fills the entire primary screen.
+        bool dualScreen = _secondary.IsAvailable;
+        TopScreenPanel.IsVisible          = !dualScreen;
+        RootGrid.RowDefinitions[0].Height = dualScreen ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+
         LoadBox(_boxIndex);
     }
 
