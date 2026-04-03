@@ -122,17 +122,21 @@ public partial class GamePage : ContentPage
         {
             _pulseTimer = Dispatcher.CreateTimer();
             _pulseTimer.Interval = TimeSpan.FromMilliseconds(16);
-            _pulseTimer.Tick += (_, _) => BoxCanvas.InvalidateSurface();
+            _pulseTimer.Tick += (_, _) =>
+            {
+                BoxCanvas.InvalidateSurface();
+                _secondary.InvalidateBoxCanvas();
+            };
         }
         _pulseTimer.Start();
 
         _secondary.Show();
 
-        // When the second screen is active, collapse the top panel so the
-        // box grid fills the entire primary screen.
+        // When the second screen is active, collapse Row 1 (the box grid) from the
+        // primary (top) screen so it fills the entire bottom screen via SecondScreenPage.
+        // Row 0 (trainer card + Pokémon detail) stays on the top screen.
         bool dualScreen = _secondary.IsAvailable;
-        TopScreenPanel.IsVisible          = !dualScreen;
-        RootGrid.RowDefinitions[0].Height = dualScreen ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        RootGrid.RowDefinitions[1].Height = dualScreen ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
 
         LoadBox(_boxIndex);
     }
@@ -177,7 +181,10 @@ public partial class GamePage : ContentPage
             int filled = _currentBox.Count(pk => pk.Species != 0);
             IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
 
-            _secondary.UpdateTrainer(_sav!, boxName, filled, _currentBox.Length);
+            _secondary.UpdateBoxGrid(
+                _currentBox, _cursorSlot, _selectedSlot,
+                _moveMode, _movePk, _moveSourceBox, _moveSourceSlot,
+                _boxIndex, boxName, _legalityCache, _showLegalityBadges);
             // Clear selected outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
                 || _currentBox[_selectedSlot].Species == 0))
@@ -1020,6 +1027,7 @@ public partial class GamePage : ContentPage
         UpdateTopPanel();
         UpdateInfoBar();
         BoxCanvas.InvalidateSurface();
+        _secondary.UpdateCursor(_cursorSlot, _selectedSlot, _moveMode, _movePk, _boxIndex);
     }
 
     private void OpenActionMenu()
@@ -1129,7 +1137,6 @@ public partial class GamePage : ContentPage
 
         PreviewCanvas.InvalidateSurface();
         StartRadarAnimation(GetRadarStats(pk));
-        _secondary.UpdatePokemon(pk);
     }
 
     private void ShowIdlePanel()
@@ -1139,7 +1146,6 @@ public partial class GamePage : ContentPage
         PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
-        _secondary.ClearPokemon();
     }
 
     // ──────────────────────────────────────────────

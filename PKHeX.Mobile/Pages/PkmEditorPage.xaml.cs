@@ -97,20 +97,11 @@ public partial class PkmEditorPage : ContentPage
 #endif
 
         _secondary.Show();
-        bool dual = _secondary.IsAvailable;
-        HeaderPanel.IsVisible             = !dual;
-        RootGrid.RowDefinitions[0].Height = dual ? new GridLength(0) : GridLength.Auto;
 
         if (App.ActiveSave is null) return;
 
         _pk = App.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
         await _sprites.PreloadBoxAsync([_pk]);
-
-        if (_pk.Species > 0)
-            _secondary.UpdatePokemon(_pk);
-        else
-            _secondary.ClearPokemon();
-
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
         UpdateRowHighlight();

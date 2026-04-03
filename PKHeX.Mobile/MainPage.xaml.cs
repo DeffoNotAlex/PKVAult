@@ -39,10 +39,6 @@ public partial class MainPage : ContentPage
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
         _secondary.Show();
-        bool dual = _secondary.IsAvailable;
-        HeroPanel.IsVisible          = !dual;
-        RootGrid.RowDefinitions[0].Height = dual ? new GridLength(0) : GridLength.Auto;
-
         _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank];
         _ = RefreshSavesAsync();
         UpdateActionHighlight();
@@ -133,9 +129,6 @@ public partial class MainPage : ContentPage
 
             var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
             if (active != null) active.IsLoaded = true;
-
-            _secondary.UpdateTrainer(sav, "—", 0, sav.BoxCount);
-            _secondary.ClearPokemon();
 
             UpdateHeroPreview();
             UpdateActionHighlight();

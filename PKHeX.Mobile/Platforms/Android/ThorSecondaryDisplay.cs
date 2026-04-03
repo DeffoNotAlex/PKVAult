@@ -78,17 +78,20 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         catch { }
     }
 
-    public void UpdateTrainer(SaveFile sav, string boxName, int filled, int total)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateTrainer(sav, boxName, filled, total));
+    public void UpdateBoxGrid(
+        PKM[] box, int cursorSlot, int selectedSlot,
+        bool moveMode, PKM? movePk, int moveSourceBox, int moveSourceSlot,
+        int currentBoxIndex, string boxName, bool?[] legalityCache, bool showLegalityBadges)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBoxGrid(
+            box, cursorSlot, selectedSlot,
+            moveMode, movePk, moveSourceBox, moveSourceSlot,
+            currentBoxIndex, boxName, legalityCache, showLegalityBadges));
 
-    public void UpdateBoxInfo(string boxName, int filled, int total)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBoxInfo(boxName, filled, total));
+    public void UpdateCursor(int cursorSlot, int selectedSlot, bool moveMode, PKM? movePk, int currentBoxIndex)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateCursor(cursorSlot, selectedSlot, moveMode, movePk, currentBoxIndex));
 
-    public void UpdatePokemon(PKM pk)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdatePokemon(pk));
-
-    public void ClearPokemon()
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ClearPokemon());
+    public void InvalidateBoxCanvas()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBoxCanvas());
 
     public void Dispose()
     {
