@@ -46,6 +46,7 @@ public partial class MainPage : ContentPage
         bool dual = _secondary.IsAvailable;
         BottomPanel.IsVisible = !dual;
         RootGrid.RowDefinitions[0].Height = dual ? GridLength.Star : GridLength.Auto;
+        RootGrid.RowDefinitions[1].Height = dual ? new GridLength(0) : GridLength.Star;
 
         _ = RefreshSavesAsync();
         UpdateActionHighlight();
