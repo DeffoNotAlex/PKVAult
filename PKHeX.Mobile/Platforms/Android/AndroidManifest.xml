@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="true"
+        android:label="PKVault"
         android:icon="@mipmap/appicon"
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true">
         <!-- Required for spanning across both Thor screens (foldable / dual-screen spanning model) -->
         <activity
-            android:name="com.projectpokemon.pkhex.MainActivity"
+            android:name="com.pkvault.app.MainActivity"
             android:resizeableActivity="true" />
     </application>
 
