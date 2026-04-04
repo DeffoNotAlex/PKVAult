@@ -426,18 +426,56 @@ public partial class MainPage : ContentPage
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
+        private static readonly Color ColNormal    = Color.FromArgb("#131B35");
+        private static readonly Color ColCursor    = Color.FromArgb("#152040");
+        private static readonly Color ColLoaded    = Color.FromArgb("#1C2850");
+        private static readonly Color StrokeNone   = Colors.Transparent;
+        private static readonly Color StrokeCursor = Color.FromArgb("#5CA0FF");
+        private static readonly Color StrokeLoaded = Color.FromArgb("#3B8BFF");
+
         private bool _isLoaded;
         public bool IsLoaded
         {
             get => _isLoaded;
-            set { if (_isLoaded == value) return; _isLoaded = value; OnPropertyChanged(); }
+            set { if (_isLoaded == value) return; _isLoaded = value; OnPropertyChanged(); RefreshCardVisuals(); }
         }
 
         private bool _isCursor;
         public bool IsCursor
         {
             get => _isCursor;
-            set { if (_isCursor == value) return; _isCursor = value; OnPropertyChanged(); }
+            set { if (_isCursor == value) return; _isCursor = value; OnPropertyChanged(); RefreshCardVisuals(); }
+        }
+
+        private Color _cardBackground = ColNormal;
+        public Color CardBackground { get => _cardBackground; private set { _cardBackground = value; OnPropertyChanged(); } }
+
+        private Color _cardStroke = StrokeNone;
+        public Color CardStroke { get => _cardStroke; private set { _cardStroke = value; OnPropertyChanged(); } }
+
+        private double _cardStrokeThickness = 1.5;
+        public double CardStrokeThickness { get => _cardStrokeThickness; private set { _cardStrokeThickness = value; OnPropertyChanged(); } }
+
+        private void RefreshCardVisuals()
+        {
+            if (_isLoaded)
+            {
+                CardBackground      = ColLoaded;
+                CardStroke          = StrokeLoaded;
+                CardStrokeThickness = 2;
+            }
+            else if (_isCursor)
+            {
+                CardBackground      = ColCursor;
+                CardStroke          = StrokeCursor;
+                CardStrokeThickness = 1.5;
+            }
+            else
+            {
+                CardBackground      = ColNormal;
+                CardStroke          = StrokeNone;
+                CardStrokeThickness = 1.5;
+            }
         }
 
         public SaveEntry Entry { get; }

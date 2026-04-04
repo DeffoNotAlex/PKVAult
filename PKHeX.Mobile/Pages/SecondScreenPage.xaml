@@ -114,21 +114,10 @@
                     <DataTemplate>
                         <Grid Margin="0,0,0,8">
                             <Border StrokeShape="RoundRectangle 14"
-                                    BackgroundColor="#131B35"
-                                    Stroke="Transparent" StrokeThickness="1.5"
+                                    BackgroundColor="{Binding CardBackground}"
+                                    Stroke="{Binding CardStroke}"
+                                    StrokeThickness="{Binding CardStrokeThickness}"
                                     Padding="0">
-                                <Border.Triggers>
-                                    <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
-                                        <Setter Property="Stroke" Value="#3B8BFF" />
-                                        <Setter Property="StrokeThickness" Value="2" />
-                                        <Setter Property="BackgroundColor" Value="#1C2850" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Border" Binding="{Binding IsCursor}" Value="True">
-                                        <Setter Property="Stroke" Value="#5CA0FF" />
-                                        <Setter Property="StrokeThickness" Value="1.5" />
-                                        <Setter Property="BackgroundColor" Value="#152040" />
-                                    </DataTrigger>
-                                </Border.Triggers>
                                 <Grid Padding="14,12" ColumnDefinitions="4,48,*,Auto">
                                     <BoxView Grid.Column="0" Color="{Binding GameColorLight}"
                                              WidthRequest="3" VerticalOptions="FillAndExpand"
