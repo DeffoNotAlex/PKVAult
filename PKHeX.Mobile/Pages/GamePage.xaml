@@ -269,7 +269,7 @@
                            FontFamily="QuicksandExtraBold" FontSize="18"
                            TextColor="#EDF0FF"
                            HorizontalTextAlignment="Center" />
-                    <Label Text="L / R" FontFamily="Nunito" FontSize="9"
+                    <Label Text="R-Stick L/R  |  R1/L1 Bank" FontFamily="Nunito" FontSize="9"
                            TextColor="#283456"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
