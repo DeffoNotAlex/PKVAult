@@ -344,6 +344,17 @@
                         <Label Text="Back" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
                                VerticalOptions="Center" />
                     </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="≡" FontFamily="NunitoExtraBold" FontSize="9"
+                                   TextColor="#F0C040"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Save" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
                 </HorizontalStackLayout>
             </Grid>
 
