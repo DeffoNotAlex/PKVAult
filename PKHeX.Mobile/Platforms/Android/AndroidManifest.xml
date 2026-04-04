@@ -6,7 +6,6 @@
         android:icon="@mipmap/appicon"
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
         android:defaultFocusHighlightEnabled="false">
         <!-- Required for spanning across both Thor screens (foldable / dual-screen spanning model) -->
         <activity
