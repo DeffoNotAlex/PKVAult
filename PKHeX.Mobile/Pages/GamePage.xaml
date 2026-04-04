@@ -101,12 +101,14 @@
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
                 <!-- Column 0: Stat radar in frosted glass box -->
-                <Border Grid.Column="0"
+                <Border x:Name="RadarBorder"
+                        Grid.Column="0"
                         StrokeShape="RoundRectangle 16"
                         BackgroundColor="#60101828"
                         Stroke="#50FFFFFF"
                         StrokeThickness="1"
-                        Margin="4">
+                        Margin="4"
+                        VerticalOptions="Center">
                     <skia:SKCanvasView x:Name="RadarCanvas"
                                        PaintSurface="OnRadarPaint" />
                 </Border>

@@ -60,6 +60,13 @@ public partial class GamePage : ContentPage
     {
         _secondary = secondary;
         InitializeComponent();
+
+        // Keep the radar frosted-glass box square regardless of row height.
+        RadarBorder.SizeChanged += (_, _) =>
+        {
+            if (RadarBorder.Width > 0)
+                RadarBorder.HeightRequest = RadarBorder.Width;
+        };
     }
 
     // ──────────────────────────────────────────────

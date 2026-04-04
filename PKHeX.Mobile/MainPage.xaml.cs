@@ -97,24 +97,37 @@ public partial class MainPage : ContentPage
     {
         if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
         {
-            HeroPreview.IsVisible = false;
+            HeroPreview.IsVisible   = false;
+            HeroEmptyState.IsVisible = true;
             return;
         }
 
         var card = _saveCards[_cardCursor];
-        HeroPreview.IsVisible = true;
+        HeroEmptyState.IsVisible = false;
+        HeroPreview.IsVisible    = true;
 
-        // Badge
-        HeroBadgeText.Text = card.GameShortName;
-        HeroBadgeGrad0.Color = card.GameColorDark;
-        HeroBadgeGrad1.Color = card.GameColorLight;
+        // Game icon: real image when available, gradient badge fallback
+        if (card.HasIcon)
+        {
+            HeroIconGrad.IsVisible      = false;
+            HeroIconImgBorder.IsVisible = true;
+            HeroIconImg.Source          = card.IconSource;
+        }
+        else
+        {
+            HeroIconImgBorder.IsVisible = false;
+            HeroIconGrad.IsVisible      = true;
+            HeroBadgeText.Text          = card.GameShortName;
+            HeroBadgeGrad0.Color        = card.GameColorDark;
+            HeroBadgeGrad1.Color        = card.GameColorLight;
+        }
 
         // Trainer info
         HeroTrainerName.Text = card.TrainerName;
-        HeroGameLabel.Text = card.VersionLabel;
-        HeroTID.Text = card.Entry.TrainerID.ToString();
-        HeroBoxes.Text = card.Entry.BoxCount.ToString();
-        HeroPlaytime.Text = card.Entry.PlayTime;
+        HeroGameLabel.Text   = card.VersionLabel;
+        HeroTID.Text         = card.Entry.TrainerID.ToString();
+        HeroBoxes.Text       = card.Entry.BoxCount.ToString();
+        HeroPlaytime.Text    = card.Entry.PlayTime;
 
         // Active pill
         HeroActivePill.IsVisible = card.IsLoaded;
