@@ -138,7 +138,7 @@
                                HorizontalTextAlignment="Center" />
                         <Label x:Name="DetailLevelNature"
                                FontFamily="Nunito" FontSize="10"
-                               TextColor="#8892B5"
+                               TextColor="#EDF0FF"
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Grid>
@@ -303,10 +303,10 @@
                 <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                     <Label x:Name="InfoSpeciesNum"
                            FontFamily="Nunito" FontSize="12"
-                           TextColor="#3D4A6E" />
+                           TextColor="#8892B5" />
                     <Label x:Name="InfoSpeciesName"
                            FontFamily="NunitoBold" FontSize="12"
-                           TextColor="#8892B5" />
+                           TextColor="#EDF0FF" />
                 </HorizontalStackLayout>
 
                 <!-- Gamepad hints -->

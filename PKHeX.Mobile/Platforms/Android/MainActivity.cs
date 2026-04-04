@@ -26,7 +26,6 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
         SetImmersiveMode();
-        DisableRecyclerViewFocusHighlight();
     }
 
     /// <summary>
@@ -63,7 +62,11 @@ public class MainActivity : MauiAppCompatActivity
     public override void OnWindowFocusChanged(bool hasFocus)
     {
         base.OnWindowFocusChanged(hasFocus);
-        if (hasFocus) SetImmersiveMode();
+        if (!hasFocus) return;
+        SetImmersiveMode();
+        // Re-run every time the window gains focus so RecyclerViews created
+        // after navigation (lazy page inflation) are also caught.
+        DisableRecyclerViewFocusHighlight();
     }
 
     private void SetImmersiveMode()
