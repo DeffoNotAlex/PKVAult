@@ -188,11 +188,36 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
                 var nativeView  = _page.ToPlatform(mauiContext);
                 SetContentView(nativeView);
 
+                // Kill the orange focus ring on every RecyclerView inside THIS
+                // Presentation window. The main Activity's DecorView walk never
+                // reaches here because this is a separate Android window.
+                Window?.DecorView?.Post(() =>
+                    StripFocusFromGroup(Window.DecorView as Android.Views.ViewGroup));
+
                 Log.Info(Tag, "ContentPage inflated on second display.");
             }
             catch (Exception ex)
             {
                 Log.Error(Tag, $"ToPlatform failed: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        private static void StripFocusFromGroup(Android.Views.ViewGroup? group)
+        {
+            if (group is null) return;
+            for (int i = 0; i < group.ChildCount; i++)
+            {
+                var child = group.GetChildAt(i);
+                if (child is AndroidX.RecyclerView.Widget.RecyclerView rv)
+                {
+                    rv.Focusable = false;
+                    rv.FocusableInTouchMode = false;
+                    rv.DescendantFocusability = Android.Views.DescendantFocusability.BlockDescendants;
+                }
+                else if (child is Android.Views.ViewGroup vg)
+                {
+                    StripFocusFromGroup(vg);
+                }
             }
         }
     }
