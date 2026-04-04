@@ -106,16 +106,15 @@ public partial class SecondScreenPage : ContentPage
         MenuSaveCountLabel.Text   = $"{saves.Count} save{(saves.Count != 1 ? "s" : "")}";
 
         if (saves.Count > 0 && cursorIndex >= 0 && cursorIndex < saves.Count)
-            MenuSavesList.SelectedItem = saves[cursorIndex];
+            MenuSavesList.ScrollTo(cursorIndex, -1, ScrollToPosition.MakeVisible, false);
     }
 
     public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
     {
-        // Update list selection
+        // Scroll the list to keep the focused item visible (no selection — avoids orange ring)
         if (MenuSavesList.ItemsSource is IList<object> saves &&
             cursorIndex >= 0 && cursorIndex < saves.Count)
         {
-            MenuSavesList.SelectedItem = saves[cursorIndex];
             MenuSavesList.ScrollTo(cursorIndex, -1, ScrollToPosition.MakeVisible, false);
         }
 

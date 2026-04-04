@@ -101,7 +101,7 @@
 
             <!-- Save card list -->
             <CollectionView x:Name="MenuSavesList" Grid.Row="1"
-                            SelectionMode="Single"
+                            SelectionMode="None"
                             BackgroundColor="Transparent"
                             Margin="14,0">
                 <CollectionView.EmptyView>
