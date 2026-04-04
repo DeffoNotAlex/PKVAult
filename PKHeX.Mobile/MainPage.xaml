@@ -159,24 +159,6 @@
                                     BackgroundColor="#131B35"
                                     Stroke="Transparent" StrokeThickness="1.5"
                                     Padding="0">
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroupList>
-                                        <VisualStateGroup x:Name="CommonStates">
-                                            <VisualState x:Name="Normal">
-                                                <VisualState.Setters>
-                                                    <Setter Property="BackgroundColor" Value="#131B35" />
-                                                    <Setter Property="Stroke" Value="Transparent" />
-                                                </VisualState.Setters>
-                                            </VisualState>
-                                            <VisualState x:Name="Selected">
-                                                <VisualState.Setters>
-                                                    <Setter Property="BackgroundColor" Value="#1C2850" />
-                                                    <Setter Property="Stroke" Value="#3B8BFF" />
-                                                </VisualState.Setters>
-                                            </VisualState>
-                                        </VisualStateGroup>
-                                    </VisualStateGroupList>
-                                </VisualStateManager.VisualStateGroups>
                                 <Border.Triggers>
                                     <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
                                         <Setter Property="Stroke" Value="#3B8BFF" />
