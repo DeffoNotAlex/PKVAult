@@ -41,10 +41,11 @@ public partial class MainPage : ContentPage
         _secondary.Show();
         _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank];
 
-        // On dual-screen: keep only the hero panel on the primary display;
-        // the save list + action bar is rendered on the bottom secondary screen.
+        // On dual-screen: hero panel fills the entire primary display (Row 0 = *),
+        // and the save list + action bar moves to the secondary screen.
         bool dual = _secondary.IsAvailable;
         BottomPanel.IsVisible = !dual;
+        RootGrid.RowDefinitions[0].Height = dual ? GridLength.Star : GridLength.Auto;
 
         _ = RefreshSavesAsync();
         UpdateActionHighlight();
