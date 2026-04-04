@@ -87,6 +87,50 @@ public partial class SecondScreenPage : ContentPage
     public void InvalidateBoxCanvas() => BoxCanvas.InvalidateSurface();
 
     // ──────────────────────────────────────────────
+    //  Main menu (save list + action bar)
+    // ──────────────────────────────────────────────
+
+    public void ShowMainMenu(IList<object> saves, int cursorIndex)
+    {
+        BoxGridPanel.IsVisible  = false;
+        MainMenuPanel.IsVisible = true;
+
+        MenuSavesList.ItemsSource = saves;
+        MenuSaveCountLabel.Text   = $"{saves.Count} save{(saves.Count != 1 ? "s" : "")}";
+
+        if (saves.Count > 0 && cursorIndex >= 0 && cursorIndex < saves.Count)
+            MenuSavesList.SelectedItem = saves[cursorIndex];
+    }
+
+    public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
+    {
+        // Update list selection
+        if (MenuSavesList.ItemsSource is IList<object> saves &&
+            cursorIndex >= 0 && cursorIndex < saves.Count)
+        {
+            MenuSavesList.SelectedItem = saves[cursorIndex];
+            MenuSavesList.ScrollTo(cursorIndex, -1, ScrollToPosition.MakeVisible, false);
+        }
+
+        // Update action bar highlight
+        var focusBg     = Color.FromArgb("#182242");
+        var focusStroke = Color.FromArgb("#3B8BFF");
+        var normalBg    = Color.FromArgb("#131B35");
+        var normalStroke = Color.FromArgb("#0DFFFFFF");
+
+        bool primaryFocused = focusSection == 1 && actionCursor == 0;
+        Menu_OpenBoxes.Stroke = primaryFocused ? focusStroke : Colors.Transparent;
+
+        Border[] tiles = [Menu_Search, Menu_Gifts, Menu_Export, Menu_Bank];
+        for (int i = 0; i < tiles.Length; i++)
+        {
+            bool focused = focusSection == 1 && actionCursor == i + 1;
+            tiles[i].BackgroundColor = focused ? focusBg : normalBg;
+            tiles[i].Stroke          = focused ? focusStroke : Color.FromArgb("#0DFFFFFF");
+        }
+    }
+
+    // ──────────────────────────────────────────────
     //  Box grid painting
     // ──────────────────────────────────────────────
 

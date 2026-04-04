@@ -6,75 +6,209 @@
              BackgroundColor="#070C1A"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
+    <Grid>
 
-        <!-- Box navigation header -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,12,16,8">
-            <Border x:Name="PrevBoxBtn" StrokeShape="RoundRectangle 10"
-                    BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
-                    WidthRequest="40" HeightRequest="36">
-                <Label Text="◀" FontSize="14" TextColor="#8892B5"
-                       HorizontalOptions="Center" VerticalOptions="Center" />
-            </Border>
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE A — Box grid (driven by GamePage)               -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="BoxGridPanel" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
 
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
-                <Label x:Name="BoxNameLabel"
-                       FontFamily="QuicksandExtraBold" FontSize="18"
-                       TextColor="#EDF0FF"
-                       HorizontalTextAlignment="Center" />
-                <Label Text="L / R" FontFamily="Nunito" FontSize="9"
-                       TextColor="#283456"
-                       HorizontalTextAlignment="Center" />
-            </VerticalStackLayout>
+            <!-- Box navigation header -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,12,16,8">
+                <Border StrokeShape="RoundRectangle 10"
+                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Label Text="◀" FontSize="14" TextColor="#8892B5"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                    <Label x:Name="BoxNameLabel"
+                           FontFamily="QuicksandExtraBold" FontSize="18"
+                           TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                    <Label Text="L / R" FontFamily="Nunito" FontSize="9"
+                           TextColor="#283456" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+                <Border Grid.Column="2" StrokeShape="RoundRectangle 10"
+                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Label Text="▶" FontSize="14" TextColor="#8892B5"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+            </Grid>
 
-            <Border x:Name="NextBoxBtn" Grid.Column="2"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
-                    WidthRequest="40" HeightRequest="36">
-                <Label Text="▶" FontSize="14" TextColor="#8892B5"
-                       HorizontalOptions="Center" VerticalOptions="Center" />
-            </Border>
+            <!-- Box grid canvas -->
+            <skia:SKCanvasView Grid.Row="1" x:Name="BoxCanvas" PaintSurface="OnBoxPaint" />
+
+            <!-- Info bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
+                <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                    <Label x:Name="InfoSpeciesNum" FontFamily="Nunito" FontSize="12" TextColor="#3D4A6E" />
+                    <Label x:Name="InfoSpeciesName" FontFamily="NunitoBold" FontSize="12" TextColor="#8892B5" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
+                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                            <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
+                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                            <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#6BABFF"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Grab" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+            </Grid>
         </Grid>
 
-        <!-- Box grid canvas -->
-        <skia:SKCanvasView Grid.Row="1"
-                           x:Name="BoxCanvas"
-                           PaintSurface="OnBoxPaint" />
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE B — Main menu: save list + action bar           -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="MainMenuPanel" IsVisible="False"
+              RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
 
-        <!-- Info bar -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
-            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                <Label x:Name="InfoSpeciesNum"
-                       FontFamily="Nunito" FontSize="12"
-                       TextColor="#3D4A6E" />
-                <Label x:Name="InfoSpeciesName"
-                       FontFamily="NunitoBold" FontSize="12"
-                       TextColor="#8892B5" />
-            </HorizontalStackLayout>
-            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
-                <HorizontalStackLayout Spacing="3">
-                    <Border StrokeShape="RoundRectangle 5"
-                            BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
-                            WidthRequest="20" HeightRequest="20">
-                        <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
-                               TextColor="#34D990"
-                               HorizontalOptions="Center" VerticalOptions="Center" />
+            <!-- Header -->
+            <Grid Grid.Row="0" Padding="18,14,18,8" ColumnDefinitions="*,Auto">
+                <Label Text="SAVE FILES" FontFamily="Quicksand" FontSize="12"
+                       TextColor="#3D4A6E" CharacterSpacing="1.5" VerticalOptions="Center" />
+                <Border Grid.Column="1" StrokeShape="RoundRectangle 6"
+                        BackgroundColor="#08FFFFFF" Stroke="Transparent" Padding="10,3">
+                    <Label x:Name="MenuSaveCountLabel" Text="0 saves"
+                           FontFamily="NunitoBold" FontSize="10" TextColor="#283456" />
+                </Border>
+            </Grid>
+
+            <!-- Save card list -->
+            <CollectionView x:Name="MenuSavesList" Grid.Row="1"
+                            SelectionMode="Single"
+                            BackgroundColor="Transparent"
+                            Margin="14,0">
+                <CollectionView.EmptyView>
+                    <Label Text="No saves found."
+                           FontFamily="Nunito" FontSize="14" TextColor="#8892B5"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           Margin="24,60" HorizontalTextAlignment="Center" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,8">
+                            <Border StrokeShape="RoundRectangle 14"
+                                    BackgroundColor="#131B35"
+                                    Stroke="Transparent" StrokeThickness="1.5"
+                                    Padding="0">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsLoaded}" Value="True">
+                                        <Setter Property="Stroke" Value="#3B8BFF" />
+                                        <Setter Property="StrokeThickness" Value="2" />
+                                        <Setter Property="BackgroundColor" Value="#1C2850" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Grid Padding="14,12" ColumnDefinitions="4,48,*,Auto">
+                                    <BoxView Grid.Column="0" Color="{Binding GameColorLight}"
+                                             WidthRequest="3" VerticalOptions="FillAndExpand"
+                                             Margin="-14,0,0,0" IsVisible="{Binding IsLoaded}" />
+                                    <Grid Grid.Column="1" WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
+                                        <Border StrokeShape="RoundRectangle 13" Stroke="Transparent"
+                                                IsVisible="{Binding HasNoIcon}">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="{Binding GameColorDark}" Offset="0" />
+                                                    <GradientStop Color="{Binding GameColorLight}" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <Label Text="{Binding GameShortName}" TextColor="White"
+                                                   FontFamily="QuicksandExtraBold" FontSize="15"
+                                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                                   HorizontalTextAlignment="Center" />
+                                        </Border>
+                                        <Border StrokeShape="RoundRectangle 13" Stroke="Transparent"
+                                                IsVisible="{Binding HasIcon}">
+                                            <Image Source="{Binding IconSource}" Aspect="AspectFill" />
+                                        </Border>
+                                    </Grid>
+                                    <VerticalStackLayout Grid.Column="2" Margin="14,0,0,0" Spacing="1" VerticalOptions="Center">
+                                        <Label Text="{Binding TrainerName}" FontFamily="NunitoExtraBold" FontSize="16" TextColor="#EDF0FF" />
+                                        <Label Text="{Binding VersionLabel}" FontFamily="Nunito" FontSize="12" TextColor="#8892B5" />
+                                        <Label Text="{Binding DetailLine}" FontFamily="Nunito" FontSize="10.5" TextColor="#3D4A6E" />
+                                    </VerticalStackLayout>
+                                    <Ellipse Grid.Column="3" Fill="#34D990"
+                                             WidthRequest="9" HeightRequest="9"
+                                             VerticalOptions="Center" IsVisible="{Binding IsLoaded}" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Action bar -->
+            <VerticalStackLayout Grid.Row="2" Padding="14,10,14,14" Spacing="10">
+                <Border x:Name="Menu_OpenBoxes"
+                        StrokeShape="RoundRectangle 14"
+                        Stroke="Transparent" StrokeThickness="1.5"
+                        Padding="0" HeightRequest="48">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#3B8BFF" Offset="0" />
+                            <GradientStop Color="#4F6BF0" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Label Text="Open Boxes" FontFamily="NunitoExtraBold" FontSize="15"
+                           TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                    <Border x:Name="Menu_Search" Grid.Column="0" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            Padding="0" HeightRequest="70">
+                        <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
+                                    WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
+                                <Label Text="🔍" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Search" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
                     </Border>
-                    <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                           VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <HorizontalStackLayout Spacing="3">
-                    <Border StrokeShape="RoundRectangle 5"
-                            BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
-                            WidthRequest="20" HeightRequest="20">
-                        <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9"
-                               TextColor="#6BABFF"
-                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border x:Name="Menu_Gifts" Grid.Column="1" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            Padding="0" HeightRequest="70">
+                        <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FFF6B9D"
+                                    WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
+                                <Label Text="🎁" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
                     </Border>
-                    <Label Text="Grab" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                           VerticalOptions="Center" />
-                </HorizontalStackLayout>
-            </HorizontalStackLayout>
+                    <Border x:Name="Menu_Export" Grid.Column="2" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            Padding="0" HeightRequest="70">
+                        <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1F34D990"
+                                    WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
+                                <Label Text="⬆" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Export" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border x:Name="Menu_Bank" Grid.Column="3" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            Padding="0" HeightRequest="70">
+                        <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
+                                    WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
+                                <Label Text="🏦" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Bank" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+
         </Grid>
 
     </Grid>

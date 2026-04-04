@@ -93,6 +93,12 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     public void InvalidateBoxCanvas()
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBoxCanvas());
 
+    public void ShowMainMenu(IList<object> saves, int cursorIndex)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowMainMenu(saves, cursorIndex));
+
+    public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateMainMenuState(cursorIndex, focusSection, actionCursor));
+
     public void Dispose()
     {
         try { _presentation?.Dismiss(); }

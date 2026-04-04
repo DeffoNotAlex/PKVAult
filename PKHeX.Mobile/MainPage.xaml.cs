@@ -40,6 +40,14 @@ public partial class MainPage : ContentPage
 #endif
         _secondary.Show();
         _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank];
+
+        // On dual-screen: keep only the hero panel (Row 0) on the primary display;
+        // the save list + action bar (Row 1) is rendered on the bottom secondary screen.
+        bool dual = _secondary.IsAvailable;
+        RootGrid.RowDefinitions[1].Height = dual
+            ? new GridLength(0)
+            : new GridLength(1, GridUnitType.Star);
+
         _ = RefreshSavesAsync();
         UpdateActionHighlight();
     }
@@ -82,6 +90,7 @@ public partial class MainPage : ContentPage
         // Show hero preview for the focused card
         UpdateHeroPreview();
         UpdateActionHighlight();
+        _secondary.ShowMainMenu(_saveCards.Cast<object>().ToList(), _cardCursor);
     }
 
     // ── Hero preview ──────────────────────────────────────────────────────────
@@ -218,6 +227,8 @@ public partial class MainPage : ContentPage
             _actionTiles[i].BackgroundColor = focused ? focusBg : normalBg;
             _actionTiles[i].Stroke = focused ? focusStroke : Color.FromArgb("#0DFFFFFF");
         }
+
+        _secondary.UpdateMainMenuState(_cardCursor, _focusSection, _actionCursor);
     }
 
     // ── Gamepad ──────────────────────────────────────────────────────────────

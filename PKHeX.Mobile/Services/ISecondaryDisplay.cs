@@ -25,4 +25,10 @@ public interface ISecondaryDisplay
 
     /// <summary>Trigger a repaint of the bottom screen grid (called by the cursor pulse timer).</summary>
     void InvalidateBoxCanvas();
+
+    /// <summary>Switch the bottom screen to main-menu mode and populate the save list.</summary>
+    void ShowMainMenu(IList<object> saves, int cursorIndex);
+
+    /// <summary>Update cursor/focus state on the main-menu bottom screen.</summary>
+    void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor);
 }

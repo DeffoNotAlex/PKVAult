@@ -14,4 +14,6 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
         int currentBoxIndex, string boxName, bool?[] legalityCache, bool showLegalityBadges) { }
     public void UpdateCursor(int cursorSlot, int selectedSlot, bool moveMode, PKM? movePk, int currentBoxIndex) { }
     public void InvalidateBoxCanvas() { }
+    public void ShowMainMenu(IList<object> saves, int cursorIndex) { }
+    public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor) { }
 }
