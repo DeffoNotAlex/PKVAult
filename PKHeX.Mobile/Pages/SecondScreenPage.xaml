@@ -141,6 +141,11 @@
                                         <Setter Property="StrokeThickness" Value="2" />
                                         <Setter Property="BackgroundColor" Value="#1C2850" />
                                     </DataTrigger>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsCursor}" Value="True">
+                                        <Setter Property="Stroke" Value="#5CA0FF" />
+                                        <Setter Property="StrokeThickness" Value="1.5" />
+                                        <Setter Property="BackgroundColor" Value="#152040" />
+                                    </DataTrigger>
                                 </Border.Triggers>
                                 <Grid Padding="14,12" ColumnDefinitions="4,48,*,Auto">
                                     <BoxView Grid.Column="0" Color="{Binding GameColorLight}"

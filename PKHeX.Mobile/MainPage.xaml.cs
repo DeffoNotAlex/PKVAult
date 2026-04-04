@@ -69,8 +69,13 @@ public partial class MainPage : ContentPage
         SaveCardsList.ItemsSource = _saveCards;
         SaveCountLabel.Text = $"{_saveCards.Count} save{(_saveCards.Count != 1 ? "s" : "")}";
 
-        if (_saveCards.Count > 0 && _cardCursor < 0)
-            _cardCursor = 0;
+        // Re-clamp cursor and re-apply IsCursor on fresh card objects
+        if (_saveCards.Count > 0)
+        {
+            int clamped = Math.Max(0, Math.Min(_cardCursor < 0 ? 0 : _cardCursor, _saveCards.Count - 1));
+            _cardCursor = -1; // force SetCardCursor to treat it as new
+            SetCardCursor(clamped);
+        }
 
         // Restore active save highlight when returning from GamePage
         if (App.ActiveSaveFileUri is { Length: > 0 } uri)
@@ -80,7 +85,7 @@ public partial class MainPage : ContentPage
             {
                 active.IsLoaded = true;
                 _selectedSave = active.Entry;
-                _cardCursor = _saveCards.IndexOf(active);
+                SetCardCursor(_saveCards.IndexOf(active));
                 _gpNavigating = true;
                 SaveCardsList.SelectedItem = active;
                 _gpNavigating = false;
@@ -209,7 +214,7 @@ public partial class MainPage : ContentPage
         if (e.CurrentSelection.Count == 0) return;
         if (e.CurrentSelection[0] is SaveCardViewModel vm)
         {
-            _cardCursor = _saveCards.IndexOf(vm);
+            SetCardCursor(_saveCards.IndexOf(vm));
             LoadSave(vm.Entry);
         }
     }
@@ -221,6 +226,15 @@ public partial class MainPage : ContentPage
     private void OnBankTapped(object? sender, EventArgs e) => ActivateTile(3);
 
     // ── Action bar highlight ─────────────────────────────────────────────────
+
+    private void SetCardCursor(int newIndex)
+    {
+        if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
+            _saveCards[_cardCursor].IsCursor = false;
+        _cardCursor = newIndex;
+        if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
+            _saveCards[_cardCursor].IsCursor = true;
+    }
 
     private void UpdateActionHighlight()
     {
@@ -286,7 +300,7 @@ public partial class MainPage : ContentPage
         {
             _focusSection = 0;
             if (_saveCards.Count > 0 && _cardCursor < 0)
-                _cardCursor = 0;
+                SetCardCursor(0);
             if (_saveCards.Count > 0)
             {
                 _gpNavigating = true;
@@ -323,7 +337,7 @@ public partial class MainPage : ContentPage
         else
         {
             if (_saveCards.Count == 0) return;
-            _cardCursor = Math.Max(0, (_cardCursor < 0 ? 0 : _cardCursor) - 1);
+            SetCardCursor(Math.Max(0, (_cardCursor < 0 ? 0 : _cardCursor) - 1));
             _gpNavigating = true;
             SaveCardsList.SelectedItem = _saveCards[_cardCursor];
             _gpNavigating = false;
@@ -339,7 +353,7 @@ public partial class MainPage : ContentPage
         {
             if (_saveCards.Count > 0 && _cardCursor < _saveCards.Count - 1)
             {
-                _cardCursor++;
+                SetCardCursor(_cardCursor + 1);
                 _gpNavigating = true;
                 SaveCardsList.SelectedItem = _saveCards[_cardCursor];
                 _gpNavigating = false;
@@ -417,6 +431,13 @@ public partial class MainPage : ContentPage
         {
             get => _isLoaded;
             set { if (_isLoaded == value) return; _isLoaded = value; OnPropertyChanged(); }
+        }
+
+        private bool _isCursor;
+        public bool IsCursor
+        {
+            get => _isCursor;
+            set { if (_isCursor == value) return; _isCursor = value; OnPropertyChanged(); }
         }
 
         public SaveEntry Entry { get; }
