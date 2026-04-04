@@ -28,6 +28,18 @@ public class MainActivity : MauiAppCompatActivity
         SetImmersiveMode();
     }
 
+    protected override void OnStop()
+    {
+        base.OnStop();
+        // Dismiss the secondary-screen Presentation so it doesn't stay
+        // visible on the bottom screen when the Home button sends the app
+        // to the background. OnAppearing on each page calls Show() again
+        // when the user returns, so no explicit re-show is needed here.
+        var secondary = IPlatformApplication.Current?.Services
+            .GetService<Services.ISecondaryDisplay>();
+        secondary?.Hide();
+    }
+
     /// <summary>
     /// Strips the Android focus highlight from every RecyclerView in the window.
     /// We intercept all gamepad keys at DispatchKeyEvent so view focus is unused.
