@@ -63,6 +63,9 @@ public class MainActivity : MauiAppCompatActivity
             {
                 rv.Focusable = false;
                 rv.FocusableInTouchMode = false;
+                // Block focus from ever reaching item views inside the RecyclerView —
+                // this is the definitive kill for the orange selection ring.
+                rv.DescendantFocusability = Android.Views.DescendantFocusability.BlockDescendants;
             }
             else if (child is Android.Views.ViewGroup vg)
             {

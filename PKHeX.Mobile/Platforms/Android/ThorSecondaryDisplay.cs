@@ -74,8 +74,11 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     public void Hide()
     {
-        try { _presentation?.Hide(); }
+        // Dismiss (not just Hide) so IsShowing becomes false and the next
+        // Show() call recreates the Presentation cleanly rather than skipping.
+        try { _presentation?.Dismiss(); }
         catch { }
+        _presentation = null;
     }
 
     public void UpdateBoxGrid(
