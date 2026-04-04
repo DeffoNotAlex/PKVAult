@@ -27,7 +27,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     private const string Tag = "ThorDisplay";
 
     private readonly IServiceProvider _services;
-    private readonly SecondScreenPage _secondPage = new();
+    private SecondScreenPage _secondPage = new();
     private ThorPresentation?         _presentation;
     private Display?                  _cachedDisplay;
 
@@ -59,6 +59,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         }
 
         _presentation?.Dismiss();
+        _secondPage   = new SecondScreenPage();
         _presentation = new ThorPresentation(activity, display, _secondPage, _services);
 
         try
