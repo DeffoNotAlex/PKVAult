@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Inherit MAUI's generated theme and kill the RecyclerView focus highlight. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
+        <!-- Makes the RecyclerView item focus/ripple color transparent so the
+             D-pad cursor on the save list shows no orange highlight. -->
+        <item name="colorControlHighlight">@android:color/transparent</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+    </style>
+</resources>
