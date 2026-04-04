@@ -57,6 +57,13 @@ public partial class SecondScreenPage : ContentPage
         _showLegalityBadges = showLegalityBadges;
         _legalityCache    = legalityCache;
 
+        // Switch to box grid panel if we're currently showing main menu
+        if (!BoxGridPanel.IsVisible)
+        {
+            BoxGridPanel.IsVisible  = true;
+            MainMenuPanel.IsVisible = false;
+        }
+
         BoxNameLabel.Text = boxName;
 
         var pk = cursorSlot < box.Length ? box[cursorSlot] : null;

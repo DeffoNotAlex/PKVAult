@@ -115,7 +115,7 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  BOTTOM SECTION — Save list + Action bar               -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
+        <Grid x:Name="BottomPanel" Grid.Row="1" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
 
             <!-- Header -->
             <Grid Padding="18,14,18,8" ColumnDefinitions="*,Auto">
