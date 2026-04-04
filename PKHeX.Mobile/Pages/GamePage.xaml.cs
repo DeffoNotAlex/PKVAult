@@ -513,7 +513,7 @@ public partial class GamePage : ContentPage
 
         string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
 
-        float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.24f;
+        float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.16f;
         float cx = e.Info.Width  / 2f;
         float cy = e.Info.Height / 2f;
         float r  = Math.Min(cx, cy) - margin;
@@ -594,9 +594,9 @@ public partial class GamePage : ContentPage
         }
 
         // ── Axis labels (name + value) ───────────────────────────────────
-        float textR   = r + margin * 0.52f;
-        float labelSz = Math.Max(14f, r * 0.14f);
-        float valueSz = Math.Max(18f, r * 0.18f);
+        float textR   = r + margin * 0.60f;
+        float labelSz = Math.Max(11f, r * 0.11f);
+        float valueSz = Math.Max(14f, r * 0.14f);
         using var labelFont  = new SKFont(SKTypeface.Default, labelSz);
         using var valueFont  = new SKFont(SKTypeface.Default, valueSz) { Embolden = true };
         using var namePaint  = new SKPaint { IsAntialias = true };

@@ -98,13 +98,13 @@
 
             <!-- ── SELECTED STATE — 3-column Pokémon detail ── -->
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
-                  ColumnDefinitions="4*,3*,3.5*" Padding="8,6">
+                  ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
                 <!-- Column 0: Stat radar in frosted glass box -->
                 <Border Grid.Column="0"
                         StrokeShape="RoundRectangle 16"
-                        BackgroundColor="#40101828"
-                        Stroke="#30FFFFFF"
+                        BackgroundColor="#60101828"
+                        Stroke="#50FFFFFF"
                         StrokeThickness="1"
                         Margin="4">
                     <skia:SKCanvasView x:Name="RadarCanvas"
@@ -150,7 +150,7 @@
 
                     <!-- 4 move rows -->
                     <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#50101828" Stroke="#50FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
@@ -167,7 +167,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#50101828" Stroke="#50FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
@@ -184,7 +184,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#50101828" Stroke="#50FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
@@ -201,7 +201,7 @@
                         </Grid>
                     </Border>
                     <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="#30101828" Stroke="#30FFFFFF" StrokeThickness="1"
+                            BackgroundColor="#50101828" Stroke="#50FFFFFF" StrokeThickness="1"
                             Padding="8,6">
                         <Grid ColumnDefinitions="10,*,Auto">
                             <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
