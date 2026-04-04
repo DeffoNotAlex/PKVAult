@@ -26,15 +26,6 @@ public static class MauiProgram
                     "EnableJavaScript", (handler, _) =>
                         handler.PlatformView.Settings.JavaScriptEnabled = true);
 
-                // Remove Android's orange focus ring from CollectionView (RecyclerView).
-                // Gamepad input is intercepted at Activity.DispatchKeyEvent so view
-                // focus is irrelevant for our navigation — safe to disable.
-                Microsoft.Maui.Handlers.CollectionViewHandler.Mapper.AppendToMapping(
-                    "DisableFocusHighlight", (handler, _) =>
-                    {
-                        handler.PlatformView.Focusable = false;
-                        handler.PlatformView.FocusableInTouchMode = false;
-                    });
 #endif
             });
 

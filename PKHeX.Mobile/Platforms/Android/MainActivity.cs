@@ -26,6 +26,38 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
         SetImmersiveMode();
+        DisableRecyclerViewFocusHighlight();
+    }
+
+    /// <summary>
+    /// Strips the Android focus highlight from every RecyclerView in the window.
+    /// We intercept all gamepad keys at DispatchKeyEvent so view focus is unused.
+    /// Posted to the main looper so it runs after MAUI inflates its content.
+    /// </summary>
+    private void DisableRecyclerViewFocusHighlight()
+    {
+        Window?.DecorView?.Post(() =>
+        {
+            StripFocusFromGroup(Window.DecorView as Android.Views.ViewGroup);
+        });
+    }
+
+    private static void StripFocusFromGroup(Android.Views.ViewGroup? group)
+    {
+        if (group is null) return;
+        for (int i = 0; i < group.ChildCount; i++)
+        {
+            var child = group.GetChildAt(i);
+            if (child is AndroidX.RecyclerView.Widget.RecyclerView rv)
+            {
+                rv.Focusable = false;
+                rv.FocusableInTouchMode = false;
+            }
+            else if (child is Android.Views.ViewGroup vg)
+            {
+                StripFocusFromGroup(vg);
+            }
+        }
     }
 
     public override void OnWindowFocusChanged(bool hasFocus)
