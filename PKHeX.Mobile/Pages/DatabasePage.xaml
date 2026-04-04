@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PKHeX.Mobile.Pages.DatabasePage"
+             Title="Pokémon Search"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0B0F1E">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="8" BackgroundColor="#0B0F1E">
+
+        <!-- Filter bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+            <Entry Grid.Column="0" x:Name="SearchEntry"
+                   Placeholder="Species name…"
+                   PlaceholderColor="#556080"
+                   BackgroundColor="#1A2035"
+                   TextColor="White"
+                   TextChanged="OnFilterChanged" />
+            <Label Grid.Column="1" Text="✦" VerticalOptions="Center"
+                   FontSize="16" TextColor="#8888BB" x:Name="ShinyLabel" />
+            <Switch Grid.Column="2" x:Name="ShinyFilter"
+                    Toggled="OnFilterChanged" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Gamepad hint -->
+        <Label Grid.Row="1" Text="↕ navigate  A select  Y search  B back"
+               FontSize="9" TextColor="#404060"
+               HorizontalOptions="End"
+               Margin="0,0,4,2" />
+
+        <!-- Results -->
+        <CollectionView Grid.Row="2" x:Name="ResultsView"
+                        SelectionMode="Single"
+                        SelectionChanged="OnSelectionChanged"
+                        BackgroundColor="#0B0F1E">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="2" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="56,*,Auto" Padding="6,4" ColumnSpacing="8"
+                          BackgroundColor="#111827">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#111827" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#182845" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                        <Image Grid.Column="0"
+                               Source="{Binding SpriteSource}"
+                               WidthRequest="56" HeightRequest="46"
+                               Aspect="AspectFit" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="{Binding DisplayName}" FontAttributes="Bold" FontSize="14"
+                                   TextColor="#EEEEFF" />
+                            <Label Text="{Binding SubInfo}" FontSize="12" TextColor="#8888BB" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="{Binding BoxSlotLabel}"
+                               FontSize="11" TextColor="#445566" VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="No Pokémon found." HorizontalOptions="Center"
+                       TextColor="#556080"
+                       Margin="0,40,0,0" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

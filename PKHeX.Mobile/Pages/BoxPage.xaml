@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="PKHeX.Mobile.Pages.BoxPage"
+             Title="Box">
+
+    <Grid RowDefinitions="Auto,*" Padding="8">
+
+        <!-- Box navigation header -->
+        <Grid Grid.Row="0" ColumnDefinitions="40,*,40" Margin="0,0,0,8">
+            <Button Grid.Column="0" Text="◀" Clicked="OnPrevBox" FontSize="18" Padding="0" />
+            <Label Grid.Column="1" x:Name="BoxNameLabel"
+                   HorizontalOptions="Center" VerticalOptions="Center"
+                   FontSize="18" FontAttributes="Bold" />
+            <Button Grid.Column="2" Text="▶" Clicked="OnNextBox" FontSize="18" Padding="0" />
+        </Grid>
+
+        <!-- Box grid — single canvas draws all 30 slots -->
+        <skia:SKCanvasView Grid.Row="1"
+                           x:Name="BoxCanvas"
+                           PaintSurface="OnBoxPaintSurface">
+            <skia:SKCanvasView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBoxTapped" />
+            </skia:SKCanvasView.GestureRecognizers>
+        </skia:SKCanvasView>
+
+    </Grid>
+
+</ContentPage>

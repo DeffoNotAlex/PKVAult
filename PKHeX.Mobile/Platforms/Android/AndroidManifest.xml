@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:label="PKVault"
+        android:icon="@mipmap/appicon"
+        android:roundIcon="@mipmap/appicon_round"
+        android:supportsRtl="true"
+        android:defaultFocusHighlightEnabled="false">
+        <!-- Required for spanning across both Thor screens (foldable / dual-screen spanning model) -->
+        <activity
+            android:name="com.pkvault.app.MainActivity"
+            android:resizeableActivity="true" />
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Storage access for save files (API < 33) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+                     android:maxSdkVersion="32" />
+
+    <!-- Media access for Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36" />
+</manifest>

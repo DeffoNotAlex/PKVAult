@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PKHeX.Mobile.Pages.SettingsPage"
+             Title="Settings"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0B0F1E">
+
+    <ScrollView Padding="16" BackgroundColor="#0B0F1E">
+        <VerticalStackLayout Spacing="12">
+
+            <!-- Gamepad hint -->
+            <Label Text="↕ navigate  ◀▶ change  A toggle  B back"
+                   FontSize="10" TextColor="#404060"
+                   HorizontalOptions="End" />
+
+            <!-- Language -->
+            <Border x:Name="Row_Language" StyleId="Pick:Language"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Display Language"
+                           FontAttributes="Bold" FontSize="15"
+                           TextColor="#EEEEFF" />
+                    <Label Text="Affects species, move, and ability names. Takes effect when reopening pages."
+                           FontSize="12" TextColor="#8888BB" />
+                    <Picker x:Name="LanguagePicker"
+                            SelectedIndexChanged="OnLanguageChanged"
+                            BackgroundColor="Transparent" TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
+            <!-- Shiny sprites -->
+            <Border x:Name="Row_Shiny" StyleId="Toggle"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Show Shiny Sprites"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Display alternate colour sprites for shiny Pokémon."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="ShinySwitch"
+                            Toggled="OnShinySwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
+            <!-- Radar adaptive scale -->
+            <Border x:Name="Row_Radar" StyleId="Toggle"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Adaptive Radar Scale"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Scale the stat chart to the Pokémon's best stat so weaker Pokémon fill more of the graph."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="RadarAdaptiveSwitch"
+                            Toggled="OnRadarAdaptiveToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
+            <!-- Manage Folders -->
+            <Border x:Name="Row_Folders" StyleId="Navigate"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Manage Save Folders/Files"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Add or remove folders scanned for save files on startup."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="›" FontSize="20" TextColor="#4F80FF"
+                           VerticalOptions="Center" Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="#1E2D45" />
+
+            <!-- Legality badges -->
+            <Border x:Name="Row_Legality" StyleId="Toggle"
+                    BackgroundColor="#111827" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Show Legality Badges"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="#EEEEFF" />
+                        <Label Text="Display a green/red dot on each Pokémon in the box view."
+                               FontSize="12" TextColor="#8888BB" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="LegalitySwitch"
+                            Toggled="OnLegalitySwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
