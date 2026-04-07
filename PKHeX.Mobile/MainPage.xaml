@@ -33,88 +33,132 @@
                        HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
 
-            <!-- Active save hero (hidden until a save is focused) -->
-            <VerticalStackLayout x:Name="HeroPreview"
-                                 IsVisible="False"
-                                 HorizontalOptions="Center" VerticalOptions="Center"
-                                 Spacing="10">
+            <!-- Active save hero — floating 3D card (hidden until a save is focused) -->
+            <Grid x:Name="HeroPreview" IsVisible="False"
+                  HorizontalOptions="Center" VerticalOptions="Center">
 
-                <!-- Game icon — image if available, gradient badge fallback -->
-                <Grid WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
-                    <Border x:Name="HeroIconGrad"
-                            StrokeShape="RoundRectangle 20" Stroke="Transparent">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop x:Name="HeroBadgeGrad0" Color="#3A5080" Offset="0" />
-                                <GradientStop x:Name="HeroBadgeGrad1" Color="#5A70A0" Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Label x:Name="HeroBadgeText" Text=""
-                               FontFamily="QuicksandExtraBold" FontSize="22"
-                               TextColor="White"
-                               HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border x:Name="HeroIconImgBorder"
-                            StrokeShape="RoundRectangle 20" Stroke="Transparent"
-                            IsVisible="False">
-                        <Image x:Name="HeroIconImg" Aspect="AspectFill" />
-                    </Border>
-                </Grid>
+                <!-- Radial glow behind the card -->
+                <Ellipse x:Name="HeroGlowEllipse"
+                         WidthRequest="320" HeightRequest="90"
+                         HorizontalOptions="Center" VerticalOptions="Center"
+                         Margin="0,30,0,0" Opacity="0.55">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush Center="0.5,0.5" Radius="0.5">
+                            <GradientStop x:Name="HeroGlow0" Color="#304F80FF" Offset="0" />
+                            <GradientStop Color="Transparent" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
 
-                <!-- Trainer name + game -->
-                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
-                    <Label x:Name="HeroTrainerName"
-                           FontFamily="NunitoExtraBold" FontSize="24"
-                           TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
-                    <Label x:Name="HeroGameLabel"
-                           FontFamily="Nunito" FontSize="13"
-                           TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
+                <!-- The card -->
+                <Border x:Name="HeroCard"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="#334F80FF" StrokeThickness="1.5"
+                        Padding="18,14">
 
-                <!-- Stats row -->
-                <HorizontalStackLayout HorizontalOptions="Center" Spacing="24">
-                    <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
-                        <Label Text="TID" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
-                               HorizontalTextAlignment="Center" />
-                        <Label x:Name="HeroTID"
-                               FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
-                        <Label Text="BOXES" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
-                               HorizontalTextAlignment="Center" />
-                        <Label x:Name="HeroBoxes"
-                               FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
-                        <Label Text="PLAYTIME" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
-                               HorizontalTextAlignment="Center" />
-                        <Label x:Name="HeroPlaytime"
-                               FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="Auto,*">
 
-                <!-- Active pill -->
-                <Border x:Name="HeroActivePill"
-                        StrokeShape="RoundRectangle 20"
-                        BackgroundColor="#1A34D990"
-                        Stroke="#4034D990" StrokeThickness="1"
-                        Padding="12,5" HorizontalOptions="Center"
-                        IsVisible="False">
-                    <HorizontalStackLayout Spacing="5">
-                        <Ellipse Fill="#34D990" WidthRequest="6" HeightRequest="6"
-                                 VerticalOptions="Center" />
-                        <Label Text="ACTIVE" FontFamily="NunitoBold" FontSize="10"
-                               TextColor="#34D990" CharacterSpacing="0.6"
-                               VerticalOptions="Center" />
-                    </HorizontalStackLayout>
+                        <!-- Faded large icon in background (right-aligned) -->
+                        <Grid Grid.Column="0" Grid.ColumnSpan="2"
+                              HorizontalOptions="End" VerticalOptions="Center"
+                              WidthRequest="76" HeightRequest="76"
+                              Opacity="0.07" Margin="0,0,4,0">
+                            <Border x:Name="HeroBgIconGrad"
+                                    StrokeShape="RoundRectangle 18" Stroke="Transparent"
+                                    IsVisible="False">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop x:Name="HeroBgGrad0" Color="#3A5080" Offset="0" />
+                                        <GradientStop x:Name="HeroBgGrad1" Color="#5A70A0" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Label x:Name="HeroBgBadgeText"
+                                       FontFamily="QuicksandExtraBold" FontSize="28"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Border x:Name="HeroBgIconImgBorder"
+                                    StrokeShape="RoundRectangle 18" Stroke="Transparent"
+                                    IsVisible="False">
+                                <Image x:Name="HeroBgIconImg" Aspect="AspectFill" />
+                            </Border>
+                        </Grid>
+
+                        <!-- Left: game icon badge -->
+                        <Grid Grid.Column="0" WidthRequest="64" HeightRequest="64"
+                              VerticalOptions="Center" Margin="0,0,14,0">
+                            <Border x:Name="HeroIconGrad"
+                                    StrokeShape="RoundRectangle 16" Stroke="Transparent">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop x:Name="HeroBadgeGrad0" Color="#3A5080" Offset="0" />
+                                        <GradientStop x:Name="HeroBadgeGrad1" Color="#5A70A0" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Label x:Name="HeroBadgeText" Text=""
+                                       FontFamily="QuicksandExtraBold" FontSize="18"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Border x:Name="HeroIconImgBorder"
+                                    StrokeShape="RoundRectangle 16" Stroke="Transparent"
+                                    IsVisible="False">
+                                <Image x:Name="HeroIconImg" Aspect="AspectFill" />
+                            </Border>
+                        </Grid>
+
+                        <!-- Right: trainer info -->
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="6">
+                            <Label x:Name="HeroTrainerName"
+                                   FontFamily="NunitoExtraBold" FontSize="22"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label x:Name="HeroGameLabel"
+                                   FontFamily="Nunito" FontSize="12"
+                                   TextColor="{DynamicResource ThTextSecondary}" />
+
+                            <!-- Stats row -->
+                            <HorizontalStackLayout Spacing="18" Margin="0,2,0,0">
+                                <VerticalStackLayout Spacing="0">
+                                    <Label Text="TID" FontFamily="NunitoBold" FontSize="8"
+                                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8" />
+                                    <Label x:Name="HeroTID" FontFamily="NunitoExtraBold" FontSize="13"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="0">
+                                    <Label Text="BOXES" FontFamily="NunitoBold" FontSize="8"
+                                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8" />
+                                    <Label x:Name="HeroBoxes" FontFamily="NunitoExtraBold" FontSize="13"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="0">
+                                    <Label Text="PLAYTIME" FontFamily="NunitoBold" FontSize="8"
+                                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8" />
+                                    <Label x:Name="HeroPlaytime" FontFamily="NunitoExtraBold" FontSize="13"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+
+                            <!-- Active pill -->
+                            <Border x:Name="HeroActivePill"
+                                    StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="#1A34D990"
+                                    Stroke="#4034D990" StrokeThickness="1"
+                                    Padding="10,4" HorizontalOptions="Start"
+                                    IsVisible="False">
+                                <HorizontalStackLayout Spacing="5">
+                                    <Ellipse Fill="#34D990" WidthRequest="6" HeightRequest="6"
+                                             VerticalOptions="Center" />
+                                    <Label Text="ACTIVE" FontFamily="NunitoBold" FontSize="9"
+                                           TextColor="#34D990" CharacterSpacing="0.6"
+                                           VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+
+                    </Grid>
                 </Border>
-            </VerticalStackLayout>
+            </Grid>
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->

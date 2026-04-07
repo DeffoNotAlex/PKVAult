@@ -87,12 +87,13 @@ public partial class SecondScreenPage : ContentPage
         _showLegalityBadges = showLegalityBadges;
         _legalityCache    = legalityCache;
 
-        // Switch to box grid panel if we're currently showing main menu
+        // Switch to box grid panel, hiding whichever mode was active
         if (!BoxGridPanel.IsVisible)
         {
-            _mainMenuVisible        = false;
-            BoxGridPanel.IsVisible  = true;
-            MainMenuPanel.IsVisible = false;
+            _mainMenuVisible         = false;
+            BoxGridPanel.IsVisible   = true;
+            MainMenuPanel.IsVisible  = false;
+            BankGridPanel.IsVisible  = false;
         }
 
         BoxNameLabel.Text = boxName;
@@ -235,9 +236,10 @@ public partial class SecondScreenPage : ContentPage
 
     public void ShowMainMenu(IList<object> saves, int cursorIndex)
     {
-        _mainMenuVisible        = true;
-        BoxGridPanel.IsVisible  = false;
-        MainMenuPanel.IsVisible = true;
+        _mainMenuVisible         = true;
+        BoxGridPanel.IsVisible   = false;
+        BankGridPanel.IsVisible  = false;
+        MainMenuPanel.IsVisible  = true;
 
         MenuSavesList.ItemsSource = saves;
         MenuSaveCountLabel.Text   = $"{saves.Count} save{(saves.Count != 1 ? "s" : "")}";

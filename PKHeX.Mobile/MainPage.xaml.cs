@@ -25,6 +25,10 @@ public partial class MainPage : ContentPage
     private SaveEntry? _selectedSave;
     private bool _gpNavigating;
 
+    // Floating card animation
+    private IDispatcherTimer? _floatTimer;
+    private DateTime          _floatStart = DateTime.UtcNow;
+
     public MainPage(ISecondaryDisplay secondary)
     {
         _secondary = secondary;
@@ -61,6 +65,7 @@ public partial class MainPage : ContentPage
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
+        _floatTimer?.Stop();
     }
 
     private void OnThemeChanged()
@@ -114,8 +119,9 @@ public partial class MainPage : ContentPage
     {
         if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
         {
-            HeroPreview.IsVisible   = false;
+            HeroPreview.IsVisible    = false;
             HeroEmptyState.IsVisible = true;
+            StopFloatAnimation();
             return;
         }
 
@@ -124,20 +130,31 @@ public partial class MainPage : ContentPage
         HeroPreview.IsVisible    = true;
 
         // Game icon: real image when available, gradient badge fallback
-        if (card.HasIcon)
+        bool hasIcon = card.HasIcon;
+        HeroIconGrad.IsVisible      = !hasIcon;
+        HeroIconImgBorder.IsVisible = hasIcon;
+        HeroBgIconGrad.IsVisible      = !hasIcon;
+        HeroBgIconImgBorder.IsVisible = hasIcon;
+
+        if (hasIcon)
         {
-            HeroIconGrad.IsVisible      = false;
-            HeroIconImgBorder.IsVisible = true;
-            HeroIconImg.Source          = card.IconSource;
+            HeroIconImg.Source    = card.IconSource;
+            HeroBgIconImg.Source  = card.IconSource;
         }
         else
         {
-            HeroIconImgBorder.IsVisible = false;
-            HeroIconGrad.IsVisible      = true;
-            HeroBadgeText.Text          = card.GameShortName;
-            HeroBadgeGrad0.Color        = card.GameColorDark;
-            HeroBadgeGrad1.Color        = card.GameColorLight;
+            HeroBadgeText.Text    = card.GameShortName;
+            HeroBgBadgeText.Text  = card.GameShortName;
+            HeroBadgeGrad0.Color  = card.GameColorDark;
+            HeroBadgeGrad1.Color  = card.GameColorLight;
+            HeroBgGrad0.Color     = card.GameColorDark;
+            HeroBgGrad1.Color     = card.GameColorLight;
         }
+
+        // Accent glow + card stroke from game color
+        var accent = card.GameColorLight.WithAlpha(64);
+        HeroGlow0.Color = accent;
+        HeroCard.Stroke = new SolidColorBrush(card.GameColorLight.WithAlpha(80));
 
         // Trainer info
         HeroTrainerName.Text = card.TrainerName;
@@ -148,6 +165,45 @@ public partial class MainPage : ContentPage
 
         // Active pill
         HeroActivePill.IsVisible = card.IsLoaded;
+
+        StartFloatAnimation();
+    }
+
+    // ── Floating card animation ──────────────────────────────────────────────
+
+    private void StartFloatAnimation()
+    {
+        if (_floatTimer is not null && _floatTimer.IsRunning) return;
+        _floatStart = DateTime.UtcNow;
+        _floatTimer ??= Dispatcher.CreateTimer();
+        _floatTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30 fps
+        _floatTimer.Tick -= OnFloatTick;
+        _floatTimer.Tick += OnFloatTick;
+        _floatTimer.Start();
+    }
+
+    private void StopFloatAnimation()
+    {
+        _floatTimer?.Stop();
+        if (HeroCard is not null)
+        {
+            HeroCard.TranslationY = 0;
+            HeroCard.RotationX    = 0;
+            HeroCard.RotationY    = 0;
+        }
+    }
+
+    private void OnFloatTick(object? sender, EventArgs e)
+    {
+        double t = (DateTime.UtcNow - _floatStart).TotalSeconds;
+
+        // Two independent sine waves for organic feel
+        double phaseA = t * 2 * Math.PI / 3.5;   // 3.5s bob cycle
+        double phaseB = t * 2 * Math.PI / 4.8 + Math.PI / 3; // offset tilt
+
+        HeroCard.TranslationY = 5.0  * Math.Sin(phaseA);
+        HeroCard.RotationX    = 3.5  * Math.Sin(phaseA);
+        HeroCard.RotationY    = 2.5  * Math.Sin(phaseB);
     }
 
     // ── Save loading ─────────────────────────────────────────────────────────
