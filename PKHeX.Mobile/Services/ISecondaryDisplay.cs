@@ -31,4 +31,13 @@ public interface ISecondaryDisplay
 
     /// <summary>Update cursor/focus state on the main-menu bottom screen.</summary>
     void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor);
+
+    /// <summary>Switch the bottom screen to bank-grid mode (Mode 2 — view only).</summary>
+    void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount);
+
+    /// <summary>Update only the cursor position on the bank grid (no slot reload).</summary>
+    void UpdateBankCursor(int cursorSlot);
+
+    /// <summary>Trigger a repaint of the bank grid canvas.</summary>
+    void InvalidateBankCanvas();
 }

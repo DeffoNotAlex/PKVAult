@@ -104,6 +104,15 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateMainMenuState(cursorIndex, focusSection, actionCursor));
 
+    public void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowBankGrid(slots, cursorSlot, boxName, boxIndex, boxCount));
+
+    public void UpdateBankCursor(int cursorSlot)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBankCursor(cursorSlot));
+
+    public void InvalidateBankCanvas()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBankCanvas());
+
     public void Dispose()
     {
         _secondPage.Cleanup();

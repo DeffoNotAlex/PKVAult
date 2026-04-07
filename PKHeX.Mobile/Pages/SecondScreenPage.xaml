@@ -103,6 +103,78 @@
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE C — Bank grid (driven by BankViewPage)          -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="BankGridPanel" IsVisible="False"
+              RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThPageBg}">
+
+            <!-- Header -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,12,16,8">
+                <Border StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Label Text="{x:Static theme:Ph.CaretLeft}" FontFamily="Phosphor"
+                           FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                    <Label x:Name="BankGridNameLabel"
+                           FontFamily="QuicksandExtraBold" FontSize="18"
+                           TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
+                    <Label x:Name="BankGridIndexLabel" FontFamily="Nunito" FontSize="9"
+                           TextColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+                <Border Grid.Column="2" StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Label Text="{x:Static theme:Ph.CaretRight}" FontFamily="Phosphor"
+                           FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+            </Grid>
+
+            <!-- Bank grid canvas -->
+            <skia:SKCanvasView Grid.Row="1" x:Name="BankCanvas" PaintSurface="OnBankPaint" />
+
+            <!-- Info bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
+                <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                    <Label x:Name="BankInfoSpeciesNum" FontFamily="Nunito" FontSize="12"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                    <Label x:Name="BankInfoSpeciesName" FontFamily="NunitoBold" FontSize="12"
+                           TextColor="{DynamicResource ThTextPrimary}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#A78BFA"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Info" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Back" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE B — Main menu: save list + action bar           -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="MainMenuPanel" IsVisible="False"

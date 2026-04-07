@@ -135,21 +135,24 @@ public class BankBox
 
 public class BankSlot
 {
-    public byte[]  Data    { get; set; } = [];
-    public string  TypeExt { get; set; } = "pk9"; // e.g. "pk9", "pa8", "pb7"
-    public int     Species { get; set; }
-    public int     Level   { get; set; }
-    public bool    IsShiny { get; set; }
-    public string  Nickname { get; set; } = "";
+    public byte[]  Data        { get; set; } = [];
+    public string  TypeExt     { get; set; } = "pk9"; // e.g. "pk9", "pa8", "pb7"
+    public int     Species     { get; set; }
+    public int     Level       { get; set; }
+    public bool    IsShiny     { get; set; }
+    public string  Nickname    { get; set; } = "";
+    /// <summary>UTC timestamp when this slot was deposited (ISO 8601). Null for legacy entries.</summary>
+    public string? DepositedAt { get; set; }
 
     public static BankSlot FromPKM(PKM pk) => new()
     {
-        Data     = pk.Data.ToArray(),
-        TypeExt  = pk.GetType().Name.ToLower(),
-        Species  = pk.Species,
-        Level    = pk.CurrentLevel,
-        IsShiny  = pk.IsShiny,
-        Nickname = pk.Nickname,
+        Data        = pk.Data.ToArray(),
+        TypeExt     = pk.GetType().Name.ToLower(),
+        Species     = pk.Species,
+        Level       = pk.CurrentLevel,
+        IsShiny     = pk.IsShiny,
+        Nickname    = pk.Nickname,
+        DepositedAt = DateTime.UtcNow.ToString("o"),
     };
 
     public PKM? ToPKM()

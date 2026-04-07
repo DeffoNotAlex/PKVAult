@@ -8,7 +8,8 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
         Routing.RegisterRoute(nameof(GamePage), typeof(GamePage));
-        Routing.RegisterRoute(nameof(BankPage), typeof(BankPage));
+        Routing.RegisterRoute(nameof(BankPage),     typeof(BankPage));
+        Routing.RegisterRoute(nameof(BankViewPage), typeof(BankViewPage));
         Routing.RegisterRoute(nameof(PkmEditorPage), typeof(PkmEditorPage));
         Routing.RegisterRoute(nameof(DatabasePage), typeof(DatabasePage));
         Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
+             x:Class="PKHeX.Mobile.Pages.BankViewPage"
+             BackgroundColor="{DynamicResource ThPageBg}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ── Header: box navigation ── -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,12,16,8">
+            <Border StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource ThCardBg}"
+                    Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                    WidthRequest="40" HeightRequest="36">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPrevBoxTapped"/>
+                </Border.GestureRecognizers>
+                <Label Text="{x:Static theme:Ph.CaretLeft}" FontFamily="Phosphor"
+                       FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                <Label x:Name="BoxNameLabel" FontFamily="QuicksandExtraBold" FontSize="18"
+                       TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
+                <Label x:Name="BoxIndexLabel" FontFamily="Nunito" FontSize="9"
+                       TextColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <Border Grid.Column="2" StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource ThCardBg}"
+                    Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                    WidthRequest="40" HeightRequest="36">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnNextBoxTapped"/>
+                </Border.GestureRecognizers>
+                <Label Text="{x:Static theme:Ph.CaretRight}" FontFamily="Phosphor"
+                       FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+        </Grid>
+
+        <!-- ── Main content (two overlapping panels toggled by X) ── -->
+        <Grid Grid.Row="1">
+
+            <!-- Panel 0: sprite + text info -->
+            <Grid x:Name="InfoPanel" ColumnDefinitions="*,*">
+                <skia:SKCanvasView Grid.Column="0" x:Name="SpriteCanvas"
+                                   PaintSurface="OnSpritePaint" Margin="8" />
+
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center"
+                                     Spacing="6" Padding="0,0,20,0">
+                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Label x:Name="SpeciesNum" FontFamily="Nunito" FontSize="14"
+                               TextColor="{DynamicResource ThTextSecondary}" VerticalOptions="Center" />
+                        <Label x:Name="SpeciesName" FontFamily="QuicksandExtraBold" FontSize="22"
+                               TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="LevelLabel" FontFamily="NunitoBold" FontSize="16"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                    <Label x:Name="ShinyLabel" Text="✦ Shiny" FontFamily="NunitoBold" FontSize="14"
+                           TextColor="#F0C040" IsVisible="False" />
+                    <Label x:Name="OTLabel" FontFamily="Nunito" FontSize="13"
+                           TextColor="{DynamicResource ThTextDim}" />
+                    <Label x:Name="DepositLabel" FontFamily="Nunito" FontSize="12"
+                           TextColor="{DynamicResource ThTextHint}" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Panel 1: stat bars + move names (SkiaSharp canvas) -->
+            <skia:SKCanvasView x:Name="StatsCanvas" IsVisible="False"
+                               PaintSurface="OnStatsPaint" Margin="8" />
+
+        </Grid>
+
+        <!-- ── Hint bar ── -->
+        <HorizontalStackLayout Grid.Row="2" HorizontalOptions="Center"
+                               Spacing="20" Padding="0,8,0,14">
+            <HorizontalStackLayout Spacing="4">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
+                    <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#A78BFA"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Info" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
+                    <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Back" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
+                    <Label Text="L1" FontFamily="NunitoExtraBold" FontSize="7" TextColor="#4FC3F7"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
+                    <Label Text="R1" FontFamily="NunitoExtraBold" FontSize="7" TextColor="#4FC3F7"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Box" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </HorizontalStackLayout>
+
+    </Grid>
+</ContentPage>

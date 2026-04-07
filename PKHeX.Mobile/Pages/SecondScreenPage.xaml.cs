@@ -41,6 +41,12 @@ public partial class SecondScreenPage : ContentPage
     private int  _lastActionCursor;
     private bool _mainMenuVisible;
 
+    // Bank grid state (Mode C — driven by BankViewPage)
+    private PKM?[]   _bankSlots      = [];
+    private int      _bankCursorSlot;
+    private SKRect[] _bankSlotRects  = [];
+    private int      _lastBankW, _lastBankH;
+
     public SecondScreenPage()
     {
         InitializeComponent();
@@ -55,6 +61,7 @@ public partial class SecondScreenPage : ContentPage
         MainThread.BeginInvokeOnMainThread(() =>
         {
             BoxCanvas.InvalidateSurface();
+            BankCanvas.InvalidateSurface();
             if (_mainMenuVisible)
                 ApplyMainMenuHighlight(_lastFocusSection, _lastActionCursor);
         });
@@ -116,6 +123,111 @@ public partial class SecondScreenPage : ContentPage
     }
 
     public void InvalidateBoxCanvas() => BoxCanvas.InvalidateSurface();
+
+    // ──────────────────────────────────────────────
+    //  Bank grid (Mode C — driven by BankViewPage)
+    // ──────────────────────────────────────────────
+
+    public void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount)
+    {
+        _bankSlots      = slots;
+        _bankCursorSlot = cursorSlot;
+
+        _mainMenuVisible         = false;
+        BoxGridPanel.IsVisible   = false;
+        MainMenuPanel.IsVisible  = false;
+        BankGridPanel.IsVisible  = true;
+
+        BankGridNameLabel.Text  = boxName;
+        BankGridIndexLabel.Text = $"{boxIndex + 1} / {boxCount}";
+
+        UpdateBankSpeciesInfo();
+        _ = _sprites.PreloadBoxAsync(slots.Select(p => p ?? (PKM)new PK9()).ToArray());
+        BankCanvas.InvalidateSurface();
+    }
+
+    public void UpdateBankCursor(int cursorSlot)
+    {
+        _bankCursorSlot = cursorSlot;
+        UpdateBankSpeciesInfo();
+        BankCanvas.InvalidateSurface();
+    }
+
+    public void InvalidateBankCanvas() => BankCanvas.InvalidateSurface();
+
+    private void UpdateBankSpeciesInfo()
+    {
+        var pk = _bankCursorSlot < _bankSlots.Length ? _bankSlots[_bankCursorSlot] : null;
+        BankInfoSpeciesNum.Text  = pk?.Species > 0 ? $"#{pk.Species:000}" : "";
+        BankInfoSpeciesName.Text = pk?.Species > 0
+            ? GameInfo.GetStrings("en").specieslist[pk.Species]
+            : "";
+    }
+
+    private void RecalcBankGridLayout(int w, int h)
+    {
+        if (w == _lastBankW && h == _lastBankH && _bankSlotRects.Length == Columns * Rows) return;
+        _lastBankW = w; _lastBankH = h;
+
+        const float gap = 6f, padX = 14f, padY = 4f;
+        float availW = w - padX * 2 - gap * (Columns - 1);
+        float availH = h - padY * 2 - gap * (Rows - 1);
+        float slotSize = MathF.Min(availW / Columns, availH / Rows);
+
+        float gridW = slotSize * Columns + gap * (Columns - 1);
+        float gridH = slotSize * Rows + gap * (Rows - 1);
+        float offX = (w - gridW) / 2f;
+        float offY = (h - gridH) / 2f;
+
+        _bankSlotRects = new SKRect[Columns * Rows];
+        for (int i = 0; i < _bankSlotRects.Length; i++)
+        {
+            int col = i % Columns, row = i / Columns;
+            float x = offX + col * (slotSize + gap);
+            float y = offY + row * (slotSize + gap);
+            _bankSlotRects[i] = new SKRect(x, y, x + slotSize, y + slotSize);
+        }
+    }
+
+    private void OnBankPaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(ThemeService.CanvasBg);
+
+        RecalcBankGridLayout(e.Info.Width, e.Info.Height);
+
+        const float radius = 10f;
+        float tBlue  = (float)(_pulseTimer.Elapsed.TotalMilliseconds % 1800) / 1800f;
+        float pulse  = 0.5f + 0.5f * MathF.Sin(tBlue * MathF.PI * 2);
+
+        for (int i = 0; i < BankService.SlotsPerBox && i < _bankSlotRects.Length; i++)
+        {
+            var rect  = _bankSlotRects[i];
+            var pk    = i < _bankSlots.Length ? _bankSlots[i] : null;
+            bool isCursor = i == _bankCursorSlot;
+            bool filled   = pk?.Species > 0;
+
+            // Slot background
+            var bgColor = filled ? ThemeService.SlotFilled : ThemeService.SlotEmpty;
+            using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
+            canvas.DrawRoundRect(rect, radius, radius, bgPaint);
+
+            using var borderPaint = new SKPaint
+            {
+                Color = ThemeService.SlotBorder,
+                Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true,
+            };
+            canvas.DrawRoundRect(rect, radius, radius, borderPaint);
+
+            // Sprite
+            if (filled)
+                DrawSprite(canvas, _sprites.GetSprite(pk!), rect, isCursor ? 0.75f : 0.70f, 255);
+
+            // Cursor
+            if (isCursor)
+                DrawBlueCursor(canvas, rect, radius, pulse);
+        }
+    }
 
     // ──────────────────────────────────────────────
     //  Main menu (save list + action bar)

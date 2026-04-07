@@ -16,4 +16,7 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
     public void InvalidateBoxCanvas() { }
     public void ShowMainMenu(IList<object> saves, int cursorIndex) { }
     public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor) { }
+    public void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount) { }
+    public void UpdateBankCursor(int cursorSlot) { }
+    public void InvalidateBankCanvas() { }
 }

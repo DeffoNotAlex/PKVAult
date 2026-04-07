@@ -196,8 +196,7 @@ public partial class MainPage : ContentPage
                     _ = ExportSaveAsync();
                 break;
             case 3: // Bank
-                if (_selectedSave is not null)
-                    _ = Shell.Current.GoToAsync(nameof(BankPage));
+                _ = Shell.Current.GoToAsync(nameof(BankViewPage));
                 break;
         }
     }
