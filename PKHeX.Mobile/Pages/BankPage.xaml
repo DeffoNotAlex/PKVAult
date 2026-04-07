@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.Pages.BankPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#050518">
@@ -11,10 +12,12 @@
         <!-- ── Header ── -->
         <Grid Grid.Row="0" ColumnDefinitions="52,*,52"
               BackgroundColor="#0A0A20" Padding="4,8">
-            <Button Grid.Column="0" x:Name="PrevBankBtn" Text="◀"
+            <Button Grid.Column="0" x:Name="PrevBankBtn"
+                    Text="{x:Static theme:Ph.CaretLeft}"
+                    FontFamily="Phosphor"
                     Clicked="OnPrevBox"
                     BackgroundColor="#1A2040" TextColor="#A0B0FF"
-                    FontSize="14" FontAttributes="Bold" Padding="0" />
+                    FontSize="18" Padding="0" />
             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
                 <Label x:Name="BankNameLabel"
                        TextColor="White" FontSize="16" FontAttributes="Bold"
@@ -23,10 +26,12 @@
                        TextColor="#404870" FontSize="10"
                        HorizontalOptions="Center" />
             </VerticalStackLayout>
-            <Button Grid.Column="2" x:Name="NextBankBtn" Text="▶"
+            <Button Grid.Column="2" x:Name="NextBankBtn"
+                    Text="{x:Static theme:Ph.CaretRight}"
+                    FontFamily="Phosphor"
                     Clicked="OnNextBox"
                     BackgroundColor="#1A2040" TextColor="#A0B0FF"
-                    FontSize="14" FontAttributes="Bold" Padding="0" />
+                    FontSize="18" Padding="0" />
         </Grid>
 
         <!-- ── Mode banner ── -->

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.Pages.BoxPage"
              Title="Box">
 
@@ -9,11 +10,13 @@
 
         <!-- Box navigation header -->
         <Grid Grid.Row="0" ColumnDefinitions="40,*,40" Margin="0,0,0,8">
-            <Button Grid.Column="0" Text="◀" Clicked="OnPrevBox" FontSize="18" Padding="0" />
+            <Button Grid.Column="0" Text="{x:Static theme:Ph.CaretLeft}" FontFamily="Phosphor"
+                    Clicked="OnPrevBox" FontSize="22" Padding="0" />
             <Label Grid.Column="1" x:Name="BoxNameLabel"
                    HorizontalOptions="Center" VerticalOptions="Center"
                    FontSize="18" FontAttributes="Bold" />
-            <Button Grid.Column="2" Text="▶" Clicked="OnNextBox" FontSize="18" Padding="0" />
+            <Button Grid.Column="2" Text="{x:Static theme:Ph.CaretRight}" FontFamily="Phosphor"
+                    Clicked="OnNextBox" FontSize="22" Padding="0" />
         </Grid>
 
         <!-- Box grid — single canvas draws all 30 slots -->

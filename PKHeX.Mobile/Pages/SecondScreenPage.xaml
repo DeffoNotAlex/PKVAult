@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.Pages.SecondScreenPage"
              BackgroundColor="{DynamicResource ThPageBg}"
              Shell.NavBarIsVisible="False">
@@ -20,7 +21,8 @@
                         BackgroundColor="{DynamicResource ThCardBg}"
                         Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
                         WidthRequest="40" HeightRequest="36">
-                    <Label Text="◀" FontSize="14" TextColor="{DynamicResource ThTextSecondary}"
+                    <Label Text="{x:Static theme:Ph.CaretLeft}" FontFamily="Phosphor"
+                           FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
@@ -34,7 +36,8 @@
                         BackgroundColor="{DynamicResource ThCardBg}"
                         Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
                         WidthRequest="40" HeightRequest="36">
-                    <Label Text="▶" FontSize="14" TextColor="{DynamicResource ThTextSecondary}"
+                    <Label Text="{x:Static theme:Ph.CaretRight}" FontFamily="Phosphor"
+                           FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
             </Grid>
@@ -202,7 +205,9 @@
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
-                                <Label Text="🔍" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Label Text="{x:Static theme:Ph.MagnifyingGlass}" FontFamily="Phosphor"
+                                       FontSize="20" TextColor="#A78BFA"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Search" FontFamily="NunitoBold" FontSize="10"
                                    TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
@@ -215,7 +220,9 @@
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FFF6B9D"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
-                                <Label Text="🎁" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Label Text="{x:Static theme:Ph.Gift}" FontFamily="Phosphor"
+                                       FontSize="20" TextColor="#FF6B9D"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10"
                                    TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
@@ -228,7 +235,9 @@
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1F34D990"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
-                                <Label Text="⬆" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Label Text="{x:Static theme:Ph.Export}" FontFamily="Phosphor"
+                                       FontSize="20" TextColor="#FF9F43"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Export" FontFamily="NunitoBold" FontSize="10"
                                    TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
@@ -241,7 +250,9 @@
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
-                                <Label Text="🏦" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Label Text="{x:Static theme:Ph.Bank}" FontFamily="PhosphorFill"
+                                       FontSize="20" TextColor="#34D990"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
                                    TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />

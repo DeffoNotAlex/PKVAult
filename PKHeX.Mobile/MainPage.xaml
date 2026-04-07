@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.MainPage"
              Title="PKVault"
              Shell.NavBarIsVisible="False"
@@ -260,7 +261,8 @@
                                     BackgroundColor="{DynamicResource ThIconBgBlue}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
-                                <Label Text="🔍" FontSize="16"
+                                <Label Text="{x:Static theme:Ph.MagnifyingGlass}"
+                                       FontFamily="Phosphor" FontSize="20" TextColor="#A78BFA"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Search" FontFamily="NunitoBold" FontSize="10"
@@ -282,7 +284,8 @@
                                     BackgroundColor="{DynamicResource ThIconBgPink}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
-                                <Label Text="🎁" FontSize="16"
+                                <Label Text="{x:Static theme:Ph.Gift}"
+                                       FontFamily="Phosphor" FontSize="20" TextColor="#FF6B9D"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10"
@@ -304,7 +307,8 @@
                                     BackgroundColor="{DynamicResource ThIconBgOrange}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
-                                <Label Text="📤" FontSize="16"
+                                <Label Text="{x:Static theme:Ph.Export}"
+                                       FontFamily="Phosphor" FontSize="20" TextColor="#FF9F43"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Export" FontFamily="NunitoBold" FontSize="10"
@@ -326,7 +330,8 @@
                                     BackgroundColor="{DynamicResource ThIconBgGreen}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
-                                <Label Text="🏦" FontSize="16"
+                                <Label Text="{x:Static theme:Ph.Bank}"
+                                       FontFamily="PhosphorFill" FontSize="20" TextColor="#34D990"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
