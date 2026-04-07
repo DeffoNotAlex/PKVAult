@@ -67,6 +67,7 @@ public partial class MainPage : ContentPage
     {
         foreach (var card in _saveCards)
             card.RefreshTheme();
+        UpdateActionHighlight();
     }
 
     // ── Data ─────────────────────────────────────────────────────────────────
