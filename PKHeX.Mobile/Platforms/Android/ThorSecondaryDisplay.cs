@@ -59,6 +59,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         }
 
         _presentation?.Dismiss();
+        _secondPage.Cleanup();
         _secondPage   = new SecondScreenPage();
         _presentation = new ThorPresentation(activity, display, _secondPage, _services);
 
@@ -105,6 +106,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     public void Dispose()
     {
+        _secondPage.Cleanup();
         try { _presentation?.Dismiss(); }
         catch { }
         _presentation = null;

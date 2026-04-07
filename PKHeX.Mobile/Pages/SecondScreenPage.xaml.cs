@@ -36,7 +36,29 @@ public partial class SecondScreenPage : ContentPage
     private SKRect[] _slotRects  = [];
     private int      _lastW, _lastH;
 
-    public SecondScreenPage() => InitializeComponent();
+    // Cached main-menu state for live theme repaints
+    private int  _lastFocusSection;
+    private int  _lastActionCursor;
+    private bool _mainMenuVisible;
+
+    public SecondScreenPage()
+    {
+        InitializeComponent();
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    /// <summary>Call before discarding this instance so ThemeChanged doesn't leak.</summary>
+    public void Cleanup() => ThemeService.ThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            BoxCanvas.InvalidateSurface();
+            if (_mainMenuVisible)
+                ApplyMainMenuHighlight(_lastFocusSection, _lastActionCursor);
+        });
+    }
 
     // ──────────────────────────────────────────────
     //  Public API — driven by GamePage via ISecondaryDisplay
@@ -61,6 +83,7 @@ public partial class SecondScreenPage : ContentPage
         // Switch to box grid panel if we're currently showing main menu
         if (!BoxGridPanel.IsVisible)
         {
+            _mainMenuVisible        = false;
             BoxGridPanel.IsVisible  = true;
             MainMenuPanel.IsVisible = false;
         }
@@ -100,6 +123,7 @@ public partial class SecondScreenPage : ContentPage
 
     public void ShowMainMenu(IList<object> saves, int cursorIndex)
     {
+        _mainMenuVisible        = true;
         BoxGridPanel.IsVisible  = false;
         MainMenuPanel.IsVisible = true;
 
@@ -112,18 +136,23 @@ public partial class SecondScreenPage : ContentPage
 
     public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
     {
-        // Scroll the list to keep the focused item visible (no selection — avoids orange ring)
+        _lastFocusSection = focusSection;
+        _lastActionCursor = actionCursor;
+
         if (MenuSavesList.ItemsSource is IList<object> saves &&
             cursorIndex >= 0 && cursorIndex < saves.Count)
-        {
             MenuSavesList.ScrollTo(cursorIndex, -1, ScrollToPosition.MakeVisible, false);
-        }
 
-        // Update action bar highlight
-        var focusBg     = Color.FromArgb("#182242");
-        var focusStroke = Color.FromArgb("#3B8BFF");
-        var normalBg    = Color.FromArgb("#131B35");
-        var normalStroke = Color.FromArgb("#0DFFFFFF");
+        ApplyMainMenuHighlight(focusSection, actionCursor);
+    }
+
+    private void ApplyMainMenuHighlight(int focusSection, int actionCursor)
+    {
+        bool light       = Current == PkTheme.Light;
+        var focusBg      = Color.FromArgb(light ? "#EEF2FF" : "#182242");
+        var focusStroke  = Color.FromArgb("#3B8BFF");
+        var normalBg     = Color.FromArgb(light ? "#FFFFFF" : "#131B35");
+        var normalStroke = Color.FromArgb(light ? "#E0E4EC" : "#0DFFFFFF");
 
         bool primaryFocused = focusSection == 1 && actionCursor == 0;
         Menu_OpenBoxes.Stroke = primaryFocused ? focusStroke : Colors.Transparent;
@@ -133,7 +162,7 @@ public partial class SecondScreenPage : ContentPage
         {
             bool focused = focusSection == 1 && actionCursor == i + 1;
             tiles[i].BackgroundColor = focused ? focusBg : normalBg;
-            tiles[i].Stroke          = focused ? focusStroke : Color.FromArgb("#0DFFFFFF");
+            tiles[i].Stroke          = focused ? focusStroke : normalStroke;
         }
     }
 

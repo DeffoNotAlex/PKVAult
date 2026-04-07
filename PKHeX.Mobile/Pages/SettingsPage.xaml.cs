@@ -178,11 +178,12 @@ public partial class SettingsPage : ContentPage
         Preferences.Default.Set(KeyLegalityBadge, e.Value);
     }
 
-    private void OnThemeSwitchToggled(object sender, ToggledEventArgs e)
+    private async void OnThemeSwitchToggled(object sender, ToggledEventArgs e)
     {
         if (_loading) return;
         ThemeService.Apply(e.Value ? PkTheme.Light : PkTheme.Dark);
         UpdateHighlight();
+        await DisplayAlertAsync("Theme changed", "Restart the app for full effect.", "OK");
     }
 
     /// <summary>
