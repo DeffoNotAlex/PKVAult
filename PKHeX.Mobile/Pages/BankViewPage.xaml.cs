@@ -115,7 +115,7 @@ public partial class BankViewPage : ContentPage
                 ? _strings.specieslist[pk.Species] : "?";
             LevelLabel.Text  = $"Lv. {pk.CurrentLevel}";
             ShinyLabel.IsVisible = pk.IsShiny;
-            OTLabel.Text = $"OT: {pk.OT_Name}  ·  ID: {pk.TID16}";
+            OTLabel.Text = $"OT: {pk.OriginalTrainerName}  ·  ID: {pk.TID16}";
 
             var slot = _bank.GetSlot(_boxIndex, _cursorSlot);
             if (slot?.DepositedAt is { Length: > 0 } ts &&
@@ -183,7 +183,7 @@ public partial class BankViewPage : ContentPage
     {
         string[] names  = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"];
         int[]    values = pk is not null
-            ? [pk.Stat_HP, pk.Stat_ATK, pk.Stat_DEF, pk.Stat_SPA, pk.Stat_SPD, pk.Stat_SPE]
+            ? [pk.Stat_HPMax, pk.Stat_ATK, pk.Stat_DEF, pk.Stat_SPA, pk.Stat_SPD, pk.Stat_SPE]
             : [0, 0, 0, 0, 0, 0];
         SKColor[] colors =
         [
