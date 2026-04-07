@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PKHeX — AYN Thor Dual-Screen Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Pokémon HOME palette */
+    --bg-deep: #070C1A;
+    --bg-mid: #0C1228;
+    --bg-card: #131B35;
+    --bg-card-hover: #182242;
+    --bg-card-active: #1C2850;
+
+    --accent-blue: #3B8BFF;
+    --accent-blue-soft: #6BABFF;
+    --accent-teal: #36D1C4;
+    --accent-green: #34D990;
+    --accent-pink: #FF6B9D;
+    --accent-orange: #FF9F43;
+    --accent-purple: #A78BFA;
+    --accent-red: #FF5252;
+    --accent-yellow: #FFD93D;
+
+    --game-emerald: #50C878;
+    --game-y: #E85D75;
+    --game-um: #FF8C42;
+    --game-scarlet: #E83F3F;
+    --game-violet: #9B72CF;
+
+    --text-primary: #EDF0FF;
+    --text-secondary: #8892B5;
+    --text-dim: #3D4A6E;
+    --text-muted: #283456;
+
+    --border-subtle: rgba(255,255,255,0.05);
+    --border-focus: rgba(59,139,255,0.6);
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    /*
+      Real resolutions:
+        Top:    1920×1080 (landscape, 16:9)
+        Bottom: 1080×1240 (near-square, slightly portrait)
+
+      Mockup base width: 480px for top (wide), scale bottom proportionally.
+      Top:    480 × 270  (1920/1080 = 1.778, so 480/1.778 ≈ 270)
+      Bottom: 480 × 551  (1240/1080 = 1.148, so 480*1.148 ≈ 551)
+
+      Actually let's make top wider to really show the cinematic ratio.
+      We'll use 520px wide for both screens (matching physical width).
+      Top:    520 × 293  (520 / 1.778)
+      Bottom: 520 × 597  (520 * 1.148)
+    */
+    --screen-w: 520px;
+    --top-h: 293px;
+    --bottom-h: 597px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #020408;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 16px 72px;
+    overflow-x: hidden;
+  }
+
+  /* === Device frame === */
+  .device-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .screen-label {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    align-self: flex-start;
+    padding-left: 6px;
+  }
+
+  /* Top bezel */
+  .top-bezel {
+    width: calc(var(--screen-w) + 24px);
+    background: #0E0E16;
+    border-radius: 16px 16px 3px 3px;
+    padding: 12px;
+    box-shadow: 0 2px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .top-screen {
+    width: var(--screen-w);
+    height: var(--top-h);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-deep);
+  }
+
+  /* Hinge */
+  .hinge {
+    width: calc(var(--screen-w) + 32px);
+    height: 16px;
+    background: linear-gradient(to bottom,
+      #08080F 0%, #18182A 35%, #1E1E30 50%, #18182A 65%, #0A0A12 100%
+    );
+    border-radius: 2px;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hinge::after {
+    content: '';
+    width: 50px;
+    height: 2.5px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* Bottom bezel */
+  .bottom-bezel {
+    width: calc(var(--screen-w) + 24px);
+    background: #0E0E16;
+    border-radius: 3px 3px 20px 20px;
+    padding: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .bottom-screen {
+    width: var(--screen-w);
+    height: var(--bottom-h);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-deep);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ======================================
+     TOP SCREEN — Wide Cinematic Hero
+     ====================================== */
+  .top-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 40%, rgba(59,139,255,0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 60%, rgba(167,139,250,0.07) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 100%, rgba(54,209,196,0.05) 0%, transparent 40%),
+      linear-gradient(170deg, #070C1A 0%, #0A1025 40%, #0D1530 100%);
+    animation: heroBg 20s ease-in-out infinite alternate;
+  }
+  @keyframes heroBg {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(12deg); }
+  }
+
+  /* Game-colored glow */
+  .hero-glow {
+    position: absolute;
+    top: 10%;
+    left: 30%;
+    width: 40%;
+    height: 80%;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.1;
+    transition: all 0.8s ease;
+    pointer-events: none;
+    z-index: 1;
+    background: var(--accent-blue);
+  }
+
+  /* Grid overlay */
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,139,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,139,255,0.025) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Particles */
+  .particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: pFloat linear infinite;
+  }
+  @keyframes pFloat {
+    0% { transform: translateY(110%) scale(0.5); opacity: 0; }
+    8% { opacity: 0.8; }
+    92% { opacity: 0.8; }
+    100% { transform: translateY(-120%) scale(1); opacity: 0; }
+  }
+
+  /* Wide hero layout: left branding, right preview */
+  .hero-layout {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+  }
+
+  /* Left: branding */
+  .hero-brand {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    animation: heroIn 0.8s ease-out 0.2s both;
+  }
+  @keyframes heroIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .hero-pokeball {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+  }
+  .hero-pokeball svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 14px rgba(59,139,255,0.25));
+    animation: pbSpin 28s linear infinite;
+  }
+  @keyframes pbSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .hero-title {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 25%, var(--accent-blue-soft) 65%, var(--accent-teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+
+  .hero-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .hero-ver {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* Divider line */
+  .hero-divider {
+    width: 1px;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06), transparent);
+    margin: 0 28px;
+    flex-shrink: 0;
+  }
+
+  /* Right: save preview (appears on focus) */
+  .hero-preview {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    transform: translateX(15px);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-width: 0;
+  }
+  .hero-preview.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .prev-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 800;
+    font-size: 19px;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .prev-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%);
+  }
+
+  .prev-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .prev-trainer {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .prev-game {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-top: 1px;
+  }
+  .prev-meta-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+  }
+  .prev-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .prev-meta-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .prev-meta-val {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .prev-active-pill {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(52,217,144,0.1);
+    border: 1px solid rgba(52,217,144,0.25);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    flex-shrink: 0;
+  }
+  .prev-active-pill .adot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+
+  /* ======================================
+     BOTTOM SCREEN — Save List + Actions
+     ====================================== */
+  .bottom-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(59,139,255,0.03) 0%, transparent 40%),
+      var(--bg-deep);
+  }
+
+  .list-header {
+    padding: 14px 18px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .list-header-title {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+  }
+  .save-count {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+
+  /* Save list */
+  .saves-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 14px;
+    scrollbar-width: none;
+  }
+  .saves-list::-webkit-scrollbar { display: none; }
+
+  .save-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+  }
+  .save-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .save-card.focused {
+    border-color: var(--accent-blue);
+    background: var(--bg-card-active);
+    box-shadow: 0 0 20px rgba(59,139,255,0.1), 0 4px 16px rgba(0,0,0,0.3);
+    transform: scale(1.012);
+  }
+  .save-card.focused::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(59,139,255,0.07), transparent 60%);
+  }
+
+  .save-card .card-accent {
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .save-card.focused .card-accent { opacity: 1; }
+
+  .game-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  }
+  .game-badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+  }
+
+  .badge-emerald { background: linear-gradient(135deg, #2D8B57, var(--game-emerald)); }
+  .badge-y { background: linear-gradient(135deg, #C8384A, var(--game-y)); }
+  .badge-um { background: linear-gradient(135deg, #D67028, var(--game-um)); }
+  .badge-scarlet { background: linear-gradient(135deg, #B82E2E, var(--game-scarlet)); }
+  .badge-violet { background: linear-gradient(135deg, #7B52A8, var(--game-violet)); }
+
+  .card-info { flex: 1; min-width: 0; }
+  .card-trainer { font-weight: 800; font-size: 16px; line-height: 1.2; }
+  .card-game { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-top: 1px; }
+  .card-detail { font-size: 10.5px; color: var(--text-dim); font-weight: 600; margin-top: 1px; }
+
+  .card-active-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 10px rgba(52,217,144,0.5);
+    flex-shrink: 0;
+    display: none;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .save-card.active-save .card-active-dot { display: block; }
+
+  /* Action bar */
+  .action-bar {
+    flex-shrink: 0;
+    padding: 10px 14px 14px;
+    background: linear-gradient(to top, var(--bg-deep) 60%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .primary-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--accent-blue), #4F6BF0);
+    border: none;
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59,139,255,0.3);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+  }
+  .primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  }
+  .primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(59,139,255,0.4); }
+  .primary-btn svg { width: 20px; height: 20px; }
+
+  .secondary-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .sec-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 4px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sec-btn:hover, .sec-btn.sec-focused {
+    background: var(--bg-card-hover);
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  .sec-btn-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sec-btn-icon svg { width: 18px; height: 18px; }
+
+  .sbi-search { background: rgba(167,139,250,0.12); color: var(--accent-purple); }
+  .sbi-gifts { background: rgba(255,107,157,0.12); color: var(--accent-pink); }
+  .sbi-export { background: rgba(255,159,67,0.12); color: var(--accent-orange); }
+  .sbi-bank { background: rgba(52,217,144,0.12); color: var(--accent-green); }
+
+  .sec-btn-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  /* Gamepad hints */
+  .gp-hints {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 2px 0;
+  }
+  .gp-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .gp-glyph {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--text-secondary);
+  }
+
+
+  /* ======================================
+     CONTROL BAR
+     ====================================== */
+  .control-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #06060E;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 100;
+  }
+  .control-bar span {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+  .ctrl-btn {
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover {
+    background: var(--accent-blue);
+    color: #fff;
+    border-color: var(--accent-blue);
+  }
+
+  /* Animations */
+  .save-card {
+    animation: cardIn 0.3s ease-out both;
+  }
+  .save-card:nth-child(1) { animation-delay: 0.05s; }
+  .save-card:nth-child(2) { animation-delay: 0.1s; }
+  .save-card:nth-child(3) { animation-delay: 0.15s; }
+  .save-card:nth-child(4) { animation-delay: 0.2s; }
+  .save-card:nth-child(5) { animation-delay: 0.25s; }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .action-bar {
+    animation: fadeUp 0.35s ease-out 0.3s both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 560px) {
+    :root {
+      --screen-w: 92vw;
+      --top-h: calc(var(--screen-w) * 0.5625); /* 9/16 */
+      --bottom-h: calc(var(--screen-w) * 1.148); /* 1240/1080 */
+    }
+    .top-bezel, .bottom-bezel { width: calc(var(--screen-w) + 16px); }
+    .hinge { width: calc(var(--screen-w) + 22px); }
+    .hero-layout { padding: 0 20px; }
+    .hero-title { font-size: 26px; }
+    .prev-trainer { font-size: 20px; }
+    .prev-icon { width: 50px; height: 50px; font-size: 16px; border-radius: 13px; }
+    .hero-divider { margin: 0 18px; }
+  }
+
+  @media (max-width: 400px) {
+    .hero-layout { padding: 0 14px; }
+    .hero-title { font-size: 22px; }
+    .hero-pokeball { width: 36px; height: 36px; }
+    .prev-trainer { font-size: 17px; }
+    .prev-meta-row { gap: 10px; }
+    .prev-meta-val { font-size: 12px; }
+    .hero-divider { margin: 0 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="device-frame">
+  <!-- TOP SCREEN — 1920×1080 landscape -->
+  <div class="screen-label">Top · 6" AMOLED · 1920×1080 @ 120Hz</div>
+  <div class="top-bezel">
+    <div class="top-screen">
+      <div class="top-content">
+        <div class="hero-bg"></div>
+        <div class="hero-glow" id="heroGlow"></div>
+        <div class="grid-overlay"></div>
+        <div class="particles" id="particles"></div>
+
+        <div class="hero-layout">
+          <!-- Left: branding -->
+          <div class="hero-brand">
+            <div class="hero-pokeball">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+                <path d="M4 50 H96" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+                <circle cx="50" cy="50" r="14" stroke="rgba(255,255,255,0.18)" stroke-width="2.5"/>
+                <circle cx="50" cy="50" r="8" fill="rgba(59,139,255,0.25)" stroke="rgba(107,171,255,0.35)" stroke-width="1.5"/>
+                <path d="M8.5 46 A42 42 0 0 1 91.5 46" stroke="rgba(59,139,255,0.12)" stroke-width="1" fill="none"/>
+              </svg>
+            </div>
+            <div class="hero-title">PKHeX</div>
+            <div class="hero-subtitle">Save Manager</div>
+            <div class="hero-ver">v25.03 · AYN Thor</div>
+          </div>
+
+          <div class="hero-divider"></div>
+
+          <!-- Right: save preview -->
+          <div class="hero-preview" id="heroPreview">
+            <div class="prev-icon" id="prevIcon">E</div>
+            <div class="prev-info">
+              <div class="prev-trainer" id="prevTrainer">RYAN</div>
+              <div class="prev-game" id="prevGame">Pokémon Emerald · Gen 3</div>
+              <div class="prev-meta-row">
+                <div class="prev-meta-item">
+                  <div class="prev-meta-label">TID</div>
+                  <div class="prev-meta-val" id="prevTID">21121</div>
+                </div>
+                <div class="prev-meta-item">
+                  <div class="prev-meta-label">Boxes</div>
+                  <div class="prev-meta-val" id="prevBoxes">14</div>
+                </div>
+                <div class="prev-meta-item">
+                  <div class="prev-meta-label">Playtime</div>
+                  <div class="prev-meta-val" id="prevTime">999:59:59</div>
+                </div>
+              </div>
+            </div>
+            <div class="prev-active-pill" id="prevActivePill">
+              <span class="adot"></span>
+              Active
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HINGE -->
+  <div class="hinge"></div>
+
+  <!-- BOTTOM SCREEN — 1080×1240 near-square -->
+  <div class="screen-label" style="margin-top: 4px;">Bottom · 3.92" AMOLED · 1080×1240 · Touch</div>
+  <div class="bottom-bezel">
+    <div class="bottom-screen">
+      <div class="bottom-content">
+        <div class="list-header">
+          <div class="list-header-title">Save Files</div>
+          <div class="save-count">5 saves</div>
+        </div>
+
+        <div class="saves-list" id="savesList"></div>
+
+        <div class="action-bar">
+          <button class="primary-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="18" rx="3"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/>
+            </svg>
+            Open Boxes
+          </button>
+          <div class="secondary-row">
+            <div class="sec-btn">
+              <div class="sec-btn-icon sbi-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><line x1="16" y1="16" x2="20" y2="20"/></svg>
+              </div>
+              <span class="sec-btn-label">Search</span>
+            </div>
+            <div class="sec-btn">
+              <div class="sec-btn-icon sbi-gifts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8v12"/><path d="M3 12h18"/><path d="M12 8c-2-3-5.5-3-5.5 0s3.5 3 5.5 0"/><path d="M12 8c2-3 5.5-3 5.5 0s-3.5 3-5.5 0"/></svg>
+              </div>
+              <span class="sec-btn-label">Gifts</span>
+            </div>
+            <div class="sec-btn">
+              <div class="sec-btn-icon sbi-export">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <span class="sec-btn-label">Export</span>
+            </div>
+            <div class="sec-btn">
+              <div class="sec-btn-icon sbi-bank">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 10h20"/><circle cx="12" cy="15" r="2"/></svg>
+              </div>
+              <span class="sec-btn-label">Bank</span>
+            </div>
+          </div>
+          <div class="gp-hints">
+            <div class="gp-hint"><span class="gp-glyph">↕</span>Nav</div>
+            <div class="gp-hint"><span class="gp-glyph" style="color:var(--accent-green)">A</span>Select</div>
+            <div class="gp-hint"><span class="gp-glyph" style="color:var(--accent-pink)">B</span>Back</div>
+            <div class="gp-hint"><span class="gp-glyph" style="color:var(--accent-purple)">X</span>Search</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Control bar -->
+<div class="control-bar">
+  <span>Simulate:</span>
+  <button class="ctrl-btn" onclick="moveFocus(-1)">▲ Up</button>
+  <button class="ctrl-btn" onclick="moveFocus(1)">▼ Down</button>
+  <button class="ctrl-btn" onclick="pressA()">Ⓐ Set Active</button>
+</div>
+
+<script>
+const saves = [
+  { trainer:'RYAN', game:'Pokémon Emerald', gen:3, code:'E', badge:'badge-emerald', color:'#50C878', tid:'21121', boxes:14, time:'999:59:59', active:false },
+  { trainer:'Player', game:'Pokémon Y', gen:6, code:'Y', badge:'badge-y', color:'#E85D75', tid:'45504', boxes:31, time:'183:02:58', active:true },
+  { trainer:'Gridelin', game:'Pokémon Ultra Moon', gen:7, code:'UM', badge:'badge-um', color:'#FF8C42', tid:'23211', boxes:32, time:'42:06:30', active:false },
+  { trainer:'Gridelin', game:'Pokémon Ultra Moon', gen:7, code:'UM', badge:'badge-um', color:'#FF8C42', tid:'23211', boxes:32, time:'42:06:30', active:false },
+  { trainer:'Ash', game:'Pokémon Scarlet', gen:9, code:'SCA', badge:'badge-scarlet', color:'#E83F3F', tid:'10042', boxes:31, time:'88:15:22', active:false },
+];
+
+let focusIndex = 1;
+const list = document.getElementById('savesList');
+
+// Build cards
+saves.forEach((s, i) => {
+  const card = document.createElement('div');
+  card.className = `save-card${s.active ? ' active-save' : ''}${i === focusIndex ? ' focused' : ''}`;
+  card.innerHTML = `
+    <div class="card-accent" style="background:${s.color}"></div>
+    <div class="game-badge ${s.badge}">${s.code}</div>
+    <div class="card-info">
+      <div class="card-trainer">${s.trainer}</div>
+      <div class="card-game">${s.game} · Gen ${s.gen}</div>
+      <div class="card-detail">TID ${s.tid} · ${s.boxes} boxes · ${s.time}</div>
+    </div>
+    <div class="card-active-dot"></div>
+  `;
+  card.addEventListener('click', () => { focusIndex = i; updateFocus(); });
+  list.appendChild(card);
+});
+
+const cards = list.querySelectorAll('.save-card');
+
+function updateFocus() {
+  const s = saves[focusIndex];
+  cards.forEach((c, i) => c.classList.toggle('focused', i === focusIndex));
+  cards[focusIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Top screen preview
+  const pi = document.getElementById('prevIcon');
+  pi.className = `prev-icon ${s.badge}`;
+  pi.textContent = s.code;
+  document.getElementById('prevTrainer').textContent = s.trainer;
+  document.getElementById('prevGame').textContent = `${s.game} · Gen ${s.gen}`;
+  document.getElementById('prevTID').textContent = s.tid;
+  document.getElementById('prevBoxes').textContent = s.boxes;
+  document.getElementById('prevTime').textContent = s.time;
+
+  const pill = document.getElementById('prevActivePill');
+  pill.style.display = s.active ? 'flex' : 'none';
+
+  document.getElementById('heroPreview').classList.add('visible');
+  document.getElementById('heroGlow').style.background = s.color;
+}
+
+function moveFocus(dir) {
+  const n = focusIndex + dir;
+  if (n >= 0 && n < saves.length) { focusIndex = n; updateFocus(); }
+}
+
+function pressA() {
+  saves.forEach(s => s.active = false);
+  saves[focusIndex].active = true;
+  cards.forEach(c => c.classList.remove('active-save'));
+  cards[focusIndex].classList.add('active-save');
+  updateFocus();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveFocus(1); }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pressA(); }
+});
+
+// Particles
+const pc = document.getElementById('particles');
+for (let i = 0; i < 20; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const sz = Math.random() * 2.5 + 1;
+  p.style.cssText = `
+    width:${sz}px; height:${sz}px;
+    left:${Math.random()*100}%;
+    background:hsla(${Math.random()>0.5?'220':'260'},80%,70%,${Math.random()*0.35+0.1});
+    animation-duration:${Math.random()*14+8}s;
+    animation-delay:${Math.random()*10}s;
+  `;
+  pc.appendChild(p);
+}
+
+updateFocus();
+</script>
+</body>
+</html>

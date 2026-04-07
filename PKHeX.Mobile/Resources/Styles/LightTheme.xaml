@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="PKHeX.Mobile.Resources.Styles.LightTheme">
+
+    <!-- Backgrounds -->
+    <Color x:Key="ThPageBg">#F2F4F8</Color>
+    <Color x:Key="ThRootBg">#E8EBF2</Color>
+    <Color x:Key="ThSettingsBg">#F2F4F8</Color>
+
+    <!-- Cards / rows -->
+    <Color x:Key="ThCardBg">#FFFFFF</Color>
+    <Color x:Key="ThSettingsRow">#FFFFFF</Color>
+    <Color x:Key="ThSettingsRowFocus">#EEF2FF</Color>
+
+    <!-- Text -->
+    <Color x:Key="ThTextPrimary">#0D1117</Color>
+    <Color x:Key="ThTextSecondary">#4A5568</Color>
+    <Color x:Key="ThTextDim">#9AA5B4</Color>
+    <Color x:Key="ThTextHint">#9AA5B4</Color>
+
+    <!-- Accent -->
+    <Color x:Key="ThAccent">#3B8BFF</Color>
+    <Color x:Key="ThAccentLight">#5CA0FF</Color>
+
+    <!-- Dividers -->
+    <Color x:Key="ThDivider">#E0E4EC</Color>
+    <Color x:Key="ThDividerLine">#20000000</Color>
+
+    <!-- Gamepad hints -->
+    <Color x:Key="ThHintBg">#0A000000</Color>
+    <Color x:Key="ThHintStroke">#0F000000</Color>
+
+    <!-- Misc -->
+    <Color x:Key="ThBadgeBg">#08000000</Color>
+    <Color x:Key="ThNavBtnStroke">#E0E4EC</Color>
+
+    <!-- GamePage top screen -->
+    <Color x:Key="ThTopScreenBg">#F2F4F8</Color>
+    <Color x:Key="ThRadarBg">#C0FFFFFF</Color>
+    <Color x:Key="ThRadarStroke">#40000000</Color>
+    <Color x:Key="ThMoveRowBg">#80FFFFFF</Color>
+    <Color x:Key="ThMoveRowStroke">#20000000</Color>
+
+    <!-- Action menu -->
+    <Color x:Key="ThActionMenuOverlay">#80E8EBF2</Color>
+    <Color x:Key="ThActionMenuPanel">#FFFFFF</Color>
+    <Color x:Key="ThActionMenuStroke">#E0E4EC</Color>
+    <Color x:Key="ThActionMenuTitle">#9AA5B4</Color>
+    <Color x:Key="ThSaveMenuBg">#E8F5E8</Color>
+    <Color x:Key="ThSaveMenuText">#2D7D2D</Color>
+    <Color x:Key="ThExportMenuBg">#EEE8FF</Color>
+    <Color x:Key="ThExportMenuText">#6040AA</Color>
+
+    <!-- Tile icons (secondary action tiles) -->
+    <Color x:Key="ThTileStroke">#E0E4EC</Color>
+
+</ResourceDictionary>

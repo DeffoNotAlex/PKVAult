@@ -4,6 +4,7 @@ using PKHeX.Mobile.Services;
 using PKHeX.Mobile.Theme;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;
 
@@ -137,6 +138,10 @@ public partial class GamePage : ContentPage
         }
         _pulseTimer.Start();
 
+        ThemeService.ThemeChanged -= OnThemeChanged;
+        ThemeService.ThemeChanged += OnThemeChanged;
+        SpriteBgImage.IsVisible = ThemeService.Current == AppTheme.Dark;
+
         _secondary.Show();
 
         // When the second screen is active, collapse Row 1 (the box grid) from the
@@ -155,7 +160,16 @@ public partial class GamePage : ContentPage
         GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
+        ThemeService.ThemeChanged -= OnThemeChanged;
         _pulseTimer?.Stop();
+    }
+
+    private void OnThemeChanged()
+    {
+        SpriteBgImage.IsVisible = ThemeService.Current == AppTheme.Dark;
+        TopBgCanvas.InvalidateSurface();
+        BoxCanvas.InvalidateSurface();
+        RadarCanvas.InvalidateSurface();
     }
 
 #if ANDROID
@@ -268,7 +282,7 @@ public partial class GamePage : ContentPage
     private void OnBoxPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(7, 12, 26)); // BgDeep
+        canvas.Clear(ThemeService.CanvasBg);
         if (_currentBox.Length == 0) return;
 
         RecalcGridLayout(e.Info.Width, e.Info.Height);
@@ -291,14 +305,14 @@ public partial class GamePage : ContentPage
             bool filled = pk.Species != 0;
 
             // ── Slot background ──
-            var bgColor = filled ? new SKColor(0x11, 0x1C, 0x33) : new SKColor(0x0E, 0x15, 0x29);
+            var bgColor = filled ? ThemeService.SlotFilled : ThemeService.SlotEmpty;
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
             canvas.DrawRoundRect(rect, radius, radius, bgPaint);
 
-            // Slot border (white 3%)
+            // Slot border
             using var borderPaint = new SKPaint
             {
-                Color = new SKColor(255, 255, 255, 8),
+                Color = ThemeService.SlotBorder,
                 Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true,
             };
             canvas.DrawRoundRect(rect, radius, radius, borderPaint);
@@ -529,13 +543,13 @@ public partial class GamePage : ContentPage
         using var ringPaint      = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
         float ringLabelSz        = Math.Max(10f, r * 0.09f);
         using var ringFont       = new SKFont(SKTypeface.Default, ringLabelSz);
-        using var ringLabelPaint = new SKPaint { Color = new SKColor(80, 100, 150, 160), IsAntialias = true };
+        using var ringLabelPaint = new SKPaint { Color = ThemeService.RadarStat, IsAntialias = true };
 
         for (int ri = 0; ri < ringValues.Length; ri++)
         {
             float frac = ringValues[ri] / visMax;
             float rr   = r * frac;
-            ringPaint.Color = new SKColor(35, 50, 90, (byte)(40 + ri * 25));
+            ringPaint.Color = ThemeService.RadarGrid.WithAlpha((byte)(40 + ri * 25));
             DrawHexPath(canvas, cx, cy, rr, n, ringPaint);
 
             float lx = cx;
@@ -587,7 +601,7 @@ public partial class GamePage : ContentPage
         statPath.Close();
         using var strokePaint = new SKPaint
         {
-            Color = new SKColor(220, 235, 255, 200),
+            Color = ThemeService.RadarLabel.WithAlpha(200),
             Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true,
         };
         canvas.DrawPath(statPath, strokePaint);
@@ -744,14 +758,22 @@ public partial class GamePage : ContentPage
     private void OnTopBgPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(SKColors.Transparent); // Let background image show through
+        canvas.Clear(SKColors.Transparent);
 
         float w = e.Info.Width;
         float h = e.Info.Height;
 
-        // Semi-transparent dark overlay so text is readable over the background image
-        using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 60) };
-        canvas.DrawRect(0, 0, w, h, dimPaint);
+        // In light mode, fill with solid background instead of dark overlay over image
+        if (ThemeService.Current == AppTheme.Light)
+        {
+            canvas.Clear(ThemeService.CanvasBg);
+        }
+        else
+        {
+            // Semi-transparent dark overlay so text is readable over the background image
+            using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 60) };
+            canvas.DrawRect(0, 0, w, h, dimPaint);
+        }
 
         // Radial glow — game accent color at low opacity
         var gameColor = _sav != null

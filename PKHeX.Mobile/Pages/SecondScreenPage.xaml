@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="PKHeX.Mobile.Pages.SecondScreenPage"
-             BackgroundColor="#070C1A"
+             BackgroundColor="{DynamicResource ThPageBg}"
              Shell.NavBarIsVisible="False">
 
     <Grid>
@@ -11,27 +11,30 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE A — Box grid (driven by GamePage)               -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid x:Name="BoxGridPanel" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
+        <Grid x:Name="BoxGridPanel" RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Box navigation header -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,12,16,8">
                 <Border StrokeShape="RoundRectangle 10"
-                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
                         WidthRequest="40" HeightRequest="36">
-                    <Label Text="◀" FontSize="14" TextColor="#8892B5"
+                    <Label Text="◀" FontSize="14" TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
                     <Label x:Name="BoxNameLabel"
                            FontFamily="QuicksandExtraBold" FontSize="18"
-                           TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                           TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
                     <Label Text="R-Stick L/R  |  R1/L1 Bank" FontFamily="Nunito" FontSize="9"
-                           TextColor="#283456" HorizontalTextAlignment="Center" />
+                           TextColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
                 <Border Grid.Column="2" StrokeShape="RoundRectangle 10"
-                        BackgroundColor="#131B35" Stroke="#0D0D0D0D" StrokeThickness="1"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
                         WidthRequest="40" HeightRequest="36">
-                    <Label Text="▶" FontSize="14" TextColor="#8892B5"
+                    <Label Text="▶" FontSize="14" TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
             </Grid>
@@ -42,41 +45,55 @@
             <!-- Info bar -->
             <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
                 <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                    <Label x:Name="InfoSpeciesNum" FontFamily="Nunito" FontSize="12" TextColor="#3D4A6E" />
-                    <Label x:Name="InfoSpeciesName" FontFamily="NunitoBold" FontSize="12" TextColor="#8892B5" />
+                    <Label x:Name="InfoSpeciesNum" FontFamily="Nunito" FontSize="12"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                    <Label x:Name="InfoSpeciesName" FontFamily="NunitoBold" FontSize="12"
+                           TextColor="{DynamicResource ThTextPrimary}" />
                 </HorizontalStackLayout>
                 <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="3">
-                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
-                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
                             <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                        <Label Text="Select" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
-                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
-                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
                             <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#6BABFF"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Grab" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                        <Label Text="Grab" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
-                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
-                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
                             <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Back" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                        <Label Text="Back" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
-                        <Border StrokeShape="RoundRectangle 5" BackgroundColor="#0AFFFFFF"
-                                Stroke="#0FFFFFFF" StrokeThickness="1" WidthRequest="20" HeightRequest="20">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
                             <Label Text="≡" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#F0C040"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Save" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E" VerticalOptions="Center" />
+                        <Label Text="Save" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
             </Grid>
@@ -86,16 +103,18 @@
         <!--  MODE B — Main menu: save list + action bar           -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="MainMenuPanel" IsVisible="False"
-              RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
+              RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Header -->
             <Grid Grid.Row="0" Padding="18,14,18,8" ColumnDefinitions="*,Auto">
                 <Label Text="SAVE FILES" FontFamily="Quicksand" FontSize="12"
-                       TextColor="#3D4A6E" CharacterSpacing="1.5" VerticalOptions="Center" />
+                       TextColor="{DynamicResource ThTextDim}" CharacterSpacing="1.5" VerticalOptions="Center" />
                 <Border Grid.Column="1" StrokeShape="RoundRectangle 6"
-                        BackgroundColor="#08FFFFFF" Stroke="Transparent" Padding="10,3">
+                        BackgroundColor="{DynamicResource ThBadgeBg}" Stroke="Transparent" Padding="10,3">
                     <Label x:Name="MenuSaveCountLabel" Text="0 saves"
-                           FontFamily="NunitoBold" FontSize="10" TextColor="#283456" />
+                           FontFamily="NunitoBold" FontSize="10"
+                           TextColor="{DynamicResource ThTextHint}" />
                 </Border>
             </Grid>
 
@@ -106,7 +125,8 @@
                             Margin="14,0">
                 <CollectionView.EmptyView>
                     <Label Text="No saves found."
-                           FontFamily="Nunito" FontSize="14" TextColor="#8892B5"
+                           FontFamily="Nunito" FontSize="14"
+                           TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center"
                            Margin="24,60" HorizontalTextAlignment="Center" />
                 </CollectionView.EmptyView>
@@ -142,9 +162,12 @@
                                         </Border>
                                     </Grid>
                                     <VerticalStackLayout Grid.Column="2" Margin="14,0,0,0" Spacing="1" VerticalOptions="Center">
-                                        <Label Text="{Binding TrainerName}" FontFamily="NunitoExtraBold" FontSize="16" TextColor="#EDF0FF" />
-                                        <Label Text="{Binding VersionLabel}" FontFamily="Nunito" FontSize="12" TextColor="#8892B5" />
-                                        <Label Text="{Binding DetailLine}" FontFamily="Nunito" FontSize="10.5" TextColor="#3D4A6E" />
+                                        <Label Text="{Binding TrainerName}" FontFamily="NunitoExtraBold" FontSize="16"
+                                               TextColor="{Binding TextPrimary}" />
+                                        <Label Text="{Binding VersionLabel}" FontFamily="Nunito" FontSize="12"
+                                               TextColor="{Binding TextSecondary}" />
+                                        <Label Text="{Binding DetailLine}" FontFamily="Nunito" FontSize="10.5"
+                                               TextColor="{Binding TextDim}" />
                                     </VerticalStackLayout>
                                     <Ellipse Grid.Column="3" Fill="#34D990"
                                              WidthRequest="9" HeightRequest="9"
@@ -173,47 +196,55 @@
                 </Border>
                 <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
                     <Border x:Name="Menu_Search" Grid.Column="0" StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
                                 <Label Text="🔍" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Search" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                            <Label Text="Search" FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="Menu_Gifts" Grid.Column="1" StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FFF6B9D"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
                                 <Label Text="🎁" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                            <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="Menu_Export" Grid.Column="2" StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1F34D990"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
                                 <Label Text="⬆" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Export" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                            <Label Text="Export" FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="Menu_Bank" Grid.Column="3" StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35" Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent" BackgroundColor="#1FA78BFA"
                                     WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
                                 <Label Text="🏦" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Bank" FontFamily="NunitoBold" FontSize="10" TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                            <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>

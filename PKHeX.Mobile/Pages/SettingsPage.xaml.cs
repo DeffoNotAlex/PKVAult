@@ -1,6 +1,7 @@
 using PKHeX.Core;
 using PKHeX.Drawing.Mobile.Sprites;
 using PKHeX.Mobile.Services;
+using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;
 
@@ -40,6 +41,7 @@ public partial class SettingsPage : ContentPage
         ShinySwitch.IsToggled         = Preferences.Default.Get(KeyShinySprites, true);
         RadarAdaptiveSwitch.IsToggled = Preferences.Default.Get(KeyRadarAdaptive, false);
         LegalitySwitch.IsToggled      = Preferences.Default.Get(KeyLegalityBadge, false);
+        ThemeSwitch.IsToggled         = ThemeService.Current == AppTheme.Light;
 
         _loading = false;
 
@@ -57,14 +59,14 @@ public partial class SettingsPage : ContentPage
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality];
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme];
     }
 
     private void UpdateHighlight()
     {
-        var focusedBg     = Color.FromArgb("#182845");
+        var focusedBg     = Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#EEF2FF" : "#182845");
         var focusedStroke = Color.FromArgb("#4F80FF");
-        var normalBg      = Color.FromArgb("#111827");
+        var normalBg      = Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#FFFFFF" : "#111827");
 
         for (int i = 0; i < _rows.Length; i++)
         {
@@ -143,6 +145,9 @@ public partial class SettingsPage : ContentPage
             case 4:
                 LegalitySwitch.IsToggled = !LegalitySwitch.IsToggled;
                 break;
+            case 5:
+                ThemeSwitch.IsToggled = !ThemeSwitch.IsToggled;
+                break;
         }
     }
 
@@ -171,6 +176,13 @@ public partial class SettingsPage : ContentPage
     {
         if (_loading) return;
         Preferences.Default.Set(KeyLegalityBadge, e.Value);
+    }
+
+    private void OnThemeSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        if (_loading) return;
+        ThemeService.Apply(e.Value ? AppTheme.Light : AppTheme.Dark);
+        UpdateHighlight();
     }
 
     /// <summary>

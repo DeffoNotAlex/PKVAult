@@ -1,0 +1,44 @@
+{
+  "bulbasaur": {
+    "ani": "ok",
+    "ani-shiny": "ok",
+    "gen5ani": "ok",
+    "gen5ani-shiny": "ok"
+  },
+  "charizard": {
+    "ani": "ok",
+    "ani-shiny": "ok",
+    "gen5ani": "ok",
+    "gen5ani-shiny": "ok"
+  },
+  "fakeslug": {
+    "ani": "missing",
+    "ani-shiny": "missing",
+    "gen5ani": "missing",
+    "gen5ani-shiny": "missing"
+  },
+  "jangmo-o": {
+    "ani": "missing",
+    "ani-shiny": "missing",
+    "gen5ani": "missing",
+    "gen5ani-shiny": "missing"
+  },
+  "mr-mime": {
+    "ani": "missing",
+    "ani-shiny": "missing",
+    "gen5ani": "missing",
+    "gen5ani-shiny": "missing"
+  },
+  "nidoranf": {
+    "ani": "ok",
+    "ani-shiny": "ok",
+    "gen5ani": "ok",
+    "gen5ani-shiny": "ok"
+  },
+  "urshifu-rapid-strike": {
+    "ani": "missing",
+    "ani-shiny": "missing",
+    "gen5ani": "missing",
+    "gen5ani-shiny": "missing"
+  }
+}

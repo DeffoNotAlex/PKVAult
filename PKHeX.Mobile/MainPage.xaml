@@ -4,14 +4,15 @@
              x:Class="PKHeX.Mobile.MainPage"
              Title="PKVault"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#070C1A">
+             BackgroundColor="{DynamicResource ThPageBg}">
 
     <Grid x:Name="RootGrid" RowDefinitions="Auto,*" RowSpacing="2">
 
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SECTION — Hero: centered save card              -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid x:Name="HeroPanel" Grid.Row="0" BackgroundColor="#070C1A"
+        <Grid x:Name="HeroPanel" Grid.Row="0"
+              BackgroundColor="{DynamicResource ThPageBg}"
               MinimumHeightRequest="160">
 
             <!-- Empty state: shown when no save is focused -->
@@ -23,11 +24,11 @@
                            VerticalOptions="Center" />
                     <Label Text="PKVault"
                            FontFamily="QuicksandExtraBold" FontSize="36"
-                           TextColor="#EDF0FF" VerticalOptions="Center" />
+                           TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
                 </HorizontalStackLayout>
                 <Label Text="SAVE MANAGER"
                        FontFamily="NunitoBold" FontSize="11"
-                       TextColor="#283456" CharacterSpacing="3.5"
+                       TextColor="{DynamicResource ThTextHint}" CharacterSpacing="3.5"
                        HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
 
@@ -63,37 +64,37 @@
                 <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
                     <Label x:Name="HeroTrainerName"
                            FontFamily="NunitoExtraBold" FontSize="24"
-                           TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                           TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
                     <Label x:Name="HeroGameLabel"
                            FontFamily="Nunito" FontSize="13"
-                           TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                           TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
 
                 <!-- Stats row -->
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="24">
                     <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
                         <Label Text="TID" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="#3D4A6E" CharacterSpacing="0.8"
+                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
                                HorizontalTextAlignment="Center" />
                         <Label x:Name="HeroTID"
                                FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
                         <Label Text="BOXES" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="#3D4A6E" CharacterSpacing="0.8"
+                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
                                HorizontalTextAlignment="Center" />
                         <Label x:Name="HeroBoxes"
                                FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
                         <Label Text="PLAYTIME" FontFamily="NunitoBold" FontSize="9"
-                               TextColor="#3D4A6E" CharacterSpacing="0.8"
+                               TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.8"
                                HorizontalTextAlignment="Center" />
                         <Label x:Name="HeroPlaytime"
                                FontFamily="NunitoExtraBold" FontSize="14"
-                               TextColor="#EDF0FF" HorizontalTextAlignment="Center" />
+                               TextColor="{DynamicResource ThTextPrimary}" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </HorizontalStackLayout>
 
@@ -118,23 +119,24 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  BOTTOM SECTION — Save list + Action bar               -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid x:Name="BottomPanel" Grid.Row="1" RowDefinitions="Auto,*,Auto" BackgroundColor="#070C1A">
+        <Grid x:Name="BottomPanel" Grid.Row="1" RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Header -->
             <Grid Padding="18,14,18,8" ColumnDefinitions="*,Auto">
                 <Label Text="SAVE FILES"
                        FontFamily="Quicksand" FontSize="12"
-                       TextColor="#3D4A6E"
+                       TextColor="{DynamicResource ThTextDim}"
                        CharacterSpacing="1.5"
                        VerticalOptions="Center" />
                 <Border Grid.Column="1"
                         StrokeShape="RoundRectangle 6"
-                        BackgroundColor="#08FFFFFF"
+                        BackgroundColor="{DynamicResource ThBadgeBg}"
                         Stroke="Transparent"
                         Padding="10,3">
                     <Label x:Name="SaveCountLabel" Text="0 saves"
                            FontFamily="NunitoBold" FontSize="10"
-                           TextColor="#283456" />
+                           TextColor="{DynamicResource ThTextHint}" />
                 </Border>
             </Grid>
 
@@ -147,7 +149,7 @@
                 <CollectionView.EmptyView>
                     <Label Text="No saves found. Add folders in Settings."
                            FontFamily="Nunito" FontSize="14"
-                           TextColor="#8892B5"
+                           TextColor="{DynamicResource ThTextSecondary}"
                            HorizontalOptions="Center" VerticalOptions="Center"
                            Margin="24,60" HorizontalTextAlignment="Center" />
                 </CollectionView.EmptyView>
@@ -198,13 +200,13 @@
                                                          VerticalOptions="Center">
                                         <Label Text="{Binding TrainerName}"
                                                FontFamily="NunitoExtraBold" FontSize="16"
-                                               TextColor="#EDF0FF" />
+                                               TextColor="{Binding TextPrimary}" />
                                         <Label Text="{Binding VersionLabel}"
                                                FontFamily="Nunito" FontSize="12"
-                                               TextColor="#8892B5" />
+                                               TextColor="{Binding TextSecondary}" />
                                         <Label Text="{Binding DetailLine}"
                                                FontFamily="Nunito" FontSize="10.5"
-                                               TextColor="#3D4A6E" />
+                                               TextColor="{Binding TextDim}" />
                                     </VerticalStackLayout>
 
                                     <!-- Active indicator -->
@@ -247,8 +249,8 @@
                     <!-- Search -->
                     <Border x:Name="Tile_Search" Grid.Column="0"
                             StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35"
-                            Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnSearchTapped" />
@@ -262,15 +264,15 @@
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Search" FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Gifts -->
                     <Border x:Name="Tile_Gifts" Grid.Column="1"
                             StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35"
-                            Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnGiftsTapped" />
@@ -284,15 +286,15 @@
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Gifts" FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Export -->
                     <Border x:Name="Tile_Export" Grid.Column="2"
                             StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35"
-                            Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnExportTapped" />
@@ -306,15 +308,15 @@
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Export" FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Bank -->
                     <Border x:Name="Tile_Bank" Grid.Column="3"
                             StrokeShape="RoundRectangle 8"
-                            BackgroundColor="#131B35"
-                            Stroke="#0DFFFFFF" StrokeThickness="1"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
                             Padding="0" HeightRequest="70">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnBankTapped" />
@@ -328,7 +330,7 @@
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="#8892B5" HorizontalTextAlignment="Center" />
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
@@ -337,47 +339,51 @@
                 <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
                     <HorizontalStackLayout Spacing="5">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="↕" FontFamily="NunitoExtraBold" FontSize="9"
-                                   TextColor="#8892B5"
+                                   TextColor="{DynamicResource ThTextSecondary}"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Nav" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                               VerticalOptions="Center" />
+                        <Label Text="Nav" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="5">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#34D990"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Select" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                               VerticalOptions="Center" />
+                        <Label Text="Select" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="5">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#FF6B9D"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Back" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                               VerticalOptions="Center" />
+                        <Label Text="Back" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="5">
                         <Border StrokeShape="RoundRectangle 5"
-                                BackgroundColor="#0AFFFFFF" Stroke="#0FFFFFFF" StrokeThickness="1"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                                 WidthRequest="20" HeightRequest="20">
                             <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9"
                                    TextColor="#A78BFA"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
-                        <Label Text="Search" FontFamily="Nunito" FontSize="10" TextColor="#3D4A6E"
-                               VerticalOptions="Center" />
+                        <Label Text="Search" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
 

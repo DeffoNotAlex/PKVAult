@@ -3,6 +3,7 @@ using PKHeX.Core;
 using PKHeX.Mobile.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;
 
@@ -168,7 +169,7 @@ public partial class SecondScreenPage : ContentPage
     private void OnBoxPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(7, 12, 26));
+        canvas.Clear(ThemeService.CanvasBg);
         if (_box.Length == 0) return;
 
         RecalcGridLayout(e.Info.Width, e.Info.Height);
@@ -190,13 +191,13 @@ public partial class SecondScreenPage : ContentPage
             bool filled     = pk.Species != 0;
 
             // Slot background
-            var bgColor = filled ? new SKColor(0x11, 0x1C, 0x33) : new SKColor(0x0E, 0x15, 0x29);
+            var bgColor = filled ? ThemeService.SlotFilled : ThemeService.SlotEmpty;
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
             canvas.DrawRoundRect(rect, radius, radius, bgPaint);
 
             using var borderPaint = new SKPaint
             {
-                Color = new SKColor(255, 255, 255, 8),
+                Color = ThemeService.SlotBorder,
                 Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true,
             };
             canvas.DrawRoundRect(rect, radius, radius, borderPaint);

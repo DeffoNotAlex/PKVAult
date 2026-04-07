@@ -1,5 +1,6 @@
 using PKHeX.Core;
 using PKHeX.Mobile.Pages;
+using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile;
 
@@ -30,6 +31,7 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        ThemeService.ApplyOnStartup();
         SettingsPage.ApplyOnStartup();
     }
 
