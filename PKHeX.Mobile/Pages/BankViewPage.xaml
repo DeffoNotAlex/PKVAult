@@ -43,42 +43,92 @@
             </Border>
         </Grid>
 
-        <!-- ── Main content (two overlapping panels toggled by X) ── -->
-        <Grid Grid.Row="1">
+        <!-- ── Main: radar | sprite | info/moves ── -->
+        <Grid Grid.Row="1" ColumnDefinitions="2.5*,3.5*,3*" Padding="8,4">
 
-            <!-- Panel 0: sprite + text info -->
-            <Grid x:Name="InfoPanel" ColumnDefinitions="*,*">
-                <skia:SKCanvasView Grid.Column="0" x:Name="SpriteCanvas"
-                                   PaintSurface="OnSpritePaint" Margin="8" />
+            <!-- Col 0: Stat radar in frosted glass -->
+            <Border x:Name="RadarBorder"
+                    Grid.Column="0"
+                    StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{DynamicResource ThRadarBg}"
+                    Stroke="{DynamicResource ThRadarStroke}"
+                    StrokeThickness="1"
+                    Margin="4"
+                    VerticalOptions="Center">
+                <skia:SKCanvasView x:Name="RadarCanvas" PaintSurface="OnRadarPaint" />
+            </Border>
 
-                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center"
-                                     Spacing="6" Padding="0,0,20,0">
-                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                        <Label x:Name="SpeciesNum" FontFamily="Nunito" FontSize="14"
-                               TextColor="{DynamicResource ThTextSecondary}" VerticalOptions="Center" />
-                        <Label x:Name="SpeciesName" FontFamily="QuicksandExtraBold" FontSize="22"
-                               TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                    <Label x:Name="LevelLabel" FontFamily="NunitoBold" FontSize="16"
-                           TextColor="{DynamicResource ThTextSecondary}" />
-                    <Label x:Name="ShinyLabel" Text="✦ Shiny" FontFamily="NunitoBold" FontSize="14"
-                           TextColor="#F0C040" IsVisible="False" />
-                    <Label x:Name="OTLabel" FontFamily="Nunito" FontSize="13"
-                           TextColor="{DynamicResource ThTextDim}" />
-                    <Label x:Name="DepositLabel" FontFamily="Nunito" FontSize="12"
-                           TextColor="{DynamicResource ThTextHint}" />
-                </VerticalStackLayout>
+            <!-- Col 1: 3D sprite (WebView) + static fallback (Canvas) -->
+            <Grid Grid.Column="1" Margin="4">
+                <skia:SKCanvasView x:Name="PreviewCanvas" PaintSurface="OnPreviewPaint" />
+                <WebView x:Name="SpriteWebView"
+                         BackgroundColor="Transparent"
+                         IsVisible="False" />
             </Grid>
 
-            <!-- Panel 1: stat bars + move names (SkiaSharp canvas) -->
-            <skia:SKCanvasView x:Name="StatsCanvas" IsVisible="False"
-                               PaintSurface="OnStatsPaint" Margin="8" />
+            <!-- Col 2: Info panel / Moves panel (toggled by X) -->
+            <Grid Grid.Column="2" Margin="4,0,8,0">
 
+                <!-- Info view (default) -->
+                <VerticalStackLayout x:Name="InfoPanel" VerticalOptions="Center" Spacing="7">
+                    <HorizontalStackLayout Spacing="6">
+                        <Label x:Name="SpeciesNum" FontFamily="Nunito" FontSize="13"
+                               TextColor="{DynamicResource ThTextSecondary}" VerticalOptions="Center" />
+                        <Label x:Name="SpeciesName" FontFamily="QuicksandExtraBold" FontSize="20"
+                               TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="LevelLabel" FontFamily="NunitoBold" FontSize="15"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                    <Label x:Name="ShinyLabel" Text="✦ Shiny" FontFamily="NunitoBold" FontSize="13"
+                           TextColor="#F0C040" IsVisible="False" />
+                    <Label x:Name="OTLabel" FontFamily="Nunito" FontSize="12"
+                           TextColor="{DynamicResource ThTextDim}" />
+                    <Label x:Name="DepositLabel" FontFamily="Nunito" FontSize="11"
+                           TextColor="{DynamicResource ThTextHint}" />
+                </VerticalStackLayout>
+
+                <!-- Moves view (X to toggle) -->
+                <VerticalStackLayout x:Name="MovesPanel" IsVisible="False"
+                                     VerticalOptions="Center" Spacing="6">
+                    <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
+                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="1.2"
+                           Margin="0,0,0,2" />
+                    <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="{DynamicResource ThMoveRowBg}"
+                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                            Padding="10,7">
+                        <Label x:Name="MoveLabel0" FontFamily="NunitoBold" FontSize="12"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                    </Border>
+                    <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="{DynamicResource ThMoveRowBg}"
+                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                            Padding="10,7">
+                        <Label x:Name="MoveLabel1" FontFamily="NunitoBold" FontSize="12"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                    </Border>
+                    <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="{DynamicResource ThMoveRowBg}"
+                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                            Padding="10,7">
+                        <Label x:Name="MoveLabel2" FontFamily="NunitoBold" FontSize="12"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                    </Border>
+                    <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="{DynamicResource ThMoveRowBg}"
+                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                            Padding="10,7">
+                        <Label x:Name="MoveLabel3" FontFamily="NunitoBold" FontSize="12"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                    </Border>
+                </VerticalStackLayout>
+
+            </Grid>
         </Grid>
 
         <!-- ── Hint bar ── -->
         <HorizontalStackLayout Grid.Row="2" HorizontalOptions="Center"
-                               Spacing="20" Padding="0,8,0,14">
+                               Spacing="20" Padding="0,6,0,12">
             <HorizontalStackLayout Spacing="4">
                 <Border StrokeShape="RoundRectangle 5"
                         BackgroundColor="{DynamicResource ThHintBg}"
@@ -87,7 +137,7 @@
                     <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#A78BFA"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
-                <Label Text="Info" FontFamily="Nunito" FontSize="11"
+                <Label Text="Moves" FontFamily="Nunito" FontSize="11"
                        TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
             </HorizontalStackLayout>
             <HorizontalStackLayout Spacing="4">

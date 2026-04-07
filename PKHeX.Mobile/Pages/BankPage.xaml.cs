@@ -2,6 +2,7 @@ using PKHeX.Core;
 using PKHeX.Mobile.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;
 
@@ -42,6 +43,8 @@ public partial class BankPage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
+        ThemeService.ThemeChanged -= OnThemeChanged;
+        ThemeService.ThemeChanged += OnThemeChanged;
         // Slide in the inner grid (not `this`) so hit-testing is always correct
         RootGrid.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
         await RootGrid.TranslateTo(0, 0, 260, Easing.CubicInOut);
@@ -57,7 +60,11 @@ public partial class BankPage : ContentPage
         GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
+        ThemeService.ThemeChanged -= OnThemeChanged;
     }
+
+    private void OnThemeChanged() =>
+        MainThread.BeginInvokeOnMainThread(() => BankCanvas.InvalidateSurface());
 
     // ──────────────────────────────────────────────
     //  Box loading
@@ -113,106 +120,113 @@ public partial class BankPage : ContentPage
     private void OnBankPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(new SKColor(10, 10, 20));
+        canvas.Clear(ThemeService.CanvasBg);
         if (_currentSlots.Length == 0) return;
 
-        float slotSize = Math.Min((float)e.Info.Width / Columns, (float)e.Info.Height / Rows);
-        float offX = ((float)e.Info.Width  - slotSize * Columns) / 2f;
-        float offY = ((float)e.Info.Height - slotSize * Rows)    / 2f;
-        const float pad    = 4f;
-        const float radius = 8f;
+        const float gap    = 6f;
+        const float padX   = 14f, padY = 4f;
+        const float radius = 10f;
+
+        float availW   = e.Info.Width  - padX * 2 - gap * (Columns - 1);
+        float availH   = e.Info.Height - padY * 2 - gap * (Rows - 1);
+        float slotSize = MathF.Min(availW / Columns, availH / Rows);
+        float gridW    = slotSize * Columns + gap * (Columns - 1);
+        float gridH    = slotSize * Rows    + gap * (Rows - 1);
+        float offX     = (e.Info.Width  - gridW) / 2f;
+        float offY     = (e.Info.Height - gridH) / 2f;
 
         for (int i = 0; i < BankService.SlotsPerBox; i++)
         {
-            int col = i % Columns;
-            int row = i / Columns;
-            float x = offX + col * slotSize;
-            float y = offY + row * slotSize;
-            var pk = i < _currentSlots.Length ? _currentSlots[i] : null;
+            int   col = i % Columns, row = i / Columns;
+            float x   = offX + col * (slotSize + gap);
+            float y   = offY + row * (slotSize + gap);
+            var   rect = new SKRect(x, y, x + slotSize, y + slotSize);
+            var   pk   = i < _currentSlots.Length ? _currentSlots[i] : null;
 
             bool isCursor   = i == _cursorSlot;
             bool isSelected = i == _selectedSlot;
             bool isSource   = _moveMode && i == _moveSourceSlot;
+            bool filled     = pk?.Species > 0;
 
             // Slot background
-            var bgColor = isSelected
-                ? new SKColor(80, 60, 20, 220)
-                : isCursor
-                ? new SKColor(20, 40, 90, 220)
-                : new SKColor(14, 14, 36, 180);
-
+            var bgColor = filled ? ThemeService.SlotFilled : ThemeService.SlotEmpty;
             using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
-            canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, bgPaint);
+            canvas.DrawRoundRect(rect, radius, radius, bgPaint);
 
-            // Sprite — ghost (30% opacity) at source slot, normal elsewhere
-            if (pk?.Species > 0)
+            using var borderPaint = new SKPaint
             {
-                var sprite  = _sprites.GetSprite(pk);
-                float inner = slotSize - pad * 2;
+                Color = ThemeService.SlotBorder,
+                Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true,
+            };
+            canvas.DrawRoundRect(rect, radius, radius, borderPaint);
+
+            // Sprite — ghost opacity at source slot
+            if (filled)
+            {
+                var sprite = _sprites.GetSprite(pk!);
+                float scale = isCursor ? 0.75f : 0.70f;
+                float inner = slotSize * scale;
                 float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
                 float drawW, drawH;
                 if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
                 else              { drawH = inner; drawW = inner * aspect; }
-                float sx = x + pad + (inner - drawW) / 2f;
-                float sy = y + pad + (inner - drawH) / 2f;
-
+                float sx = rect.MidX - drawW / 2f;
+                float sy = rect.MidY - drawH / 2f;
                 byte alpha = isSource ? (byte)70 : (byte)255;
                 using var spritePaint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
                 canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), spritePaint);
             }
 
-            // In deposit mode: show ghost of pending Pokémon at cursor slot
+            // Ghost of pending deposit at cursor
             if (isCursor && App.PendingMove != null && !App.PendingFromBank && _movePk == null)
             {
                 var ghost = _sprites.GetSprite(App.PendingMove);
-                float inner = slotSize - pad * 2;
+                float inner = slotSize * 0.70f;
                 float aspect = ghost.Width > 0 ? (float)ghost.Width / ghost.Height : 1f;
                 float drawW, drawH;
                 if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
                 else              { drawH = inner; drawW = inner * aspect; }
-                float sx = x + pad + (inner - drawW) / 2f;
-                float sy = y + pad + (inner - drawH) / 2f;
+                float sx = rect.MidX - drawW / 2f, sy = rect.MidY - drawH / 2f;
                 using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
                 canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
             }
 
-            // In withdraw move mode: ghost of grabbed Pokémon at cursor
+            // Ghost of grabbed Pokémon in withdraw move mode
             if (isCursor && _moveMode && _movePk != null && !isSource)
             {
                 var ghost = _sprites.GetSprite(_movePk);
-                float inner = slotSize - pad * 2;
+                float inner = slotSize * 0.70f;
                 float aspect = ghost.Width > 0 ? (float)ghost.Width / ghost.Height : 1f;
                 float drawW, drawH;
                 if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
                 else              { drawH = inner; drawW = inner * aspect; }
-                float sx = x + pad + (inner - drawW) / 2f;
-                float sy = y + pad + (inner - drawH) / 2f;
+                float sx = rect.MidX - drawW / 2f, sy = rect.MidY - drawH / 2f;
                 using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
                 canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
             }
 
-            // Outlines
+            // Cursor outline
             if (isCursor)
             {
                 var color = _moveMode
-                    ? new SKColor(60, 220, 110, 230)   // green in move mode
+                    ? new SKColor(60, 220, 110, 230)
                     : App.PendingMove != null
-                    ? new SKColor(60, 200, 255, 230)   // cyan in deposit mode
-                    : new SKColor(80, 160, 255, 200);  // blue default
+                    ? new SKColor(60, 200, 255, 230)
+                    : new SKColor(80, 160, 255, 200);
                 using var p = new SKPaint { Color = color, Style = SKPaintStyle.Stroke, StrokeWidth = 3f, IsAntialias = true };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+                canvas.DrawRoundRect(rect, radius, radius, p);
             }
 
             if (isSelected)
             {
                 using var p = new SKPaint { Color = new SKColor(200, 170, 80, 160), Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, IsAntialias = true };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+                canvas.DrawRoundRect(rect, radius, radius, p);
             }
 
             if (isSource)
             {
                 using var p = new SKPaint { Color = new SKColor(220, 80, 60, 190), Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true };
-                canvas.DrawRoundRect(x + pad, y + pad, slotSize - pad * 2, slotSize - pad * 2, radius, radius, p);
+                canvas.DrawRoundRect(rect, radius, radius, p);
             }
         }
     }

@@ -5,32 +5,35 @@
              xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.Pages.BankPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#050518">
+             BackgroundColor="{DynamicResource ThPageBg}">
 
-    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="#050518">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto"
+          BackgroundColor="{DynamicResource ThPageBg}">
 
         <!-- ── Header ── -->
         <Grid Grid.Row="0" ColumnDefinitions="52,*,52"
-              BackgroundColor="#0A0A20" Padding="4,8">
+              BackgroundColor="{DynamicResource ThCardBg}" Padding="4,8">
             <Button Grid.Column="0" x:Name="PrevBankBtn"
                     Text="{x:Static theme:Ph.CaretLeft}"
                     FontFamily="Phosphor"
                     Clicked="OnPrevBox"
-                    BackgroundColor="#1A2040" TextColor="#A0B0FF"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}"
+                    TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="18" Padding="0" />
             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
                 <Label x:Name="BankNameLabel"
-                       TextColor="White" FontSize="16" FontAttributes="Bold"
+                       TextColor="{DynamicResource ThTextPrimary}" FontSize="16" FontAttributes="Bold"
                        HorizontalOptions="Center" />
                 <Label x:Name="BoxIndexLabel"
-                       TextColor="#404870" FontSize="10"
+                       TextColor="{DynamicResource ThTextHint}" FontSize="10"
                        HorizontalOptions="Center" />
             </VerticalStackLayout>
             <Button Grid.Column="2" x:Name="NextBankBtn"
                     Text="{x:Static theme:Ph.CaretRight}"
                     FontFamily="Phosphor"
                     Clicked="OnNextBox"
-                    BackgroundColor="#1A2040" TextColor="#A0B0FF"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}"
+                    TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="18" Padding="0" />
         </Grid>
 
@@ -53,13 +56,13 @@
 
         <!-- ── Info bar ── -->
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto"
-              BackgroundColor="#080818" Padding="12,6">
+              BackgroundColor="{DynamicResource ThCardBg}" Padding="12,6">
             <Label x:Name="HoverLabel"
-                   TextColor="#8899CC" FontSize="12"
+                   TextColor="{DynamicResource ThTextSecondary}" FontSize="12"
                    VerticalOptions="Center" />
             <Label Grid.Column="1"
                    Text="R-stick: box  L1/R1: swap  Y: grab  A: drop  ⊙: rename  B: back"
-                   TextColor="#252540" FontSize="9"
+                   TextColor="{DynamicResource ThTextHint}" FontSize="9"
                    VerticalOptions="Center" />
         </Grid>
 

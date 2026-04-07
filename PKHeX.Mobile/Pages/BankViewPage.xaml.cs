@@ -1,5 +1,6 @@
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
+using PKHeX.Mobile.Theme;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using static PKHeX.Mobile.Services.ThemeService;
@@ -19,13 +20,40 @@ public partial class BankViewPage : ContentPage
     private PKM?[] _currentSlots = new PKM?[BankService.SlotsPerBox];
     private int    _boxIndex;
     private int    _cursorSlot;
-    private int    _detailView;   // 0 = sprite+info, 1 = stats+moves
+    private int    _detailView;   // 0 = info, 1 = moves
     private PKM?   _previewPk;
+
+    // WebView 3D sprite
+    private bool _spriteWebViewReady;
+    private int  _previewSpecies = -1;
+
+    // Radar animation
+    private float[]                  _radarCurrent = new float[6];
+    private float                    _radarVisMax  = 255f;
+    private CancellationTokenSource? _radarAnimCts;
+
+    // Radar colors — same order as GamePage
+    private static readonly SKColor[] StatColors =
+    [
+        new SKColor(255,  80,  80),   // HP
+        new SKColor(255, 150,  50),   // Atk
+        new SKColor(240, 210,  50),   // Def
+        new SKColor( 50, 210, 160),   // Spe
+        new SKColor( 80, 140, 255),   // SpD
+        new SKColor(185,  90, 255),   // SpA
+    ];
 
     public BankViewPage(ISecondaryDisplay secondary)
     {
         _secondary = secondary;
         InitializeComponent();
+
+        // Keep radar box square
+        RadarBorder.SizeChanged += (_, _) =>
+        {
+            if (RadarBorder.Width > 0)
+                RadarBorder.HeightRequest = RadarBorder.Width;
+        };
     }
 
     // ──────────────────────────────────────────────
@@ -43,6 +71,10 @@ public partial class BankViewPage : ContentPage
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
+
+        _spriteWebViewReady = false;
+        _previewSpecies     = -1;
+
         await LoadBoxAsync(_boxIndex, resetCursor: false);
     }
 
@@ -54,14 +86,15 @@ public partial class BankViewPage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
+        _radarAnimCts?.Cancel();
     }
 
     private void OnThemeChanged()
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            SpriteCanvas.InvalidateSurface();
-            StatsCanvas.InvalidateSurface();
+            PreviewCanvas.InvalidateSurface();
+            RadarCanvas.InvalidateSurface();
         });
     }
 
@@ -75,16 +108,19 @@ public partial class BankViewPage : ContentPage
         if (resetCursor) _cursorSlot = 0;
 
         _currentSlots = _bank.GetBoxData(box);
-        string boxName = box < _bank.Boxes.Count ? _bank.Boxes[box].Name : $"Bank {box + 1}";
+        string boxName  = box < _bank.Boxes.Count ? _bank.Boxes[box].Name : $"Bank {box + 1}";
         int    boxCount = _bank.Boxes.Count;
 
         BoxNameLabel.Text  = boxName;
         BoxIndexLabel.Text = $"{box + 1} / {boxCount}";
 
-        await _sprites.PreloadBoxAsync(_currentSlots.Select(p => p ?? (PKM)new PK9()).ToArray());
-
+        // Switch the second screen to bank mode immediately (before sprite preload)
         _secondary.ShowBankGrid(_currentSlots, _cursorSlot, boxName, box, boxCount);
         UpdateDetail();
+
+        // Preload sprites in background then refresh
+        await _sprites.PreloadBoxAsync(_currentSlots.Select(p => p ?? (PKM)new PK9()).ToArray());
+        _secondary.InvalidateBankCanvas();
     }
 
     // ──────────────────────────────────────────────
@@ -94,14 +130,34 @@ public partial class BankViewPage : ContentPage
     private void UpdateDetail()
     {
         _previewPk = _cursorSlot < _currentSlots.Length ? _currentSlots[_cursorSlot] : null;
-        if (_detailView == 0)
+
+        UpdateInfoLabels();
+        UpdateMoveLabels();
+        PreviewCanvas.InvalidateSurface();
+
+        if (_previewPk?.Species > 0)
         {
-            UpdateInfoLabels();
-            SpriteCanvas.InvalidateSurface();
+            int key = _previewPk.Species * 2 + (_previewPk.IsShiny ? 1 : 0);
+            if (key != _previewSpecies)
+            {
+                _previewSpecies = key;
+                LoadAnimatedSprite(_previewPk);
+            }
+            else if (_spriteWebViewReady)
+            {
+                SpriteWebView.IsVisible = true;
+                PreviewCanvas.IsVisible = false;
+            }
+            StartRadarAnimation(GetRadarStats(_previewPk));
         }
         else
         {
-            StatsCanvas.InvalidateSurface();
+            SpriteWebView.IsVisible = false;
+            PreviewCanvas.IsVisible = true;
+            _previewSpecies = -1;
+            _radarAnimCts?.Cancel();
+            _radarCurrent = new float[6];
+            RadarCanvas.InvalidateSurface();
         }
     }
 
@@ -136,14 +192,77 @@ public partial class BankViewPage : ContentPage
         }
     }
 
+    private void UpdateMoveLabels()
+    {
+        string MoveName(int id) =>
+            id > 0 && id < _strings.movelist.Length ? _strings.movelist[id] : "—";
+
+        var pk = _previewPk;
+        MoveLabel0.Text = MoveName(pk?.Move1 ?? 0);
+        MoveLabel1.Text = MoveName(pk?.Move2 ?? 0);
+        MoveLabel2.Text = MoveName(pk?.Move3 ?? 0);
+        MoveLabel3.Text = MoveName(pk?.Move4 ?? 0);
+    }
+
     // ──────────────────────────────────────────────
-    //  Canvas: sprite
+    //  WebView 3D sprite
     // ──────────────────────────────────────────────
 
-    private void OnSpritePaint(object sender, SKPaintSurfaceEventArgs e)
+    private async void LoadAnimatedSprite(PKM pk)
+    {
+        var name = pk.Species < _strings.specieslist.Length
+            ? _strings.specieslist[pk.Species]
+            : pk.Species.ToString();
+
+        var dataUri = await SpriteCacheService.GetDataUriAsync(ToShowdownSlug(name), pk.IsShiny);
+        if (dataUri is null)
+        {
+            PreviewCanvas.IsVisible = true;
+            PreviewCanvas.InvalidateSurface();
+            return;
+        }
+
+        if (!_spriteWebViewReady)
+        {
+            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
+            SpriteWebView.IsVisible = true;
+            PreviewCanvas.IsVisible = false;
+            _spriteWebViewReady     = true;
+        }
+        else
+        {
+            var js = $$"""document.getElementById('s').src='{{dataUri}}';""";
+            await SpriteWebView.EvaluateJavaScriptAsync(js);
+        }
+    }
+
+    private static string ToShowdownSlug(string speciesName)
+    {
+        var s = speciesName.ToLowerInvariant()
+            .Replace("♀", "f").Replace("♂", "m")
+            .Replace("é", "e");
+        return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
+    }
+
+    private static string BuildSpriteShell(string src) => $$"""
+        <!DOCTYPE html>
+        <html><head>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
+        </head><body>
+        <img id="s" src="{{src}}"
+             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
+        </body></html>
+        """;
+
+    // ──────────────────────────────────────────────
+    //  Canvas: static sprite fallback
+    // ──────────────────────────────────────────────
+
+    private void OnPreviewPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(ThemeService.CanvasBg);
+        canvas.Clear(SKColors.Transparent);
 
         var pk = _previewPk;
         if (pk is null || pk.Species == 0) return;
@@ -156,102 +275,179 @@ public partial class BankViewPage : ContentPage
         else              { drawH = maxSz; drawW = maxSz * aspect; }
         float sx = (e.Info.Width  - drawW) / 2f;
         float sy = (e.Info.Height - drawH) / 2f;
-
-        using var paint = new SKPaint { FilterQuality = SKFilterQuality.None };
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), paint);
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
     }
 
     // ──────────────────────────────────────────────
-    //  Canvas: stats + moves
+    //  Canvas: radar chart
     // ──────────────────────────────────────────────
 
-    private void OnStatsPaint(object sender, SKPaintSurfaceEventArgs e)
+    private void OnRadarPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
-        canvas.Clear(ThemeService.CanvasBg);
+        canvas.Clear(SKColors.Transparent);
+        if (_previewPk is null) return;
 
-        var pk = _previewPk;
-        float w = e.Info.Width, h = e.Info.Height;
-        bool light = Current == PkTheme.Light;
+        const int n  = 6;
+        float visMax = _radarVisMax;
 
-        float halfW = w / 2f;
-        DrawStatBars(canvas, pk, new SKRect(0, 0, halfW, h), light);
-        DrawMoves(canvas, pk, new SKRect(halfW, 0, w, h), light);
-    }
-
-    private static void DrawStatBars(SKCanvas canvas, PKM? pk, SKRect area, bool light)
-    {
-        string[] names  = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"];
-        int[]    values = pk is not null
-            ? [pk.Stat_HPMax, pk.Stat_ATK, pk.Stat_DEF, pk.Stat_SPA, pk.Stat_SPD, pk.Stat_SPE]
-            : [0, 0, 0, 0, 0, 0];
-        SKColor[] colors =
+        int[] ringValues =
         [
-            SKColor.Parse("#FF5959"), SKColor.Parse("#FF9F43"),
-            SKColor.Parse("#FFC542"), SKColor.Parse("#A78BFA"),
-            SKColor.Parse("#34D990"), SKColor.Parse("#4FC3F7"),
+            (int)(visMax * 0.25f),
+            (int)(visMax * 0.50f),
+            (int)(visMax * 0.75f),
+            (int)visMax,
         ];
 
-        int maxVal = Math.Max(1, values.Max());
-        float rowH    = area.Height / 6f;
-        float padL    = area.Left + 14f;
-        float barMaxW = area.Width - 80f;
-        var textColor = light ? new SKColor(13, 17, 23) : new SKColor(220, 228, 255);
+        string[] labels = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"];
 
-        using var namePaint = new SKPaint { Color = textColor, TextSize = 21f, IsAntialias = true };
-        using var valPaint  = new SKPaint { Color = textColor, TextSize = 19f, IsAntialias = true };
+        float margin = Math.Min(e.Info.Width, e.Info.Height) * 0.16f;
+        float cx = e.Info.Width  / 2f;
+        float cy = e.Info.Height / 2f;
+        float r  = Math.Min(cx, cy) - margin;
 
-        for (int i = 0; i < 6; i++)
+        // Grid rings
+        using var ringPaint      = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
+        float ringLabelSz        = Math.Max(10f, r * 0.09f);
+        using var ringFont       = new SKFont(SKTypeface.Default, ringLabelSz);
+        using var ringLabelPaint = new SKPaint { Color = ThemeService.RadarStat, IsAntialias = true };
+
+        for (int ri = 0; ri < ringValues.Length; ri++)
         {
-            float midY  = area.Top + i * rowH + rowH * 0.5f;
+            float frac = ringValues[ri] / visMax;
+            ringPaint.Color = ThemeService.RadarGrid.WithAlpha((byte)(40 + ri * 25));
+            DrawHexPath(canvas, cx, cy, r * frac, n, ringPaint);
+            float ly = cy - r * frac - ringLabelSz * 0.25f;
+            canvas.DrawText(ringValues[ri].ToString(), cx, ly, SKTextAlign.Center, ringFont, ringLabelPaint);
+        }
 
-            canvas.DrawText(names[i], padL, midY + 8f, namePaint);
+        // Axes
+        using var axisPaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1f, IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            axisPaint.Color = StatColors[i].WithAlpha(70);
+            canvas.DrawLine(cx, cy, cx + r * MathF.Cos(angle), cy + r * MathF.Sin(angle), axisPaint);
+        }
 
-            float barX   = padL + 52f;
-            float barY   = midY - 6f;
-            float fill   = barMaxW * (values[i] / (float)maxVal);
+        // Vertex positions
+        float[] vx = new float[n];
+        float[] vy = new float[n];
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float v = Math.Clamp(_radarCurrent[i] / visMax, 0f, 1f);
+            vx[i] = cx + r * v * MathF.Cos(angle);
+            vy[i] = cy + r * v * MathF.Sin(angle);
+        }
 
-            using var bgPaint = new SKPaint
-            {
-                Color = light ? new SKColor(205, 210, 230) : new SKColor(28, 38, 68),
-                IsAntialias = true,
-            };
-            canvas.DrawRoundRect(barX, barY, barMaxW, 12f, 6, 6, bgPaint);
+        // Colored wedge fills
+        using var wedgePaint = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            int j = (i + 1) % n;
+            using var wedgePath = new SKPath();
+            wedgePath.MoveTo(cx, cy);
+            wedgePath.LineTo(vx[i], vy[i]);
+            wedgePath.LineTo(vx[j], vy[j]);
+            wedgePath.Close();
+            wedgePaint.Color = StatColors[i].WithAlpha(90);
+            canvas.DrawPath(wedgePath, wedgePaint);
+        }
 
-            if (fill > 0)
-            {
-                using var fillPaint = new SKPaint { Color = colors[i], IsAntialias = true };
-                canvas.DrawRoundRect(barX, barY, fill, 12f, 6, 6, fillPaint);
-            }
+        // Outline stroke
+        using var statPath = new SKPath();
+        for (int i = 0; i < n; i++)
+        {
+            if (i == 0) statPath.MoveTo(vx[i], vy[i]);
+            else        statPath.LineTo(vx[i], vy[i]);
+        }
+        statPath.Close();
+        using var strokePaint = new SKPaint
+        {
+            Color = ThemeService.RadarLabel.WithAlpha(200),
+            Style = SKPaintStyle.Stroke, StrokeWidth = 2f, IsAntialias = true,
+        };
+        canvas.DrawPath(statPath, strokePaint);
 
-            canvas.DrawText(values[i].ToString(), barX + barMaxW + 7f, midY + 7f, valPaint);
+        // Vertex dots
+        using var dotPaint = new SKPaint { IsAntialias = true };
+        for (int i = 0; i < n; i++)
+        {
+            dotPaint.Color = StatColors[i];
+            canvas.DrawCircle(vx[i], vy[i], 5f, dotPaint);
+        }
+
+        // Axis labels (name + value)
+        float textR   = r + margin * 0.60f;
+        float labelSz = Math.Max(11f, r * 0.11f);
+        float valueSz = Math.Max(14f, r * 0.14f);
+        using var labelFont  = new SKFont(SKTypeface.Default, labelSz);
+        using var valueFont  = new SKFont(SKTypeface.Default, valueSz) { Embolden = true };
+        using var namePaint  = new SKPaint { IsAntialias = true };
+        using var valuePaint = new SKPaint { IsAntialias = true };
+
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float lx = cx + textR * MathF.Cos(angle);
+            float ly = cy + textR * MathF.Sin(angle);
+            namePaint.Color  = StatColors[i].WithAlpha(180);
+            valuePaint.Color = StatColors[i];
+            canvas.DrawText(labels[i],                              lx, ly,                  SKTextAlign.Center, labelFont, namePaint);
+            canvas.DrawText(((int)_radarCurrent[i]).ToString(),     lx, ly + valueSz * 1.1f, SKTextAlign.Center, valueFont, valuePaint);
         }
     }
 
-    private void DrawMoves(SKCanvas canvas, PKM? pk, SKRect area, bool light)
+    private static float[] GetRadarStats(PKM pk)
     {
-        string MoveName(int id) =>
-            id > 0 && id < _strings.movelist.Length ? _strings.movelist[id] : "—";
+        var s = pk.GetStats(pk.PersonalInfo);
+        // Clockwise from top: HP, Atk, Def, Spe, SpD, SpA
+        return [(float)s[0], (float)s[1], (float)s[2], (float)s[5], (float)s[4], (float)s[3]];
+    }
 
-        string[] moveNames = pk is not null
-            ? [MoveName(pk.Move1), MoveName(pk.Move2), MoveName(pk.Move3), MoveName(pk.Move4)]
-            : ["—", "—", "—", "—"];
+    private void StartRadarAnimation(float[] target)
+    {
+        bool adaptive = Preferences.Default.Get(SettingsPage.KeyRadarAdaptive, false);
+        _radarVisMax = adaptive
+            ? Math.Max(target.Max() / 0.78f, 80f)
+            : 255f;
 
-        var dimColor  = light ? new SKColor(100, 115, 145) : new SKColor(100, 125, 175);
-        var textColor = light ? new SKColor(13,  17,  23)  : new SKColor(220, 228, 255);
+        _radarAnimCts?.Cancel();
+        _radarAnimCts = new CancellationTokenSource();
+        var ct    = _radarAnimCts.Token;
+        var start = _radarCurrent.ToArray();
 
-        float padL = area.Left + 16f;
-
-        using var headerPaint = new SKPaint { Color = dimColor, TextSize = 16f, IsAntialias = true };
-        canvas.DrawText("MOVES", padL, area.Top + 22f, headerPaint);
-
-        float rowH = (area.Height - 28f) / 4f;
-        using var movePaint = new SKPaint { Color = textColor, TextSize = 21f, IsAntialias = true };
-        for (int i = 0; i < 4; i++)
+        _ = Task.Run(async () =>
         {
-            float y = area.Top + 28f + (i + 0.5f) * rowH + 8f;
-            canvas.DrawText(moveNames[i], padL, y, movePaint);
+            const int durationMs = 380;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (!ct.IsCancellationRequested)
+            {
+                float raw  = (float)sw.ElapsedMilliseconds / durationMs;
+                float t    = Math.Clamp(raw, 0f, 1f);
+                float ease = t < 0.5f ? 4 * t * t * t : 1 - MathF.Pow(-2 * t + 2, 3) / 2;
+                for (int i = 0; i < 6; i++)
+                    _radarCurrent[i] = start[i] + (target[i] - start[i]) * ease;
+                MainThread.BeginInvokeOnMainThread(() => RadarCanvas.InvalidateSurface());
+                if (t >= 1f) break;
+                await Task.Delay(16, ct).ConfigureAwait(false);
+            }
+        }, ct);
+    }
+
+    private static void DrawHexPath(SKCanvas canvas, float cx, float cy, float r, int n, SKPaint paint)
+    {
+        using var path = new SKPath();
+        for (int i = 0; i < n; i++)
+        {
+            float angle = MathF.PI * 2 * i / n - MathF.PI / 2;
+            float x = cx + r * MathF.Cos(angle);
+            float y = cy + r * MathF.Sin(angle);
+            if (i == 0) path.MoveTo(x, y); else path.LineTo(x, y);
         }
+        path.Close();
+        canvas.DrawPath(path, paint);
     }
 
     // ──────────────────────────────────────────────
@@ -272,9 +468,8 @@ public partial class BankViewPage : ContentPage
     private void CycleDetailView()
     {
         _detailView = _detailView == 0 ? 1 : 0;
-        InfoPanel.IsVisible   = _detailView == 0;
-        StatsCanvas.IsVisible = _detailView == 1;
-        UpdateDetail();
+        InfoPanel.IsVisible  = _detailView == 0;
+        MovesPanel.IsVisible = _detailView == 1;
     }
 
     // ──────────────────────────────────────────────
@@ -283,14 +478,12 @@ public partial class BankViewPage : ContentPage
 
     private void OnPrevBoxTapped(object sender, EventArgs e)
     {
-        if (_boxIndex > 0)
-            _ = LoadBoxAsync(_boxIndex - 1);
+        if (_boxIndex > 0) _ = LoadBoxAsync(_boxIndex - 1);
     }
 
     private void OnNextBoxTapped(object sender, EventArgs e)
     {
-        if (_boxIndex < _bank.Boxes.Count - 1)
-            _ = LoadBoxAsync(_boxIndex + 1);
+        if (_boxIndex < _bank.Boxes.Count - 1) _ = LoadBoxAsync(_boxIndex + 1);
     }
 
     // ──────────────────────────────────────────────
