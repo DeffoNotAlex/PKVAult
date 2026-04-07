@@ -1,5 +1,13 @@
 Tests/PKHeX.Core.Tests/Legality/Private/
 
+# Internal/dev-only files — never commit
+Assets4Claude/
+claude_images/
+scripts/
+sprites/
+CLAUDE.md
+PKHeX.Mobile/PORTING_PLAN.md
+
 
 #################
 ## Eclipse
