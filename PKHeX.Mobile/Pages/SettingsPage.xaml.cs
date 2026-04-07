@@ -41,7 +41,7 @@ public partial class SettingsPage : ContentPage
         ShinySwitch.IsToggled         = Preferences.Default.Get(KeyShinySprites, true);
         RadarAdaptiveSwitch.IsToggled = Preferences.Default.Get(KeyRadarAdaptive, false);
         LegalitySwitch.IsToggled      = Preferences.Default.Get(KeyLegalityBadge, false);
-        ThemeSwitch.IsToggled         = ThemeService.Current == AppTheme.Light;
+        ThemeSwitch.IsToggled         = ThemeService.Current == PkTheme.Light;
 
         _loading = false;
 
@@ -64,9 +64,9 @@ public partial class SettingsPage : ContentPage
 
     private void UpdateHighlight()
     {
-        var focusedBg     = Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#EEF2FF" : "#182845");
+        var focusedBg     = Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#EEF2FF" : "#182845");
         var focusedStroke = Color.FromArgb("#4F80FF");
-        var normalBg      = Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#FFFFFF" : "#111827");
+        var normalBg      = Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#FFFFFF" : "#111827");
 
         for (int i = 0; i < _rows.Length; i++)
         {
@@ -181,7 +181,7 @@ public partial class SettingsPage : ContentPage
     private void OnThemeSwitchToggled(object sender, ToggledEventArgs e)
     {
         if (_loading) return;
-        ThemeService.Apply(e.Value ? AppTheme.Light : AppTheme.Dark);
+        ThemeService.Apply(e.Value ? PkTheme.Light : PkTheme.Dark);
         UpdateHighlight();
     }
 

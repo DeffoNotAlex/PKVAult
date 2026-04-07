@@ -140,7 +140,7 @@ public partial class GamePage : ContentPage
 
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
-        SpriteBgImage.IsVisible = ThemeService.Current == AppTheme.Dark;
+        SpriteBgImage.IsVisible = ThemeService.Current == PkTheme.Dark;
 
         _secondary.Show();
 
@@ -166,7 +166,7 @@ public partial class GamePage : ContentPage
 
     private void OnThemeChanged()
     {
-        SpriteBgImage.IsVisible = ThemeService.Current == AppTheme.Dark;
+        SpriteBgImage.IsVisible = ThemeService.Current == PkTheme.Dark;
         TopBgCanvas.InvalidateSurface();
         BoxCanvas.InvalidateSurface();
         RadarCanvas.InvalidateSurface();
@@ -764,7 +764,7 @@ public partial class GamePage : ContentPage
         float h = e.Info.Height;
 
         // In light mode, fill with solid background instead of dark overlay over image
-        if (ThemeService.Current == AppTheme.Light)
+        if (ThemeService.Current == PkTheme.Light)
         {
             canvas.Clear(ThemeService.CanvasBg);
         }

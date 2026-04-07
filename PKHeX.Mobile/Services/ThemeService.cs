@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace PKHeX.Mobile.Services;
 
-public enum AppTheme { Dark, Light }
+public enum PkTheme { Dark, Light }
 
 /// <summary>
 /// Manages the active color theme. Call ApplyOnStartup() at launch,
@@ -13,7 +13,7 @@ public static class ThemeService
 {
     public const string PrefKey = "app_theme";
 
-    public static AppTheme Current { get; private set; } = AppTheme.Dark;
+    public static PkTheme Current { get; private set; } = PkTheme.Dark;
 
     /// <summary>Fired on the main thread after the theme dictionary is swapped.</summary>
     public static event Action? ThemeChanged;
@@ -30,11 +30,11 @@ public static class ThemeService
     public static SKColor RadarStat  => Pick(new SKColor(0x4A, 0x55, 0x68),  new SKColor(0x88, 0x92, 0xB5));
 
     private static SKColor Pick(SKColor light, SKColor dark)
-        => Current == AppTheme.Light ? light : dark;
+        => Current == PkTheme.Light ? light : dark;
 
     // ── Theme switching ──────────────────────────────────────────────────────
 
-    public static void Apply(AppTheme theme)
+    public static void Apply(PkTheme theme)
     {
         Current = theme;
         Preferences.Default.Set(PrefKey, (int)theme);
@@ -45,16 +45,16 @@ public static class ThemeService
     /// <summary>Call once at startup before any page loads. Does not fire ThemeChanged.</summary>
     public static void ApplyOnStartup()
     {
-        var saved = (AppTheme)Preferences.Default.Get(PrefKey, (int)AppTheme.Dark);
+        var saved = (PkTheme)Preferences.Default.Get(PrefKey, (int)PkTheme.Dark);
         Current = saved;
         SwapDictionary(saved);
     }
 
-    private static void SwapDictionary(AppTheme theme)
+    private static void SwapDictionary(PkTheme theme)
     {
         if (Application.Current is null) return;
         var merged = Application.Current.Resources.MergedDictionaries;
         merged.Clear();
-        merged.Add(theme == AppTheme.Light ? new LightTheme() : new DarkTheme());
+        merged.Add(theme == PkTheme.Light ? new LightTheme() : new DarkTheme());
     }
 }

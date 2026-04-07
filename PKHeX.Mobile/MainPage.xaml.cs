@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using PKHeX.Core;
 using PKHeX.Mobile.Pages;
 using PKHeX.Mobile.Services;
+using PKHeX.Mobile.Theme;
 
 namespace PKHeX.Mobile;
 
@@ -434,9 +435,9 @@ public partial class MainPage : ContentPage
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        private static Color ColNormal    => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#FFFFFF" : "#131B35");
-        private static Color ColCursor    => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#EEF2FF" : "#152040");
-        private static Color ColLoaded    => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#E8F0FF" : "#1C2850");
+        private static Color ColNormal    => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#FFFFFF" : "#131B35");
+        private static Color ColCursor    => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#EEF2FF" : "#152040");
+        private static Color ColLoaded    => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#E8F0FF" : "#1C2850");
         private static Color StrokeNone   => Colors.Transparent;
         private static Color StrokeCursor => Color.FromArgb("#5CA0FF");
         private static Color StrokeLoaded => Color.FromArgb("#3B8BFF");
@@ -491,9 +492,9 @@ public partial class MainPage : ContentPage
             OnPropertyChanged(nameof(TextDim));
         }
 
-        public Color TextPrimary   => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#0D1117" : "#EDF0FF");
-        public Color TextSecondary => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#4A5568" : "#8892B5");
-        public Color TextDim       => Color.FromArgb(ThemeService.Current == AppTheme.Light ? "#9AA5B4" : "#3D4A6E");
+        public Color TextPrimary   => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#0D1117" : "#EDF0FF");
+        public Color TextSecondary => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#4A5568" : "#8892B5");
+        public Color TextDim       => Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#9AA5B4" : "#3D4A6E");
 
         public SaveEntry Entry { get; }
         public string TrainerName { get; }
