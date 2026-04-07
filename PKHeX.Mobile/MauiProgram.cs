@@ -18,6 +18,8 @@ public static class MauiProgram
                 fonts.AddFont("Nunito-ExtraBold.ttf", "NunitoExtraBold");
                 fonts.AddFont("Quicksand-Bold.ttf", "Quicksand");
                 fonts.AddFont("Quicksand-ExtraBold.ttf", "QuicksandExtraBold");
+                fonts.AddFont("Phosphor-Regular.ttf", "Phosphor");
+                fonts.AddFont("Phosphor-Fill.ttf", "PhosphorFill");
             })
             .ConfigureMauiHandlers(handlers =>
             {
