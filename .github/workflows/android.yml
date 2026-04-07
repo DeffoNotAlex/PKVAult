@@ -45,9 +45,7 @@ jobs:
 
       - name: Upload APK to Release
         run: |
-          echo "--- APK output directory contents ---"
-          find PKHeX.Mobile/bin/Release/net10.0-android -name "*.apk"
-          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "*.apk" | head -1)
+          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "com.pkvault.app-Signed.apk" | head -1)
           echo "Found APK: $APK"
           cp "$APK" PKVault.apk
           gh release delete nightly --yes 2>/dev/null || true
