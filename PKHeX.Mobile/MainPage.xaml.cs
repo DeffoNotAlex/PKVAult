@@ -247,10 +247,11 @@ public partial class MainPage : ContentPage
 
     private void UpdateActionHighlight()
     {
-        var focusBg = Color.FromArgb("#182242");
-        var focusStroke = Color.FromArgb("#3B8BFF");
-        var normalBg = Color.FromArgb("#131B35");
-        var normalStroke = Color.FromArgb("#0DFFFFFF");
+        bool light = ThemeService.Current == PkTheme.Light;
+        var focusBg      = Color.FromArgb(light ? "#EEF2FF" : "#182242");
+        var focusStroke  = Color.FromArgb("#3B8BFF");
+        var normalBg     = Color.FromArgb(light ? "#FFFFFF" : "#131B35");
+        var normalStroke = Color.FromArgb(light ? "#E0E4EC" : "#0DFFFFFF");
 
         // Primary button focus
         bool primaryFocused = _focusSection == 1 && _actionCursor == 0;
@@ -261,7 +262,7 @@ public partial class MainPage : ContentPage
         {
             bool focused = _focusSection == 1 && _actionCursor == i + 1;
             _actionTiles[i].BackgroundColor = focused ? focusBg : normalBg;
-            _actionTiles[i].Stroke = focused ? focusStroke : Color.FromArgb("#0DFFFFFF");
+            _actionTiles[i].Stroke          = focused ? focusStroke : normalStroke;
         }
 
         _secondary.UpdateMainMenuState(_cardCursor, _focusSection, _actionCursor);

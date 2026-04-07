@@ -257,7 +257,7 @@
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
-                                    BackgroundColor="#1FA78BFA"
+                                    BackgroundColor="{DynamicResource ThIconBgBlue}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
                                 <Label Text="🔍" FontSize="16"
@@ -279,7 +279,7 @@
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
-                                    BackgroundColor="#1FFF6B9D"
+                                    BackgroundColor="{DynamicResource ThIconBgPink}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
                                 <Label Text="🎁" FontSize="16"
@@ -301,7 +301,7 @@
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
-                                    BackgroundColor="#1FFF9F43"
+                                    BackgroundColor="{DynamicResource ThIconBgOrange}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
                                 <Label Text="📤" FontSize="16"
@@ -323,7 +323,7 @@
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
                             <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
-                                    BackgroundColor="#1F34D990"
+                                    BackgroundColor="{DynamicResource ThIconBgGreen}"
                                     WidthRequest="34" HeightRequest="34"
                                     HorizontalOptions="Center">
                                 <Label Text="🏦" FontSize="16"

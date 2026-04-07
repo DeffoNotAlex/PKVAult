@@ -52,7 +52,17 @@
     <Color x:Key="ThExportMenuBg">#EEE8FF</Color>
     <Color x:Key="ThExportMenuText">#6040AA</Color>
 
-    <!-- Tile icons (secondary action tiles) -->
+    <!-- Secondary action tiles -->
     <Color x:Key="ThTileStroke">#E0E4EC</Color>
+    <Color x:Key="ThTileBg">#FFFFFF</Color>
+    <Color x:Key="ThTileFocusBg">#EEF2FF</Color>
+    <Color x:Key="ThTileFocusStroke">#3B8BFF</Color>
+    <Color x:Key="ThTileNormalStroke">#E0E4EC</Color>
+
+    <!-- Tile icon badge tints (stronger alpha on light so they're visible on white) -->
+    <Color x:Key="ThIconBgBlue">#30A78BFA</Color>
+    <Color x:Key="ThIconBgPink">#30FF6B9D</Color>
+    <Color x:Key="ThIconBgOrange">#30FF9F43</Color>
+    <Color x:Key="ThIconBgGreen">#3034D990</Color>
 
 </ResourceDictionary>
