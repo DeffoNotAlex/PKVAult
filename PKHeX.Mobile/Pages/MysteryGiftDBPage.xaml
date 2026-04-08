@@ -57,9 +57,32 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border StrokeShape="RoundRectangle 12" StrokeThickness="1"
-                            BackgroundColor="{DynamicResource ThCardBg}"
                             Stroke="{DynamicResource ThDivider}"
                             Padding="0">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor">
+                                                <Setter.Value>
+                                                    <AppThemeBinding Dark="#131B35" Light="#FFFFFF" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor">
+                                                <Setter.Value>
+                                                    <AppThemeBinding Dark="#182845" Light="#EEF2FF" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
                         <Grid ColumnDefinitions="56,*,Auto" Padding="10,8" ColumnSpacing="10">
                             <Image Grid.Column="0"
                                    Source="{Binding SpriteSource}"

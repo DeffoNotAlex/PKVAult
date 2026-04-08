@@ -153,7 +153,7 @@ public partial class GamePage : ContentPage
 
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
-        SpriteBgImage.IsVisible = ThemeService.Current == PkTheme.Dark;
+        SpriteBgImage.IsVisible = true;
 
         _secondary.Show();
 
@@ -182,7 +182,7 @@ public partial class GamePage : ContentPage
 
     private void OnThemeChanged()
     {
-        SpriteBgImage.IsVisible = ThemeService.Current == PkTheme.Dark;
+        SpriteBgImage.IsVisible = true;
         TopBgCanvas.InvalidateSurface();
         BoxCanvas.InvalidateSurface();
         RadarCanvas.InvalidateSurface();
@@ -863,17 +863,13 @@ public partial class GamePage : ContentPage
         float w = e.Info.Width;
         float h = e.Info.Height;
 
-        // In light mode, fill with solid background instead of dark overlay over image
-        if (ThemeService.Current == PkTheme.Light)
-        {
-            canvas.Clear(ThemeService.CanvasBg);
-        }
-        else
-        {
-            // Semi-transparent dark overlay so text is readable over the background image
-            using var dimPaint = new SKPaint { Color = new SKColor(7, 12, 26, 60) };
-            canvas.DrawRect(0, 0, w, h, dimPaint);
-        }
+        // Semi-transparent overlay so text stays readable over the background image.
+        // Light mode uses a heavier white wash to keep contrast; dark uses a light dark tint.
+        var overlayColor = ThemeService.Current == PkTheme.Light
+            ? new SKColor(242, 244, 248, 195)   // ~76% white wash
+            : new SKColor(7, 12, 26, 60);        // ~24% dark tint
+        using var dimPaint = new SKPaint { Color = overlayColor };
+        canvas.DrawRect(0, 0, w, h, dimPaint);
 
         // Radial glow — game accent color at low opacity
         var gameColor = _sav != null
