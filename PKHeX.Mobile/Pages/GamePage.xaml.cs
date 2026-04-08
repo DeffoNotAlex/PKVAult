@@ -42,6 +42,19 @@ public partial class GamePage : ContentPage
     private readonly Stopwatch _cursorTimer = Stopwatch.StartNew();
     private IDispatcherTimer? _pulseTimer;
 
+    // Bounce animation: slot that just received the cursor
+    private int  _bounceSlot   = -1;
+    private long _bounceStartMs;
+
+    // Box slide direction (-1 = prev box, +1 = next box, 0 = no slide)
+    private int _boxSlideDir;
+
+#if ANDROID
+    // Pokémon cry playback
+    private Android.Media.MediaPlayer? _cryPlayer;
+    private string _lastCrySlug = "";
+#endif
+
     // Pre-computed grid layout (recalculated on canvas size change)
     private SKRect[] _slotRects = [];
     private float _gridSlotSize;
@@ -159,6 +172,9 @@ public partial class GamePage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
+        _cryPlayer?.Stop();
+        _cryPlayer?.Release();
+        _cryPlayer = null;
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
         _pulseTimer?.Stop();
@@ -189,8 +205,15 @@ public partial class GamePage : ContentPage
     {
         if (_sav is null || _loadingBox) return;
         _loadingBox = true;
+        int slideDir = _boxSlideDir;
+        _boxSlideDir = 0;
         try
         {
+            // Slide out existing content (only when the canvas is visible — single-screen mode)
+            bool canSlide = slideDir != 0 && BoxCanvas.Width > 10;
+            if (canSlide)
+                await BoxCanvas.TranslateTo(-slideDir * BoxCanvas.Width, 0, 120, Easing.CubicIn);
+
             _currentBox = _sav.GetBoxData(box);
             var boxName = _sav is IBoxDetailName named
                 ? named.GetBoxName(box)
@@ -214,6 +237,14 @@ public partial class GamePage : ContentPage
             _legalityCache = new bool?[_currentBox.Length];
             await _sprites.PreloadBoxAsync(_currentBox);
             BoxCanvas.InvalidateSurface();
+
+            if (canSlide)
+            {
+                // Pre-position canvas on the incoming side, then slide to rest
+                BoxCanvas.TranslationX = slideDir * BoxCanvas.Width;
+                await BoxCanvas.TranslateTo(0, 0, 140, Easing.CubicOut);
+            }
+
             UpdateTopPanel();
             UpdateInfoBar();
             if (_showLegalityBadges) _ = RunLegalityBadgesAsync(_currentBox);
@@ -228,6 +259,7 @@ public partial class GamePage : ContentPage
     private void OnPrevBox(object sender, EventArgs e)
     {
         if (_sav is null || _boxIndex <= 0) return;
+        _boxSlideDir = -1;
         _boxIndex--;
         DeselectSlot();
         LoadBox(_boxIndex);
@@ -236,6 +268,7 @@ public partial class GamePage : ContentPage
     private void OnNextBox(object sender, EventArgs e)
     {
         if (_sav is null || _boxIndex >= _sav.BoxCount - 1) return;
+        _boxSlideDir = +1;
         _boxIndex++;
         DeselectSlot();
         LoadBox(_boxIndex);
@@ -322,6 +355,17 @@ public partial class GamePage : ContentPage
             {
                 var sprite = _sprites.GetSprite(pk);
                 float spriteScale = isCursor ? 0.75f : 0.70f; // 108% when cursor'd (0.70*1.08≈0.75)
+                // Bounce: slot that just received the cursor pops out briefly
+                if (i == _bounceSlot)
+                {
+                    long bounceElapsed = _cursorTimer.ElapsedMilliseconds - _bounceStartMs;
+                    if (bounceElapsed < 300)
+                    {
+                        float bt = bounceElapsed / 300f;
+                        float decay = (1f - bt) * (1f - bt); // ease-out quad
+                        spriteScale += 0.12f * decay;
+                    }
+                }
                 byte alpha = isSource ? (byte)70 : (byte)255;
                 DrawSprite(canvas, sprite, rect, spriteScale, alpha);
             }
@@ -752,6 +796,50 @@ public partial class GamePage : ContentPage
         """;
 
     // ──────────────────────────────────────────────
+    //  Pokémon cry (Android)
+    // ──────────────────────────────────────────────
+
+#if ANDROID
+    private async void PlayCry(string speciesName)
+    {
+        var slug = ToShowdownSlug(speciesName);
+        if (slug == _lastCrySlug) return;
+        _lastCrySlug = slug;
+
+        var cryDir  = Path.Combine(FileSystem.CacheDirectory, "cries");
+        var cryPath = Path.Combine(cryDir, slug + ".ogg");
+
+        if (!File.Exists(cryPath))
+        {
+            Directory.CreateDirectory(cryDir);
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+                var bytes = await http.GetByteArrayAsync(
+                    $"https://play.pokemonshowdown.com/audio/cries/{slug}.ogg");
+                await File.WriteAllBytesAsync(cryPath, bytes);
+            }
+            catch { return; }
+        }
+
+        // Guard: species may have changed while we were downloading
+        if (_lastCrySlug != slug) return;
+
+        _cryPlayer?.Stop();
+        _cryPlayer?.Reset();
+        _cryPlayer?.Release();
+        _cryPlayer = new Android.Media.MediaPlayer();
+        try
+        {
+            _cryPlayer.SetDataSource(cryPath);
+            _cryPlayer.Prepare();
+            _cryPlayer.Start();
+        }
+        catch { _cryPlayer = null; }
+    }
+#endif
+
+    // ──────────────────────────────────────────────
     //  Top screen background (gradient glow)
     // ──────────────────────────────────────────────
 
@@ -1052,7 +1140,9 @@ public partial class GamePage : ContentPage
         int next = _cursorSlot + delta;
         if ((uint)next >= (uint)_currentBox.Length) return;
 
-        _cursorSlot = next;
+        _cursorSlot    = next;
+        _bounceSlot    = next;
+        _bounceStartMs = _cursorTimer.ElapsedMilliseconds;
         UpdateTopPanel();
         UpdateInfoBar();
         BoxCanvas.InvalidateSurface();
@@ -1157,6 +1247,9 @@ public partial class GamePage : ContentPage
         {
             _previewSpecies = key;
             LoadAnimatedSprite(pk);
+#if ANDROID
+            PlayCry(speciesName);
+#endif
         }
         else if (_spriteWebViewReady)
         {

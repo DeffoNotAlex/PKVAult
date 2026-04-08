@@ -41,6 +41,10 @@ public partial class SecondScreenPage : ContentPage
     private int  _lastActionCursor;
     private bool _mainMenuVisible;
 
+    // Bounce animation: box grid slot that just received the cursor
+    private int  _bounceSlot    = -1;
+    private long _bounceStartMs;
+
     // Bank grid state (Mode C — driven by BankViewPage)
     private PKM?[]   _bankSlots      = [];
     private int      _bankCursorSlot;
@@ -76,6 +80,9 @@ public partial class SecondScreenPage : ContentPage
         bool moveMode, PKM? movePk, int moveSourceBox, int moveSourceSlot,
         int currentBoxIndex, string boxName, bool?[] legalityCache, bool showLegalityBadges)
     {
+        int prevBoxIndex = _currentBoxIndex;
+        bool wasShowingGrid = BoxGridPanel.IsVisible;
+
         _box              = box;
         _cursorSlot       = cursorSlot;
         _selectedSlot     = selectedSlot;
@@ -98,6 +105,15 @@ public partial class SecondScreenPage : ContentPage
 
         BoxNameLabel.Text = boxName;
 
+        // Slide in new box content when the box index changes
+        if (wasShowingGrid && currentBoxIndex != prevBoxIndex)
+        {
+            int dir = currentBoxIndex > prevBoxIndex ? 1 : -1;
+            double w = BoxCanvas.Width > 10 ? BoxCanvas.Width : 360;
+            BoxCanvas.TranslationX = dir * w;
+            _ = BoxCanvas.TranslateTo(0, 0, 180, Easing.CubicOut);
+        }
+
         var pk = cursorSlot < box.Length ? box[cursorSlot] : null;
         InfoSpeciesNum.Text  = pk?.Species > 0 ? $"#{pk.Species:000}" : "";
         InfoSpeciesName.Text = pk?.Species > 0
@@ -110,6 +126,9 @@ public partial class SecondScreenPage : ContentPage
 
     public void UpdateCursor(int cursorSlot, int selectedSlot, bool moveMode, PKM? movePk, int currentBoxIndex)
     {
+        _bounceSlot    = cursorSlot;
+        _bounceStartMs = _pulseTimer.ElapsedMilliseconds;
+
         _cursorSlot      = cursorSlot;
         _selectedSlot    = selectedSlot;
         _moveMode        = moveMode;
@@ -350,7 +369,17 @@ public partial class SecondScreenPage : ContentPage
             {
                 var sprite = _sprites.GetSprite(pk);
                 float scale = isCursor ? 0.75f : 0.70f;
-                byte alpha  = isSource ? (byte)70 : (byte)255;
+                // Bounce: pop out on cursor land
+                if (i == _bounceSlot)
+                {
+                    long bounceElapsed = _pulseTimer.ElapsedMilliseconds - _bounceStartMs;
+                    if (bounceElapsed < 300)
+                    {
+                        float bt = bounceElapsed / 300f;
+                        scale += 0.12f * (1f - bt) * (1f - bt);
+                    }
+                }
+                byte alpha = isSource ? (byte)70 : (byte)255;
                 DrawSprite(canvas, sprite, rect, scale, alpha);
             }
 
