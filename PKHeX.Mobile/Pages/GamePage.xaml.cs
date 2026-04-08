@@ -745,11 +745,28 @@ public partial class GamePage : ContentPage
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
 
-        var slug  = ToShowdownSlug(name);
-        var shiny = pk.IsShiny;
+        var speciesSlug = ToShowdownSlug(name);
+        var shiny       = pk.IsShiny;
+
+        // Build form-specific slug (e.g. "giratina-origin", "meloetta-pirouette")
+        string slug = speciesSlug;
+        string? baseSlug = null;
+        if (pk.Form != 0)
+        {
+            var formName = ShowdownParsing.GetStringFromForm(pk.Form, _strings, pk.Species, pk.Context);
+            var formSuffix = ToShowdownFormSuffix(formName);
+            if (formSuffix.Length > 0)
+            {
+                slug     = $"{speciesSlug}-{formSuffix}";
+                baseSlug = speciesSlug; // fallback if CDN doesn't have this form
+            }
+        }
 
         // Fetch from disk cache or download; falls back to static canvas if unavailable
         var dataUri = await Services.SpriteCacheService.GetDataUriAsync(slug, shiny);
+        // Form sprite not on CDN — fall back to base-form animated sprite
+        if (dataUri is null && baseSlug is not null)
+            dataUri = await Services.SpriteCacheService.GetDataUriAsync(baseSlug, shiny);
         if (dataUri is null)
         {
             // Nothing cached and download failed — show static sprite, don't break WebView state
@@ -782,6 +799,38 @@ public partial class GamePage : ContentPage
             .Replace("♀", "f").Replace("♂", "m")
             .Replace("é", "e");
         return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
+    }
+
+    /// <summary>
+    /// Converts a PKHeX form display name to a Showdown CDN form suffix.
+    /// E.g. "Origin Forme" → "origin", "Sandy Cloak" → "sandy", "Pirouette" → "pirouette".
+    /// Returns empty string if the form name produces no usable suffix.
+    /// </summary>
+    private static string ToShowdownFormSuffix(string formName)
+    {
+        if (string.IsNullOrWhiteSpace(formName)) return "";
+
+        var s = formName.ToLowerInvariant()
+            .Replace("é", "e")
+            .Replace("♀", "f")
+            .Replace("♂", "m");
+
+        // Strip trailing descriptor words that Showdown omits from its slugs
+        string[] dropSuffixes = [" forme", " form", " mode", " cloak", " style",
+                                  " size", " rider", " pattern", " face", " plumage"];
+        foreach (var suffix in dropSuffixes)
+        {
+            if (s.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                s = s[..^suffix.Length];
+                break;
+            }
+        }
+
+        // Replace spaces/underscores with hyphens; strip everything else non-alphanumeric
+        s = s.Replace(' ', '-').Replace('_', '-');
+        s = System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9-]", "");
+        return s.Trim('-');
     }
 
     private static string BuildSpriteShell(string src) => $$"""

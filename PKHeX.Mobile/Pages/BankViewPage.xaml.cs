@@ -214,7 +214,24 @@ public partial class BankViewPage : ContentPage
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
 
-        var dataUri = await SpriteCacheService.GetDataUriAsync(ToShowdownSlug(name), pk.IsShiny);
+        var speciesSlug = ToShowdownSlug(name);
+
+        string slug = speciesSlug;
+        string? baseSlug = null;
+        if (pk.Form != 0)
+        {
+            var formName = ShowdownParsing.GetStringFromForm(pk.Form, _strings, pk.Species, pk.Context);
+            var formSuffix = ToShowdownFormSuffix(formName);
+            if (formSuffix.Length > 0)
+            {
+                slug     = $"{speciesSlug}-{formSuffix}";
+                baseSlug = speciesSlug;
+            }
+        }
+
+        var dataUri = await SpriteCacheService.GetDataUriAsync(slug, pk.IsShiny);
+        if (dataUri is null && baseSlug is not null)
+            dataUri = await SpriteCacheService.GetDataUriAsync(baseSlug, pk.IsShiny);
         if (dataUri is null)
         {
             PreviewCanvas.IsVisible = true;
@@ -242,6 +259,29 @@ public partial class BankViewPage : ContentPage
             .Replace("♀", "f").Replace("♂", "m")
             .Replace("é", "e");
         return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
+    }
+
+    private static string ToShowdownFormSuffix(string formName)
+    {
+        if (string.IsNullOrWhiteSpace(formName)) return "";
+
+        var s = formName.ToLowerInvariant()
+            .Replace("é", "e").Replace("♀", "f").Replace("♂", "m");
+
+        string[] dropSuffixes = [" forme", " form", " mode", " cloak", " style",
+                                  " size", " rider", " pattern", " face", " plumage"];
+        foreach (var suffix in dropSuffixes)
+        {
+            if (s.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                s = s[..^suffix.Length];
+                break;
+            }
+        }
+
+        s = s.Replace(' ', '-').Replace('_', '-');
+        s = System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9-]", "");
+        return s.Trim('-');
     }
 
     private static string BuildSpriteShell(string src) => $$"""
