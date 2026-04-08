@@ -1140,7 +1140,7 @@ public partial class GamePage : ContentPage
                 break;
             case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonStart:  OpenActionMenu(); break;
-            case Android.Views.Keycode.ButtonThumbRight: PlayCryForCurrentSlot(); break;
+            case Android.Views.Keycode.ButtonThumbr: PlayCryForCurrentSlot(); break;
         }
     }
 #endif
