@@ -77,6 +77,12 @@
                                 BackgroundColor="{DynamicResource ThCardBg}"
                                 Stroke="{DynamicResource ThDivider}"
                                 Padding="0">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsHighlighted}" Value="True">
+                                    <Setter Property="Stroke" Value="#4A90D9" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                </DataTrigger>
+                            </Border.Triggers>
                         <Grid ColumnDefinitions="56,*,Auto" Padding="10,8" ColumnSpacing="10">
                             <Image Grid.Column="0"
                                    Source="{Binding SpriteSource}"

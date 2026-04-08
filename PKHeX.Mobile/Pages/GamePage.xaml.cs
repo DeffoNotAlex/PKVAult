@@ -1308,8 +1308,8 @@ public partial class GamePage : ContentPage
         TopIdlePanel.IsVisible     = false;
         TopSelectedPanel.IsVisible = true;
 
-        // Only reload WebView if the species/shiny changed (avoid flicker on cursor move)
-        int key = pk.Species * 2 + (pk.IsShiny ? 1 : 0);
+        // Only reload WebView if the species/form/shiny changed (avoid flicker on cursor move)
+        int key = (pk.Species << 10) | (pk.Form << 1) | (pk.IsShiny ? 1 : 0);
         if (key != _previewSpecies)
         {
             _previewSpecies = key;

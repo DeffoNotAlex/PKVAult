@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
 
@@ -9,7 +10,7 @@ public partial class DatabasePage : ContentPage
     private List<PokemonEntry> _all = [];
     private List<PokemonEntry> _filtered = [];
     private int _gpIndex = -1;
-    private bool _gpNavigating;
+    private PokemonEntry? _highlightedEntry;
     private DateTime _lastListNav = DateTime.MinValue;
 
     public DatabasePage()
@@ -76,11 +77,10 @@ public partial class DatabasePage : ContentPage
         _lastListNav = DateTime.UtcNow;
 
         if (_filtered.Count == 0) return;
+        if (_highlightedEntry is not null) _highlightedEntry.IsHighlighted = false;
         _gpIndex = Math.Clamp(_gpIndex + delta, 0, _filtered.Count - 1);
-
-        _gpNavigating = true;
-        ResultsView.SelectedItem = _filtered[_gpIndex];
-        _gpNavigating = false;
+        _highlightedEntry = _filtered[_gpIndex];
+        _highlightedEntry.IsHighlighted = true;
 
         ResultsView.ScrollTo(_gpIndex, -1, ScrollToPosition.MakeVisible, false);
     }
@@ -140,6 +140,7 @@ public partial class DatabasePage : ContentPage
             (!shinyOnly || e.Pk.IsShiny)
         ).ToList();
 
+        if (_highlightedEntry is not null) { _highlightedEntry.IsHighlighted = false; _highlightedEntry = null; }
         _gpIndex = -1;
         ResultsView.ItemsSource = _filtered;
     }
@@ -148,7 +149,6 @@ public partial class DatabasePage : ContentPage
 
     private async void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_gpNavigating) return;
         if (e.CurrentSelection.FirstOrDefault() is not PokemonEntry entry)
             return;
 
@@ -157,11 +157,29 @@ public partial class DatabasePage : ContentPage
     }
 }
 
-public record PokemonEntry(
-    PKM Pk,
-    int Box,
-    int Slot,
-    string DisplayName,
-    string SubInfo,
-    string BoxSlotLabel,
-    ImageSource SpriteSource);
+public class PokemonEntry(PKM pk, int box, int slot,
+    string displayName, string subInfo, string boxSlotLabel, ImageSource spriteSource)
+    : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public PKM Pk            { get; } = pk;
+    public int  Box          { get; } = box;
+    public int  Slot         { get; } = slot;
+    public string DisplayName  { get; } = displayName;
+    public string SubInfo      { get; } = subInfo;
+    public string BoxSlotLabel { get; } = boxSlotLabel;
+    public ImageSource SpriteSource { get; } = spriteSource;
+
+    private bool _isHighlighted;
+    public bool IsHighlighted
+    {
+        get => _isHighlighted;
+        set
+        {
+            if (_isHighlighted == value) return;
+            _isHighlighted = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHighlighted)));
+        }
+    }
+}

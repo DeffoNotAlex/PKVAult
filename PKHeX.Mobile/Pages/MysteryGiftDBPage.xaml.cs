@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
 
@@ -9,7 +10,7 @@ public partial class MysteryGiftDBPage : ContentPage
     private List<GiftEntry> _all = [];
     private List<GiftEntry> _filtered = [];
     private int _gpIndex = -1;
-    private bool _gpNavigating;
+    private GiftEntry? _highlightedEntry;
     private DateTime _lastListNav = DateTime.MinValue;
 
     public MysteryGiftDBPage()
@@ -73,11 +74,10 @@ public partial class MysteryGiftDBPage : ContentPage
         _lastListNav = DateTime.UtcNow;
 
         if (_filtered.Count == 0) return;
+        if (_highlightedEntry is not null) _highlightedEntry.IsHighlighted = false;
         _gpIndex = Math.Clamp(_gpIndex + delta, 0, _filtered.Count - 1);
-
-        _gpNavigating = true;
-        GiftList.SelectedItem = _filtered[_gpIndex];
-        _gpNavigating = false;
+        _highlightedEntry = _filtered[_gpIndex];
+        _highlightedEntry.IsHighlighted = true;
 
         GiftList.ScrollTo(_gpIndex, -1, ScrollToPosition.MakeVisible, false);
     }
@@ -135,6 +135,7 @@ public partial class MysteryGiftDBPage : ContentPage
             return true;
         }).ToList();
 
+        if (_highlightedEntry is not null) { _highlightedEntry.IsHighlighted = false; _highlightedEntry = null; }
         _gpIndex = -1;
         GiftList.ItemsSource = _filtered;
     }
@@ -143,7 +144,6 @@ public partial class MysteryGiftDBPage : ContentPage
 
     private async void OnGiftSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (_gpNavigating) return;
         if (e.CurrentSelection.FirstOrDefault() is not GiftEntry entry)
             return;
         GiftList.SelectedItem = null;
@@ -200,9 +200,26 @@ public partial class MysteryGiftDBPage : ContentPage
     }
 }
 
-public record GiftEntry(
-    MysteryGift Gift,
-    string Title,
-    string SubInfo,
-    string GenLabel,
-    ImageSource? SpriteSource);
+public class GiftEntry(MysteryGift gift, string title, string subInfo,
+    string genLabel, ImageSource? spriteSource) : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public MysteryGift Gift    { get; } = gift;
+    public string Title        { get; } = title;
+    public string SubInfo      { get; } = subInfo;
+    public string GenLabel     { get; } = genLabel;
+    public ImageSource? SpriteSource { get; } = spriteSource;
+
+    private bool _isHighlighted;
+    public bool IsHighlighted
+    {
+        get => _isHighlighted;
+        set
+        {
+            if (_isHighlighted == value) return;
+            _isHighlighted = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHighlighted)));
+        }
+    }
+}
