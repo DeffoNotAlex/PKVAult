@@ -29,14 +29,13 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
             .Select(pk => ((ushort)pk.Species, pk.IsShiny));
         await HomeSpriteCacheService.PreloadAsync(homeSlots).ConfigureAwait(false);
 
-        // Fall back: load bundled sprites for form variants (HOME only has base form)
-        // and for any species where HOME download failed.
+        // Fall back: load bundled sprites for anything HOME couldn't provide
         foreach (var pk in box)
         {
             if (pk.Species == 0)
                 continue;
-            // Base-form Pokémon with a HOME sprite cached: bundled not needed
-            if (pk.Form == 0 && HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny) is not null)
+            // Skip bundled load if HOME already has this one
+            if (HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny) is not null)
                 continue;
 
             var key = BuildKey(pk);
@@ -58,25 +57,15 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
 
     public SKBitmap GetSprite(PKM pk)
     {
-        // For alternate forms: use bundled sprite (form-correct) — HOME only has base form.
-        // For base form: prefer high-quality HOME sprite.
-        if (pk.Form == 0)
-        {
-            var home = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny);
-            if (home is not null) return home;
-        }
+        // Prefer high-quality HOME sprite for all forms
+        var home = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny);
+        if (home is not null) return home;
 
-        // Bundled 2D sprite (form-specific)
+        // Fall back to bundled 2D sprite
         var key = BuildKey(pk);
         if (_cache.TryGetValue(key, out var bmp)) return bmp;
-        // Form sprite missing from bundle — alias to base form
         if (pk.Form != 0 && _cache.TryGetValue(BuildBaseKey(pk), out var baseBmp))
             return baseBmp;
-
-        // Last resort: HOME sprite even for non-zero forms (better than empty)
-        var homeFallback = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny);
-        if (homeFallback is not null) return homeFallback;
-
         return GetEmptySprite();
     }
 
