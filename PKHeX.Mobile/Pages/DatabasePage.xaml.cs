@@ -1,5 +1,4 @@
 using PKHeX.Core;
-using PKHeX.Drawing.Mobile.Sprites;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Pages;
@@ -116,13 +115,15 @@ public partial class DatabasePage : ContentPage
                     ? $"{named.GetBoxName(box)} #{slot + 1}"
                     : $"Box {box + 1} #{slot + 1}";
 
-                var spriteKey = "b" + SpriteName.GetResourceStringSprite(
-                    pk.Species, pk.Form, pk.Gender,
-                    pk is IFormArgument fa ? fa.FormArgument : 0u,
-                    pk.Context, pk.IsShiny);
+                var spriteUrl = pk.IsShiny
+                    ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{pk.Species}.png"
+                    : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{pk.Species}.png";
 
-                var source = ImageSource.FromStream(
-                    ct => FileSystem.OpenAppPackageFileAsync($"sprites/{spriteKey}.png").WaitAsync(ct));
+                var source = new UriImageSource
+                {
+                    Uri = new Uri(spriteUrl),
+                    CacheValidity = TimeSpan.FromDays(30),
+                };
 
                 _all.Add(new PokemonEntry(pk, box, slot, displayName, subInfo, boxLabel, source));
             }

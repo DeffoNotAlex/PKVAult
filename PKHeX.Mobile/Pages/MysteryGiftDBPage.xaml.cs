@@ -1,5 +1,4 @@
 using PKHeX.Core;
-using PKHeX.Drawing.Mobile.Sprites;
 using PKHeX.Mobile.Services;
 
 namespace PKHeX.Mobile.Pages;
@@ -98,10 +97,11 @@ public partial class MysteryGiftDBPage : ContentPage
                     ? _strings.specieslist[gift.Species] : gift.Species.ToString();
                 subInfo = $"{speciesName}  Lv.{gift.Level}";
 
-                var spriteKey = "b" + SpriteName.GetResourceStringSprite(
-                    gift.Species, gift.Form, 0, 0, gift.Context, false);
-                sprite = ImageSource.FromStream(
-                    ct => FileSystem.OpenAppPackageFileAsync($"sprites/{spriteKey}.png").WaitAsync(ct));
+                sprite = new UriImageSource
+                {
+                    Uri = new Uri($"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{gift.Species}.png"),
+                    CacheValidity = TimeSpan.FromDays(30),
+                };
             }
             else if (!gift.IsEntity)
             {

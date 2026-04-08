@@ -18,14 +18,26 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
 
     /// <summary>
     /// Pre-loads sprites for all non-empty slots in a box so painting is cache-hit only.
+    /// HOME sprites are downloaded in parallel first; bundled sprites fill any gaps.
     /// Call this before InvalidateSurface.
     /// </summary>
     public async Task PreloadBoxAsync(PKM[] box)
     {
+        // Kick off all HOME sprite downloads in parallel (network or disk cache)
+        var homeSlots = box
+            .Where(pk => pk.Species != 0)
+            .Select(pk => ((ushort)pk.Species, pk.IsShiny));
+        await HomeSpriteCacheService.PreloadAsync(homeSlots).ConfigureAwait(false);
+
+        // Fall back: load bundled sprites for anything HOME couldn't provide
         foreach (var pk in box)
         {
             if (pk.Species == 0)
                 continue;
+            // Skip bundled load if HOME already has this one
+            if (HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny) is not null)
+                continue;
+
             var key = BuildKey(pk);
             if (!_cache.ContainsKey(key))
             {
@@ -45,6 +57,11 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
 
     public SKBitmap GetSprite(PKM pk)
     {
+        // Prefer high-quality HOME sprite if available
+        var home = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny);
+        if (home is not null) return home;
+
+        // Fall back to bundled 2D sprite
         var key = BuildKey(pk);
         if (_cache.TryGetValue(key, out var bmp)) return bmp;
         // Form sprite not yet preloaded — try base form from cache
