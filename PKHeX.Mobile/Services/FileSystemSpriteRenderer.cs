@@ -28,12 +28,30 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
                 continue;
             var key = BuildKey(pk);
             if (!_cache.ContainsKey(key))
-                await TryLoadAsync(key);
+            {
+                var bmp = await TryLoadAsync(key);
+                // Form sprite missing — alias to form 0 so slot isn't blank
+                if (bmp is null && pk.Form != 0)
+                {
+                    var baseKey = BuildBaseKey(pk);
+                    if (!_cache.ContainsKey(baseKey))
+                        await TryLoadAsync(baseKey);
+                    if (_cache.TryGetValue(baseKey, out var baseBmp))
+                        _cache[key] = baseBmp;
+                }
+            }
         }
     }
 
-    public SKBitmap GetSprite(PKM pk) =>
-        _cache.GetValueOrDefault(BuildKey(pk)) ?? GetEmptySprite();
+    public SKBitmap GetSprite(PKM pk)
+    {
+        var key = BuildKey(pk);
+        if (_cache.TryGetValue(key, out var bmp)) return bmp;
+        // Form sprite not yet preloaded — try base form from cache
+        if (pk.Form != 0 && _cache.TryGetValue(BuildBaseKey(pk), out var baseBmp))
+            return baseBmp;
+        return GetEmptySprite();
+    }
 
     public SKBitmap GetSprite(ushort species, byte form, byte gender, uint formArg, bool shiny, EntityContext context)
     {
@@ -61,6 +79,10 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
         uint formArg = pk is IFormArgument fa ? fa.FormArgument : 0u;
         return "b" + SpriteName.GetResourceStringSprite(pk.Species, pk.Form, pk.Gender, formArg, pk.Context, pk.IsShiny);
     }
+
+    // Fallback key: form 0, no formArg — used when a form-specific sprite file is absent
+    private static string BuildBaseKey(PKM pk)
+        => "b" + SpriteName.GetResourceStringSprite(pk.Species, 0, pk.Gender, 0u, pk.Context, pk.IsShiny);
 
     private async Task<SKBitmap?> TryLoadAsync(string name)
     {
