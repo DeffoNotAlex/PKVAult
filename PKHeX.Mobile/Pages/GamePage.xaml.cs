@@ -1166,14 +1166,23 @@ public partial class GamePage : ContentPage
     {
         _menuOpen   = true;
         _menuCursor = 0;
+        ActionMenuOverlay.Opacity = 0;
+        ActionMenuPanel.TranslationY = 48;
         ActionMenuOverlay.IsVisible = true;
         UpdateMenuHighlight();
+        _ = ActionMenuOverlay.FadeTo(1, 180, Easing.CubicOut);
+        _ = ActionMenuPanel.TranslateToAsync(0, 0, 180, Easing.CubicOut);
     }
 
-    private void CloseActionMenu()
+    private async void CloseActionMenu()
     {
         _menuOpen = false;
+        await Task.WhenAll(
+            ActionMenuOverlay.FadeTo(0, 130, Easing.CubicIn),
+            ActionMenuPanel.TranslateToAsync(0, 36, 130, Easing.CubicIn));
         ActionMenuOverlay.IsVisible = false;
+        ActionMenuOverlay.Opacity   = 1;
+        ActionMenuPanel.TranslationY = 0;
     }
 
     private void UpdateMenuHighlight()

@@ -31,6 +31,9 @@ public partial class MainPage : ContentPage
     private IDispatcherTimer? _floatTimer;
     private DateTime          _floatStart = DateTime.UtcNow;
 
+    // Hero cross-fade cancellation
+    private CancellationTokenSource? _heroAnimCts;
+
     public MainPage(ISecondaryDisplay secondary)
     {
         _secondary = secondary;
@@ -117,15 +120,35 @@ public partial class MainPage : ContentPage
 
     // ── Hero preview ──────────────────────────────────────────────────────────
 
-    private void UpdateHeroPreview()
+    private async void UpdateHeroPreview()
     {
+        // Cancel any in-progress cross-fade
+        _heroAnimCts?.Cancel();
+        _heroAnimCts = new CancellationTokenSource();
+        var cts = _heroAnimCts;
+
         if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
         {
-            HeroPreview.IsVisible    = false;
-            HeroGridCanvas.IsVisible = false;
+            if (HeroPreview.IsVisible)
+            {
+                await HeroCard.FadeTo(0, 100);
+                if (cts.IsCancellationRequested) return;
+                HeroPreview.IsVisible    = false;
+                HeroGridCanvas.IsVisible = false;
+                HeroCard.Opacity         = 1;
+            }
             HeroEmptyState.IsVisible = true;
             StopFloatAnimation();
             return;
+        }
+
+        bool wasVisible = HeroPreview.IsVisible;
+
+        // Fade card out before swapping content
+        if (wasVisible)
+        {
+            await HeroCard.FadeTo(0, 100);
+            if (cts.IsCancellationRequested) return;
         }
 
         var card = _saveCards[_cardCursor];
@@ -135,29 +158,28 @@ public partial class MainPage : ContentPage
 
         // Game icon: real image when available, gradient badge fallback
         bool hasIcon = card.HasIcon;
-        HeroIconGrad.IsVisible      = !hasIcon;
-        HeroIconImgBorder.IsVisible = hasIcon;
+        HeroIconGrad.IsVisible        = !hasIcon;
+        HeroIconImgBorder.IsVisible   = hasIcon;
         HeroBgIconGrad.IsVisible      = !hasIcon;
         HeroBgIconImgBorder.IsVisible = hasIcon;
 
         if (hasIcon)
         {
-            HeroIconImg.Source    = card.IconSource;
-            HeroBgIconImg.Source  = card.IconSource;
+            HeroIconImg.Source   = card.IconSource;
+            HeroBgIconImg.Source = card.IconSource;
         }
         else
         {
-            HeroBadgeText.Text    = card.GameShortName;
-            HeroBgBadgeText.Text  = card.GameShortName;
-            HeroBadgeGrad0.Color  = card.GameColorDark;
-            HeroBadgeGrad1.Color  = card.GameColorLight;
-            HeroBgGrad0.Color     = card.GameColorDark;
-            HeroBgGrad1.Color     = card.GameColorLight;
+            HeroBadgeText.Text   = card.GameShortName;
+            HeroBgBadgeText.Text = card.GameShortName;
+            HeroBadgeGrad0.Color = card.GameColorDark;
+            HeroBadgeGrad1.Color = card.GameColorLight;
+            HeroBgGrad0.Color    = card.GameColorDark;
+            HeroBgGrad1.Color    = card.GameColorLight;
         }
 
         // Accent glow + card stroke from game color
-        var accent = card.GameColorLight.WithAlpha(64);
-        HeroGlow0.Color = accent;
+        HeroGlow0.Color = card.GameColorLight.WithAlpha(64);
         HeroCard.Stroke = new SolidColorBrush(card.GameColorLight.WithAlpha(80));
 
         // Trainer info
@@ -171,6 +193,10 @@ public partial class MainPage : ContentPage
         HeroActivePill.IsVisible = card.IsLoaded;
 
         StartFloatAnimation();
+
+        // Fade card in
+        HeroCard.Opacity = 0;
+        await HeroCard.FadeTo(1, 160, Easing.CubicOut);
     }
 
     // ── Floating card animation ──────────────────────────────────────────────
