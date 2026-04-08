@@ -866,7 +866,7 @@ public partial class GamePage : ContentPage
         // Semi-transparent overlay so text stays readable over the background image.
         // Light mode uses a heavier white wash to keep contrast; dark uses a light dark tint.
         var overlayColor = ThemeService.Current == PkTheme.Light
-            ? new SKColor(242, 244, 248, 195)   // ~76% white wash
+            ? new SKColor(242, 244, 248, 80)    // ~31% white wash — image shows through
             : new SKColor(7, 12, 26, 60);        // ~24% dark tint
         using var dimPaint = new SKPaint { Color = overlayColor };
         canvas.DrawRect(0, 0, w, h, dimPaint);
