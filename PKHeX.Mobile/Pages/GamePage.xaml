@@ -371,6 +371,18 @@
                         <Label Text="Save" FontFamily="Nunito" FontSize="10"
                                TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="3">
+                        <Border StrokeShape="RoundRectangle 5"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                                WidthRequest="20" HeightRequest="20">
+                            <Label Text="R3" FontFamily="NunitoExtraBold" FontSize="7"
+                                   TextColor="#60C0FF"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Cry" FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
                 </HorizontalStackLayout>
             </Grid>
 

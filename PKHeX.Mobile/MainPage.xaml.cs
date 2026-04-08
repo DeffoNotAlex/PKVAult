@@ -4,6 +4,8 @@ using PKHeX.Core;
 using PKHeX.Mobile.Pages;
 using PKHeX.Mobile.Services;
 using PKHeX.Mobile.Theme;
+using SkiaSharp;
+using SkiaSharp.Views.Maui;
 
 namespace PKHeX.Mobile;
 
@@ -120,6 +122,7 @@ public partial class MainPage : ContentPage
         if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
         {
             HeroPreview.IsVisible    = false;
+            HeroGridCanvas.IsVisible = false;
             HeroEmptyState.IsVisible = true;
             StopFloatAnimation();
             return;
@@ -128,6 +131,7 @@ public partial class MainPage : ContentPage
         var card = _saveCards[_cardCursor];
         HeroEmptyState.IsVisible = false;
         HeroPreview.IsVisible    = true;
+        HeroGridCanvas.IsVisible = true;
 
         // Game icon: real image when available, gradient badge fallback
         bool hasIcon = card.HasIcon;
@@ -204,6 +208,38 @@ public partial class MainPage : ContentPage
         HeroCard.TranslationY = 5.0  * Math.Sin(phaseA);
         HeroCard.RotationX    = 3.5  * Math.Sin(phaseA);
         HeroCard.RotationY    = 2.5  * Math.Sin(phaseB);
+
+        HeroGridCanvas.InvalidateSurface();
+    }
+
+    // ── Animated dot grid ────────────────────────────────────────────────────
+
+    private void OnHeroGridPaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        float w = e.Info.Width;
+        float h = e.Info.Height;
+
+        const float spacing = 28f;
+        const float dotR    = 2.2f;
+        const float speed   = 8f; // px per second
+
+        double t = (DateTime.UtcNow - _floatStart).TotalSeconds;
+        float ox = (float)(t * speed % spacing);
+        float oy = (float)(t * speed * 0.6 % spacing);
+
+        bool isDark = ThemeService.Current == PkTheme.Dark;
+        var dotColor = isDark
+            ? new SKColor(255, 255, 255, 22)   // subtle white on dark
+            : new SKColor(0,   0,   0,   28);  // subtle black on light
+
+        using var paint = new SKPaint { Color = dotColor, IsAntialias = true };
+
+        for (float x = -spacing + ox; x < w + spacing; x += spacing)
+        for (float y = -spacing + oy; y < h + spacing; y += spacing)
+            canvas.DrawCircle(x, y, dotR, paint);
     }
 
     // ── Save loading ─────────────────────────────────────────────────────────

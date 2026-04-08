@@ -18,7 +18,7 @@
                     FontFamily="Phosphor"
                     Clicked="OnPrevBox"
                     BackgroundColor="{DynamicResource ThNavBtnBg}"
-                    TextColor="{DynamicResource ThTextSecondary}"
+                    TextColor="White"
                     FontSize="18" Padding="0" />
             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
                 <Label x:Name="BankNameLabel"
@@ -33,7 +33,7 @@
                     FontFamily="Phosphor"
                     Clicked="OnNextBox"
                     BackgroundColor="{DynamicResource ThNavBtnBg}"
-                    TextColor="{DynamicResource ThTextSecondary}"
+                    TextColor="White"
                     FontSize="18" Padding="0" />
         </Grid>
 

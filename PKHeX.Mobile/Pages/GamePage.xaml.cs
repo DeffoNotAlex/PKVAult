@@ -800,6 +800,18 @@ public partial class GamePage : ContentPage
     // ──────────────────────────────────────────────
 
 #if ANDROID
+    private void PlayCryForCurrentSlot()
+    {
+        if (_previewPk?.Species > 0)
+        {
+            var name = _previewPk.Species < _strings.specieslist.Length
+                ? _strings.specieslist[_previewPk.Species]
+                : _previewPk.Species.ToString();
+            _lastCrySlug = ""; // clear debounce so R3 always re-plays
+            PlayCry(name);
+        }
+    }
+
     private async void PlayCry(string speciesName)
     {
         var slug = ToShowdownSlug(speciesName);
@@ -1128,6 +1140,7 @@ public partial class GamePage : ContentPage
                 break;
             case Android.Views.Keycode.ButtonSelect: OnSettingsClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonStart:  OpenActionMenu(); break;
+            case Android.Views.Keycode.ButtonThumbRight: PlayCryForCurrentSlot(); break;
         }
     }
 #endif
@@ -1247,9 +1260,6 @@ public partial class GamePage : ContentPage
         {
             _previewSpecies = key;
             LoadAnimatedSprite(pk);
-#if ANDROID
-            PlayCry(speciesName);
-#endif
         }
         else if (_spriteWebViewReady)
         {

@@ -33,6 +33,7 @@
 
     <!-- Misc -->
     <Color x:Key="ThBadgeBg">#08000000</Color>
+    <Color x:Key="ThNavBtnBg">#E8ECF4</Color>
     <Color x:Key="ThNavBtnStroke">#E0E4EC</Color>
 
     <!-- GamePage top screen -->
