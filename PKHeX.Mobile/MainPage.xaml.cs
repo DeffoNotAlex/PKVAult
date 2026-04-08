@@ -371,9 +371,10 @@ public partial class MainPage : ContentPage
         var normalBg     = Color.FromArgb(light ? "#FFFFFF" : "#131B35");
         var normalStroke = Color.FromArgb(light ? "#E0E4EC" : "#0DFFFFFF");
 
-        // Primary button focus
+        // Primary button focus — use white stroke so it's visible against the blue gradient
         bool primaryFocused = _focusSection == 1 && _actionCursor == 0;
-        Btn_OpenBoxes.Stroke = primaryFocused ? focusStroke : Colors.Transparent;
+        Btn_OpenBoxes.Stroke          = primaryFocused ? Colors.White : Colors.Transparent;
+        Btn_OpenBoxes.StrokeThickness = primaryFocused ? 2.5 : 1.5;
 
         // Tiles
         for (int i = 0; i < _actionTiles.Length; i++)
