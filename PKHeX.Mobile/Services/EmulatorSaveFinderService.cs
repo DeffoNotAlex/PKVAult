@@ -6,7 +6,7 @@ namespace PKHeX.Mobile.Services;
 /// </summary>
 public static class EmulatorSaveFinderService
 {
-    // Known Pokémon Switch title IDs (case-insensitive match against Eden directory names)
+    // Known Pokémon Switch title IDs — used only for display names.
     private static readonly Dictionary<string, string> PokemonSwitchGames =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -21,15 +21,11 @@ public static class EmulatorSaveFinderService
             { "01008F6008C5E000", "Violet"            },
         };
 
-    private static string SwitchGameName(string titleId) =>
-        PokemonSwitchGames.TryGetValue(titleId, out var n) ? n : titleId;
-
     /// <summary>
     /// Scans an Eden emulator "files" root folder for Pokémon Switch saves.
-    /// Tree: root/nand/user/save/0/&lt;uid_h&gt;/&lt;uid_l&gt;/&lt;title_id&gt;/main
+    /// Navigates to nand/user/save/ then recursively searches for files named
+    /// "main", trying SaveUtil on each one. No assumptions about uid/title layout.
     /// </summary>
-    /// <param name="rootTreeUri">SAF tree URI the user granted (pointing at the eden/files level).</param>
-    /// <returns>List of (content URI of "main" file, human-readable game name).</returns>
     public static async Task<List<(string FileUri, string GameName)>> ScanEdenAsync(string rootTreeUri)
     {
         return await Task.Run(() =>
@@ -48,22 +44,18 @@ public static class EmulatorSaveFinderService
                 var rootDocId = global::Android.Provider.DocumentsContract.GetTreeDocumentId(treeUri);
                 if (rootDocId == null) return results;
 
-                // Walk the deterministic prefix: nand → user → save → 0
-                var saveZeroDocId = NavigatePath(resolver, treeUri, rootDocId,
-                    ["nand", "user", "save", "0"]);
-                if (saveZeroDocId == null) return results;
+                // Navigate to nand/user/save/ — this prefix is stable across all Yuzu-based layouts.
+                // From there we do a recursive depth-limited search for files named "main".
+                var saveDocId = NavigatePath(resolver, treeUri, rootDocId, ["nand", "user", "save"]);
+                if (saveDocId == null) return results;
 
-                // Enumerate uid_high / uid_low / title_id
-                // We try SaveUtil on the "main" file at every title directory —
-                // same approach as Azahar — so unexpected title ID formats don't
-                // cause silent misses. The dict is only used for the display name.
-                foreach (var (hiDocId, _) in ListChildren(resolver, treeUri, saveZeroDocId))
-                foreach (var (loDocId, _) in ListChildren(resolver, treeUri, hiDocId))
-                foreach (var (titleDocId, titleName) in ListChildren(resolver, treeUri, loDocId))
+                // Collect every "main" file found up to 5 directories deep
+                var mainDocIds = new List<string>();
+                FindNamedFiles(resolver, treeUri, saveDocId, "main", 5, mainDocIds);
+
+                // Try SaveUtil on each candidate
+                foreach (var mainDocId in mainDocIds)
                 {
-                    var mainDocId = FindChildDocId(resolver, treeUri, titleDocId, "main");
-                    if (mainDocId == null) continue;
-
                     var mainUri = global::Android.Provider.DocumentsContract
                         .BuildDocumentUriUsingTree(treeUri, mainDocId);
                     if (mainUri == null) continue;
@@ -77,13 +69,16 @@ public static class EmulatorSaveFinderService
                         var data = ms.ToArray();
                         if (data.Length == 0 || !PKHeX.Core.SaveUtil.TryGetSaveFile(data, out _))
                             continue;
-                        var name = SwitchGameName(titleName); // falls back to titleName if unknown
-                        results.Add((mainUri.ToString()!, name));
+
+                        // Try to extract a friendly name from the parent directory name
+                        // (the title ID folder), falling back to "Switch save"
+                        var gameName = GuessEdenGameName(mainDocId);
+                        results.Add((mainUri.ToString()!, gameName));
                     }
                     catch { }
                 }
             }
-            catch { /* permission denied or unexpected structure — return what we have */ }
+            catch { }
 #endif
             return results;
         });
@@ -92,11 +87,7 @@ public static class EmulatorSaveFinderService
     /// <summary>
     /// Scans an Azahar (Citra) emulator root folder for 3DS Pokémon save files.
     /// Tree: root/sdmc/Nintendo 3DS/&lt;ID0&gt;/&lt;ID1&gt;/title/00040000/&lt;game_id&gt;/data/00000001/main
-    /// ID0 and ID1 are random hex dirs — enumerated automatically.
-    /// All files found under 00040000 are tried against SaveUtil; non-Pokémon saves are silently ignored.
     /// </summary>
-    /// <param name="rootTreeUri">SAF tree URI the user granted (pointing at the Azahar root, i.e. the folder that contains sdmc/).</param>
-    /// <returns>List of (content URI of save file, "Azahar save") pairs that parsed successfully.</returns>
     public static async Task<List<(string FileUri, string GameName)>> ScanAzaharAsync(string rootTreeUri)
     {
         return await Task.Run(() =>
@@ -115,25 +106,20 @@ public static class EmulatorSaveFinderService
                 var rootDocId = global::Android.Provider.DocumentsContract.GetTreeDocumentId(treeUri);
                 if (rootDocId == null) return results;
 
-                // Navigate: sdmc → Nintendo 3DS
                 var n3dsDocId = NavigatePath(resolver, treeUri, rootDocId, ["sdmc", "Nintendo 3DS"]);
                 if (n3dsDocId == null) return results;
 
-                // Enumerate ID0 → ID1 → title/00040000
                 foreach (var (id0DocId, _) in ListChildren(resolver, treeUri, n3dsDocId))
                 foreach (var (id1DocId, _) in ListChildren(resolver, treeUri, id0DocId))
                 {
                     var retailDocId = NavigatePath(resolver, treeUri, id1DocId, ["title", "00040000"]);
                     if (retailDocId == null) continue;
 
-                    // Enumerate all game title directories under 00040000
                     foreach (var (gameDocId, _) in ListChildren(resolver, treeUri, retailDocId))
                     {
-                        // Navigate data/00000001
                         var dataDocId = NavigatePath(resolver, treeUri, gameDocId, ["data", "00000001"]);
                         if (dataDocId == null) continue;
 
-                        // The save file is named "main" (no extension)
                         var saveDocId = FindChildDocId(resolver, treeUri, dataDocId, "main");
                         if (saveDocId == null) continue;
 
@@ -141,7 +127,6 @@ public static class EmulatorSaveFinderService
                             .BuildDocumentUriUsingTree(treeUri, saveDocId);
                         if (saveUri == null) continue;
 
-                        // Attempt to parse — silently skip non-Pokémon titles
                         try
                         {
                             using var stream = resolver.OpenInputStream(saveUri);
@@ -152,7 +137,7 @@ public static class EmulatorSaveFinderService
                             if (data.Length > 0 && PKHeX.Core.SaveUtil.TryGetSaveFile(data, out _))
                                 results.Add((saveUri.ToString()!, "Azahar save"));
                         }
-                        catch { /* skip unreadable or non-Pokémon */ }
+                        catch { }
                     }
                 }
             }
@@ -162,13 +147,73 @@ public static class EmulatorSaveFinderService
         });
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Attempts to derive a game name from the document ID of a "main" file.
+    /// The document ID for external storage is path-based, so the parent segment
+    /// is likely the title ID directory name.
+    /// </summary>
+    private static string GuessEdenGameName(string mainDocId)
+    {
+        // docId looks like "primary:Android/data/.../nand/user/save/0/uid/uid/0100ABF008968000/main"
+        // Walk backwards to find the first segment that matches a known title ID.
+        var parts = mainDocId.Replace('\\', '/').Split('/');
+        for (int i = parts.Length - 2; i >= 0; i--)
+        {
+            if (PokemonSwitchGames.TryGetValue(parts[i], out var name))
+                return name;
+        }
+        return "Switch save";
+    }
+
     // ── Android SAF helpers ───────────────────────────────────────────────────
 
 #if ANDROID
     /// <summary>
-    /// Walks a SAF tree following a fixed sequence of child names.
-    /// Returns the final document ID, or null if any segment is not found.
+    /// Recursively finds all files with the given display name under a document tree node,
+    /// up to <paramref name="maxDepth"/> directory levels deep.
     /// </summary>
+    private static void FindNamedFiles(
+        global::Android.Content.ContentResolver resolver,
+        global::Android.Net.Uri treeUri,
+        string parentDocId,
+        string targetName,
+        int maxDepth,
+        List<string> results)
+    {
+        if (maxDepth <= 0) return;
+
+        var childrenUri = global::Android.Provider.DocumentsContract
+            .BuildChildDocumentsUriUsingTree(treeUri, parentDocId);
+        if (childrenUri == null) return;
+
+        string[] projection =
+        [
+            global::Android.Provider.DocumentsContract.Document.ColumnDocumentId,
+            global::Android.Provider.DocumentsContract.Document.ColumnDisplayName,
+            global::Android.Provider.DocumentsContract.Document.ColumnMimeType,
+        ];
+
+        using var cursor = resolver.Query(childrenUri, projection, null, null, null);
+        if (cursor == null) return;
+
+        while (cursor.MoveToNext())
+        {
+            var docId    = cursor.GetString(0);
+            var name     = cursor.GetString(1);
+            var mimeType = cursor.GetString(2);
+            if (docId == null || name == null) continue;
+
+            bool isDir = mimeType == global::Android.Provider.DocumentsContract.Document.MimeTypeDir;
+
+            if (!isDir && name == targetName)
+                results.Add(docId);
+            else if (isDir)
+                FindNamedFiles(resolver, treeUri, docId, targetName, maxDepth - 1, results);
+        }
+    }
+
     private static string? NavigatePath(
         global::Android.Content.ContentResolver resolver,
         global::Android.Net.Uri treeUri,
@@ -184,7 +229,6 @@ public static class EmulatorSaveFinderService
         return current;
     }
 
-    /// <summary>Returns the document ID of the first child whose display name equals <paramref name="childName"/>.</summary>
     private static string? FindChildDocId(
         global::Android.Content.ContentResolver resolver,
         global::Android.Net.Uri treeUri,
@@ -212,7 +256,6 @@ public static class EmulatorSaveFinderService
         return null;
     }
 
-    /// <summary>Returns (docId, displayName) pairs for all children of <paramref name="parentDocId"/>.</summary>
     private static List<(string DocId, string Name)> ListChildren(
         global::Android.Content.ContentResolver resolver,
         global::Android.Net.Uri treeUri,
