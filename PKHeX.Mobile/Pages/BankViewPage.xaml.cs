@@ -882,7 +882,7 @@ public partial class BankViewPage : ContentPage
         try
         {
             var learnset = LearnSource9SV.Instance.GetLearnset((ushort)pk.Species, 0);
-            byte level = (byte)Math.Min(pk.CurrentLevel, 100);
+            byte level = (byte)Math.Min((int)pk.CurrentLevel, 100);
             var moves = learnset.GetMoveRange(level);
             if (moves.IsEmpty)
                 moves = learnset.GetAllMoves(); // fallback: full learnset
