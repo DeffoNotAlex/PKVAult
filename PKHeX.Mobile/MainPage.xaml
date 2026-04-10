@@ -282,8 +282,8 @@
                         Padding="0" HeightRequest="48">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#3B8BFF" Offset="0" />
-                            <GradientStop Color="#4F6BF0" Offset="1" />
+                            <GradientStop Color="#C8E6FF" Offset="0" />
+                            <GradientStop Color="#B0D4F8" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.GestureRecognizers>
@@ -291,7 +291,7 @@
                     </Border.GestureRecognizers>
                     <Label Text="Open Boxes"
                            FontFamily="NunitoExtraBold" FontSize="15"
-                           TextColor="White"
+                           TextColor="#1A5A96"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
 

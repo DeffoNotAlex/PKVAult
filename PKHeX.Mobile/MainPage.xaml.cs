@@ -128,7 +128,15 @@ public partial class MainPage : ContentPage
         _heroAnimCts = new CancellationTokenSource();
         var cts = _heroAnimCts;
 
-        if (_cardCursor < 0 || _cardCursor >= _saveCards.Count)
+        // If a save is actively selected (pressed A), hero stays locked on it
+        int displayIndex = _cardCursor;
+        if (_selectedSave is not null)
+        {
+            int sel = _saveCards.FindIndex(c => c.Entry.FileUri == _selectedSave.FileUri);
+            if (sel >= 0) displayIndex = sel;
+        }
+
+        if (displayIndex < 0 || displayIndex >= _saveCards.Count)
         {
             if (HeroPreview.IsVisible)
             {
@@ -145,14 +153,18 @@ public partial class MainPage : ContentPage
 
         bool wasVisible = HeroPreview.IsVisible;
 
-        // Fade card out before swapping content
-        if (wasVisible)
+        // Only cross-fade when the displayed save actually changes
+        if (wasVisible && _selectedSave is null)
         {
             await HeroCard.FadeTo(0, 100);
             if (cts.IsCancellationRequested) return;
         }
+        else if (!wasVisible)
+        {
+            // no-op: will fade in below
+        }
 
-        var card = _saveCards[_cardCursor];
+        var card = _saveCards[displayIndex];
         HeroEmptyState.IsVisible = false;
         HeroPreview.IsVisible    = true;
         HeroGridCanvas.IsVisible = true;
