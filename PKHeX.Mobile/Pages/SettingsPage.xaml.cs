@@ -346,6 +346,8 @@ public partial class SettingsPage : ContentPage
                            ref System.Text.StringBuilder sb, ref int lineCount,
                            string slug, bool success)
     {
+        if (success) return;
+
         panel.IsVisible = true;
 
         // Trim oldest lines when cap is reached
@@ -365,7 +367,7 @@ public partial class SettingsPage : ContentPage
             lineCount -= found;
         }
 
-        sb.Append(success ? "✓ " : "✗ ");
+        sb.Append("✗ ");
         sb.AppendLine(slug);
         lineCount++;
 
