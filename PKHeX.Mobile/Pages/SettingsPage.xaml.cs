@@ -21,6 +21,13 @@ public partial class SettingsPage : ContentPage
     private int _focusRow = 0;
     private Border[] _rows = [];
 
+    // Download logs
+    private readonly System.Text.StringBuilder _spriteLog = new();
+    private readonly System.Text.StringBuilder _animLog   = new();
+    private int _spriteLogLines;
+    private int _animLogLines;
+    private const int MaxLogLines = 200;
+
     public SettingsPage()
     {
         InitializeComponent();
@@ -36,7 +43,9 @@ public partial class SettingsPage : ContentPage
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
         HomeSpriteCacheService.BulkProgressChanged += OnBulkProgress;
+        HomeSpriteCacheService.SlugCompleted       += OnSpriteSlugCompleted;
         SpriteCacheService.BulkProgressChanged     += OnAnimProgress;
+        SpriteCacheService.SlugCompleted           += OnAnimSlugCompleted;
         _loading = true;
 
         var lang = Preferences.Default.Get(KeyLanguage, "en");
@@ -63,7 +72,9 @@ public partial class SettingsPage : ContentPage
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
         HomeSpriteCacheService.BulkProgressChanged -= OnBulkProgress;
+        HomeSpriteCacheService.SlugCompleted       -= OnSpriteSlugCompleted;
         SpriteCacheService.BulkProgressChanged     -= OnAnimProgress;
+        SpriteCacheService.SlugCompleted           -= OnAnimSlugCompleted;
     }
 
     private void BuildRows()
@@ -230,6 +241,10 @@ public partial class SettingsPage : ContentPage
     private void StartBulkDownload()
     {
         if (HomeSpriteCacheService.IsBulkDownloading) return;
+        _spriteLog.Clear();
+        _spriteLogLines  = 0;
+        SpriteLogLabel.Text = "";
+        SpriteLogPanel.IsVisible = false;
         _ = HomeSpriteCacheService.BulkDownloadAsync();
         UpdateSpriteStatus();
     }
@@ -238,6 +253,12 @@ public partial class SettingsPage : ContentPage
     {
         SpriteRingCanvas.InvalidateSurface();
         UpdateSpriteStatus();
+    }
+
+    private void OnSpriteSlugCompleted(string slug, bool success)
+    {
+        AppendLog(SpriteLogPanel, SpriteLogLabel, SpriteLogScroll,
+                  ref _spriteLog, ref _spriteLogLines, slug, success);
     }
 
     private void UpdateSpriteStatus()
@@ -273,6 +294,10 @@ public partial class SettingsPage : ContentPage
     private void StartAnimBulkDownload()
     {
         if (SpriteCacheService.IsBulkDownloading) return;
+        _animLog.Clear();
+        _animLogLines  = 0;
+        AnimLogLabel.Text = "";
+        AnimLogPanel.IsVisible = false;
         _ = SpriteCacheService.BulkDownloadAllAsync();
         UpdateAnimSpriteStatus();
     }
@@ -281,6 +306,12 @@ public partial class SettingsPage : ContentPage
     {
         AnimRingCanvas.InvalidateSurface();
         UpdateAnimSpriteStatus();
+    }
+
+    private void OnAnimSlugCompleted(string slug, bool success)
+    {
+        AppendLog(AnimLogPanel, AnimLogLabel, AnimLogScroll,
+                  ref _animLog, ref _animLogLines, slug, success);
     }
 
     private void UpdateAnimSpriteStatus()
@@ -308,6 +339,39 @@ public partial class SettingsPage : ContentPage
 
     private void OnAnimRingPaint(object sender, SKPaintSurfaceEventArgs e)
         => PaintProgressRing(e, SpriteCacheService.BulkProgress, SpriteCacheService.IsBulkDownloading);
+
+    // ── Shared log helper ─────────────────────────────────────────────────────
+
+    private void AppendLog(Border panel, Label label, ScrollView scroll,
+                           ref System.Text.StringBuilder sb, ref int lineCount,
+                           string slug, bool success)
+    {
+        panel.IsVisible = true;
+
+        // Trim oldest lines when cap is reached
+        if (lineCount >= MaxLogLines)
+        {
+            var text  = sb.ToString();
+            int cut   = 0;
+            int found = 0;
+            // Drop first MaxLogLines/4 lines
+            int dropCount = MaxLogLines / 4;
+            while (found < dropCount && cut < text.Length)
+            {
+                if (text[cut++] == '\n') found++;
+            }
+            sb.Clear();
+            sb.Append(text.AsSpan(cut));
+            lineCount -= found;
+        }
+
+        sb.Append(success ? "✓ " : "✗ ");
+        sb.AppendLine(slug);
+        lineCount++;
+
+        label.Text = sb.ToString();
+        _ = scroll.ScrollToAsync(0, double.MaxValue, false);
+    }
 
     // ── Shared ring painter ───────────────────────────────────────────────────
 

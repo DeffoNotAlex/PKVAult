@@ -40,6 +40,9 @@ public static class SpriteCacheService
     /// <summary>Fired on the main thread each time a sprite completes during bulk download.</summary>
     public static event Action<int, int>? BulkProgressChanged; // done, total
 
+    /// <summary>Fired on the main thread for each completed slug. bool = success.</summary>
+    public static event Action<string, bool>? SlugCompleted;
+
     private const int MaxSpecies  = 1025;
     private const int Concurrency = 5;
 
@@ -68,6 +71,7 @@ public static class SpriteCacheService
             var tasks = queue.Select(async item =>
             {
                 await sem.WaitAsync(ct).ConfigureAwait(false);
+                bool ok = false;
                 try
                 {
                     if (ct.IsCancellationRequested) return;
@@ -77,6 +81,7 @@ public static class SpriteCacheService
                         var path = CachePath(item.Slug, item.Shiny);
                         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                         await File.WriteAllBytesAsync(path, bytes, ct).ConfigureAwait(false);
+                        ok = true;
                     }
                     else
                         Interlocked.Increment(ref failed);
@@ -87,7 +92,13 @@ public static class SpriteCacheService
                     sem.Release();
                     int d = Interlocked.Increment(ref done);
                     BulkProgress = (d, total, failed);
-                    MainThread.BeginInvokeOnMainThread(() => BulkProgressChanged?.Invoke(d, total));
+                    string logSlug = item.Shiny ? $"{item.Slug} (shiny)" : item.Slug;
+                    bool  logOk   = ok;
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        BulkProgressChanged?.Invoke(d, total);
+                        SlugCompleted?.Invoke(logSlug, logOk);
+                    });
                 }
             }).ToArray();
 

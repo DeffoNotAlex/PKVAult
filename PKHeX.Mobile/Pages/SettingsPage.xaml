@@ -137,26 +137,37 @@
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSpriteDownloadTapped" />
                 </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                    <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
-                        <Label Text="Download HOME Sprites"
-                               FontAttributes="Bold" FontSize="15"
-                               TextColor="{DynamicResource ThTextPrimary}" />
-                        <Label x:Name="SpriteStatusLabel"
-                               Text="~120 MB · caches HOME sprites for all Pokémon"
-                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
-                    </VerticalStackLayout>
-                    <Grid Grid.Column="1" WidthRequest="52" HeightRequest="52"
-                          VerticalOptions="Center" HorizontalOptions="End">
-                        <skia:SKCanvasView x:Name="SpriteRingCanvas"
-                                           PaintSurface="OnSpriteRingPaint"
-                                           WidthRequest="52" HeightRequest="52" />
-                        <Label x:Name="SpriteRingLabel"
-                               FontFamily="NunitoBold" FontSize="10"
-                               HorizontalOptions="Center" VerticalOptions="Center"
-                               TextColor="{DynamicResource ThTextPrimary}" />
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
+                            <Label Text="Download HOME Sprites"
+                                   FontAttributes="Bold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label x:Name="SpriteStatusLabel"
+                                   Text="~120 MB · caches HOME sprites for all Pokémon"
+                                   FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                        <Grid Grid.Column="1" WidthRequest="52" HeightRequest="52"
+                              VerticalOptions="Center" HorizontalOptions="End">
+                            <skia:SKCanvasView x:Name="SpriteRingCanvas"
+                                               PaintSurface="OnSpriteRingPaint"
+                                               WidthRequest="52" HeightRequest="52" />
+                            <Label x:Name="SpriteRingLabel"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                        </Grid>
                     </Grid>
-                </Grid>
+                    <Border x:Name="SpriteLogPanel" IsVisible="False"
+                            BackgroundColor="{DynamicResource ThSettingsBg}"
+                            StrokeShape="RoundRectangle 4" Stroke="Transparent" Padding="8,6">
+                        <ScrollView x:Name="SpriteLogScroll" HeightRequest="130" Orientation="Vertical">
+                            <Label x:Name="SpriteLogLabel" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}"
+                                   LineBreakMode="CharacterWrap" />
+                        </ScrollView>
+                    </Border>
+                </VerticalStackLayout>
             </Border>
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
@@ -168,26 +179,37 @@
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnAnimSpriteDownloadTapped" />
                 </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                    <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
-                        <Label Text="Download Animated Sprites"
-                               FontAttributes="Bold" FontSize="15"
-                               TextColor="{DynamicResource ThTextPrimary}" />
-                        <Label x:Name="AnimSpriteStatusLabel"
-                               Text="~200 MB · caches animated GIFs for all Pokémon"
-                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
-                    </VerticalStackLayout>
-                    <Grid Grid.Column="1" WidthRequest="52" HeightRequest="52"
-                          VerticalOptions="Center" HorizontalOptions="End">
-                        <skia:SKCanvasView x:Name="AnimRingCanvas"
-                                           PaintSurface="OnAnimRingPaint"
-                                           WidthRequest="52" HeightRequest="52" />
-                        <Label x:Name="AnimRingLabel"
-                               FontFamily="NunitoBold" FontSize="10"
-                               HorizontalOptions="Center" VerticalOptions="Center"
-                               TextColor="{DynamicResource ThTextPrimary}" />
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
+                            <Label Text="Download Animated Sprites"
+                                   FontAttributes="Bold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label x:Name="AnimSpriteStatusLabel"
+                                   Text="~200 MB · caches animated GIFs for all Pokémon"
+                                   FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                        <Grid Grid.Column="1" WidthRequest="52" HeightRequest="52"
+                              VerticalOptions="Center" HorizontalOptions="End">
+                            <skia:SKCanvasView x:Name="AnimRingCanvas"
+                                               PaintSurface="OnAnimRingPaint"
+                                               WidthRequest="52" HeightRequest="52" />
+                            <Label x:Name="AnimRingLabel"
+                                   FontFamily="NunitoBold" FontSize="10"
+                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                        </Grid>
                     </Grid>
-                </Grid>
+                    <Border x:Name="AnimLogPanel" IsVisible="False"
+                            BackgroundColor="{DynamicResource ThSettingsBg}"
+                            StrokeShape="RoundRectangle 4" Stroke="Transparent" Padding="8,6">
+                        <ScrollView x:Name="AnimLogScroll" HeightRequest="130" Orientation="Vertical">
+                            <Label x:Name="AnimLogLabel" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}"
+                                   LineBreakMode="CharacterWrap" />
+                        </ScrollView>
+                    </Border>
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>
