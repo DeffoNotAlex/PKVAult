@@ -130,7 +130,7 @@
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
 
-            <!-- Sprite cache download -->
+            <!-- HOME sprite cache download -->
             <Border x:Name="Row_Sprites"
                     BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                     StrokeShape="RoundRectangle 6" Padding="12,10">
@@ -139,7 +139,7 @@
                 </Border.GestureRecognizers>
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                     <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
-                        <Label Text="Download All Sprites"
+                        <Label Text="Download HOME Sprites"
                                FontAttributes="Bold" FontSize="15"
                                TextColor="{DynamicResource ThTextPrimary}" />
                         <Label x:Name="SpriteStatusLabel"
@@ -152,6 +152,37 @@
                                            PaintSurface="OnSpriteRingPaint"
                                            WidthRequest="52" HeightRequest="52" />
                         <Label x:Name="SpriteRingLabel"
+                               FontFamily="NunitoBold" FontSize="10"
+                               HorizontalOptions="Center" VerticalOptions="Center"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
+            <!-- Animated sprite cache download -->
+            <Border x:Name="Row_AnimSprites"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAnimSpriteDownloadTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
+                        <Label Text="Download Animated Sprites"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label x:Name="AnimSpriteStatusLabel"
+                               Text="~200 MB · caches animated GIFs for all Pokémon"
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Grid Grid.Column="1" WidthRequest="52" HeightRequest="52"
+                          VerticalOptions="Center" HorizontalOptions="End">
+                        <skia:SKCanvasView x:Name="AnimRingCanvas"
+                                           PaintSurface="OnAnimRingPaint"
+                                           WidthRequest="52" HeightRequest="52" />
+                        <Label x:Name="AnimRingLabel"
                                FontFamily="NunitoBold" FontSize="10"
                                HorizontalOptions="Center" VerticalOptions="Center"
                                TextColor="{DynamicResource ThTextPrimary}" />

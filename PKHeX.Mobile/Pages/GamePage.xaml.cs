@@ -796,46 +796,10 @@ public partial class GamePage : ContentPage
     }
 
     private static string ToShowdownSlug(string speciesName)
-    {
-        // Showdown keys strip ALL non-alphanumeric characters — no hyphens from spaces,
-        // no "-f"/"-m" suffixes. E.g. "Mr. Mime" → "mrmime", "Nidoran♀" → "nidoranf".
-        var s = speciesName.ToLowerInvariant()
-            .Replace("♀", "f").Replace("♂", "m")
-            .Replace("é", "e");
-        return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
-    }
+        => Services.SpriteCacheService.ToShowdownSlug(speciesName);
 
-    /// <summary>
-    /// Converts a PKHeX form display name to a Showdown CDN form suffix.
-    /// E.g. "Origin Forme" → "origin", "Sandy Cloak" → "sandy", "Pirouette" → "pirouette".
-    /// Returns empty string if the form name produces no usable suffix.
-    /// </summary>
     private static string ToShowdownFormSuffix(string formName)
-    {
-        if (string.IsNullOrWhiteSpace(formName)) return "";
-
-        var s = formName.ToLowerInvariant()
-            .Replace("é", "e")
-            .Replace("♀", "f")
-            .Replace("♂", "m");
-
-        // Strip trailing descriptor words that Showdown omits from its slugs
-        string[] dropSuffixes = [" forme", " form", " mode", " cloak", " style",
-                                  " size", " rider", " pattern", " face", " plumage"];
-        foreach (var suffix in dropSuffixes)
-        {
-            if (s.EndsWith(suffix, StringComparison.Ordinal))
-            {
-                s = s[..^suffix.Length];
-                break;
-            }
-        }
-
-        // Replace spaces/underscores with hyphens; strip everything else non-alphanumeric
-        s = s.Replace(' ', '-').Replace('_', '-');
-        s = System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9-]", "");
-        return s.Trim('-');
-    }
+        => Services.SpriteCacheService.ToShowdownFormSuffix(formName);
 
     private static string BuildSpriteShell(string src) => $$"""
         <!DOCTYPE html>
