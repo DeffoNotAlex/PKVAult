@@ -26,7 +26,7 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
         // Kick off all HOME sprite downloads in parallel (network or disk cache)
         var homeSlots = box
             .Where(pk => pk.Species != 0)
-            .Select(pk => ((ushort)pk.Species, pk.IsShiny));
+            .Select(pk => ((ushort)pk.Species, pk.Form, pk.IsShiny));
         await HomeSpriteCacheService.PreloadAsync(homeSlots).ConfigureAwait(false);
 
         // Fall back: load bundled sprites for anything HOME couldn't provide
@@ -35,7 +35,7 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
             if (pk.Species == 0)
                 continue;
             // Skip bundled load if HOME already has this one
-            if (HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny) is not null)
+            if (HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.Form, pk.IsShiny) is not null)
                 continue;
 
             var key = BuildKey(pk);
@@ -58,7 +58,7 @@ public sealed class FileSystemSpriteRenderer : PKHeX.Drawing.Mobile.Sprites.ISpr
     public SKBitmap GetSprite(PKM pk)
     {
         // Prefer high-quality HOME sprite for all forms
-        var home = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.IsShiny);
+        var home = HomeSpriteCacheService.GetCached((ushort)pk.Species, pk.Form, pk.IsShiny);
         if (home is not null) return home;
 
         // Fall back to bundled 2D sprite
