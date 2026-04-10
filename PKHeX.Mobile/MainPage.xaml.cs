@@ -259,9 +259,8 @@ public partial class MainPage : ContentPage
             if (i < party.Length)
             {
                 var pk  = party[i];
-                var url = pk.IsShiny
-                    ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{pk.Species}.png"
-                    : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{pk.Species}.png";
+                var url = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny)
+                       ?? HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, 0, pk.IsShiny)!;
                 _partyImages[i].Source    = new UriImageSource { Uri = new Uri(url), CacheValidity = TimeSpan.FromDays(30) };
                 _partyImages[i].IsVisible = true;
             }

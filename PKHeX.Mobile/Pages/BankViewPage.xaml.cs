@@ -173,9 +173,8 @@ public partial class BankViewPage : ContentPage
         if (_previewPk?.Species > 0)
         {
             var pk = _previewPk;
-            var spriteUrl = pk.IsShiny
-                ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{pk.Species}.png"
-                : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{pk.Species}.png";
+            var spriteUrl = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny)
+                         ?? HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, 0, pk.IsShiny)!;
             HomeSpriteImage.Source = new UriImageSource
             {
                 Uri = new Uri(spriteUrl),
