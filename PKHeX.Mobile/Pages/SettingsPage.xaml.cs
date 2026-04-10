@@ -91,7 +91,7 @@ public partial class SettingsPage : ContentPage
     private void BuildRows()
     {
         _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites, Row_AnimSprites,
-                 Row_EdenScan, Row_MelonDSScan, Row_AzaharScan];
+                 Row_EdenScan, Row_MelonDSScan, Row_AzaharScan, Row_RetroArchScan];
     }
 
     private void UpdateHighlight()
@@ -216,6 +216,9 @@ public partial class SettingsPage : ContentPage
                 break;
             case 10:
                 _ = FindAzaharSavesAsync();
+                break;
+            case 11:
+                _ = FindRetroArchSavesAsync();
                 break;
         }
     }
@@ -454,9 +457,10 @@ public partial class SettingsPage : ContentPage
 
     // ── Emulator save finder ──────────────────────────────────────────────────
 
-    private void OnFindEdenTapped(object? sender, EventArgs e)   => _ = FindEdenSavesAsync();
-    private void OnFindMelonDSTapped(object? sender, EventArgs e) => _ = FindMelonDSSavesAsync();
-    private void OnFindAzaharTapped(object? sender, EventArgs e)  => _ = FindAzaharSavesAsync();
+    private void OnFindEdenTapped(object? sender, EventArgs e)       => _ = FindEdenSavesAsync();
+    private void OnFindMelonDSTapped(object? sender, EventArgs e)   => _ = FindMelonDSSavesAsync();
+    private void OnFindAzaharTapped(object? sender, EventArgs e)    => _ = FindAzaharSavesAsync();
+    private void OnFindRetroArchTapped(object? sender, EventArgs e) => _ = FindRetroArchSavesAsync();
 
     private async Task FindEdenSavesAsync()
     {
@@ -508,6 +512,15 @@ public partial class SettingsPage : ContentPage
             _dirService.AddFile(fileUri);
 
         AzaharStatusLabel.Text = $"Added {found.Count} save{(found.Count == 1 ? "" : "s")}.";
+    }
+
+    private async Task FindRetroArchSavesAsync()
+    {
+        var uri = await _dirPicker.PickDirectoryAsync();
+        if (uri is null) return;
+
+        _dirService.AddDirectory(uri);
+        await DisplayAlertAsync("RetroArch", "Folder added. Pokémon GBA/GBC saves (.srm) will appear on the home screen after a refresh.", "OK");
     }
 
     // ── Stub pickers for non-Android ─────────────────────────────────────────

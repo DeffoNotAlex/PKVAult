@@ -294,6 +294,30 @@
                 </VerticalStackLayout>
             </Border>
 
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
+            <!-- RetroArch (GBA/GBC Gen 1–3) -->
+            <Border x:Name="Row_RetroArchScan"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFindRetroArchTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Add RetroArch Saves Folder  (GBA/GBC)"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label Text="Point to your RetroArch saves folder. Saves are .srm files named after the ROM."
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="›" FontSize="20"
+                           TextColor="{DynamicResource ThAccent}"
+                           VerticalOptions="Center" Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
         </VerticalStackLayout>
     </ScrollView>
 
