@@ -154,6 +154,17 @@
                         BackgroundColor="{DynamicResource ThHintBg}"
                         Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                         WidthRequest="22" HeightRequest="22">
+                    <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Add" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
                     <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#A78BFA"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
@@ -190,6 +201,56 @@
                        TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
             </HorizontalStackLayout>
         </HorizontalStackLayout>
+
+        <!-- ── Pokémon picker overlay (A on empty slot) ── -->
+        <Grid x:Name="PickerOverlay"
+              Grid.RowSpan="3"
+              IsVisible="False"
+              BackgroundColor="#CC000020">
+            <Border HorizontalOptions="Center" VerticalOptions="Center"
+                    BackgroundColor="{DynamicResource ThActionMenuPanel}"
+                    Stroke="{DynamicResource ThActionMenuStroke}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0"
+                    MinimumWidthRequest="300"
+                    MaximumWidthRequest="440">
+                <Grid RowDefinitions="Auto,Auto,Auto">
+                    <Label Grid.Row="0" Text="Choose any Pokémon"
+                           FontFamily="NunitoBold" FontSize="13"
+                           TextColor="{DynamicResource ThTextPrimary}"
+                           HorizontalOptions="Center"
+                           Margin="20,14,20,8"/>
+                    <ScrollView Grid.Row="1" x:Name="PickerScroll" MaximumHeightRequest="400">
+                        <VerticalStackLayout x:Name="PickerList" Spacing="3" Padding="12,4"/>
+                    </ScrollView>
+                    <HorizontalStackLayout Grid.Row="2" HorizontalOptions="Center"
+                                           Spacing="16" Padding="0,6,0,12">
+                        <HorizontalStackLayout Spacing="4">
+                            <Border StrokeShape="RoundRectangle 4"
+                                    BackgroundColor="{DynamicResource ThHintBg}"
+                                    Stroke="{DynamicResource ThHintStroke}"
+                                    WidthRequest="22" HeightRequest="22">
+                                <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Add" FontFamily="Nunito" FontSize="11"
+                                   TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="4">
+                            <Border StrokeShape="RoundRectangle 4"
+                                    BackgroundColor="{DynamicResource ThHintBg}"
+                                    Stroke="{DynamicResource ThHintStroke}"
+                                    WidthRequest="22" HeightRequest="22">
+                                <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Cancel" FontFamily="Nunito" FontSize="11"
+                                   TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
 
     </Grid>
 </ContentPage>

@@ -363,10 +363,8 @@ public partial class BankPage : ContentPage
         }
         else
         {
-            // Empty slot — open picker to choose a Pokémon from any loaded save
+            // Empty slot — open picker
             DeselectSlot();
-            ModeLabel.Text = $"slot={_cursorSlot} len={_currentSlots.Length} species={_currentSlots[_cursorSlot]?.Species}";
-            ModeBanner.IsVisible = true;
             _ = OpenPickerAsync();
         }
     }
