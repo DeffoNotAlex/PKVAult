@@ -216,7 +216,7 @@
 
             <!-- Section header -->
             <Label Text="EMULATOR SAVES"
-                   FontSize="10" FontAttributes="Bold" LetterSpacing="1.5"
+                   FontSize="10" FontAttributes="Bold"
                    TextColor="{DynamicResource ThTextDim}" Margin="4,8,0,2" />
 
             <!-- Eden (Switch Gen 8/9) -->
