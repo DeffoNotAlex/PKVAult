@@ -1,3 +1,4 @@
+using Microsoft.Maui.Controls.Shapes;
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
 using PKHeX.Mobile.Theme;
@@ -20,7 +21,7 @@ public partial class BankViewPage : ContentPage
     private PKM?[] _currentSlots = new PKM?[BankService.SlotsPerBox];
     private int    _boxIndex;
     private int    _cursorSlot;
-    private int    _detailView;   // 0 = info, 1 = moves
+    private bool   _detailToggled;
     private PKM?   _previewPk;
 
     // Radar animation
@@ -123,6 +124,8 @@ public partial class BankViewPage : ContentPage
     {
         _previewPk = _cursorSlot < _currentSlots.Length ? _currentSlots[_cursorSlot] : null;
 
+        _detailToggled = false;
+        ApplyDetailToggle();
         UpdateInfoLabels();
         UpdateMoveLabels();
 
@@ -388,9 +391,116 @@ public partial class BankViewPage : ContentPage
 
     private void CycleDetailView()
     {
-        _detailView = _detailView == 0 ? 1 : 0;
-        InfoPanel.IsVisible  = _detailView == 0;
-        MovesPanel.IsVisible = _detailView == 1;
+        if (_previewPk?.Species is 0 or null) return;
+        _detailToggled = !_detailToggled;
+        ApplyDetailToggle();
+        if (_detailToggled) UpdateCompatPanel(_previewPk);
+    }
+
+    private void ApplyDetailToggle()
+    {
+        RadarBorder.IsVisible  = !_detailToggled;
+        CompatPanel.IsVisible  =  _detailToggled;
+        InfoPanel.IsVisible    = !_detailToggled;
+        MovesPanel.IsVisible   =  _detailToggled;
+    }
+
+    private void UpdateCompatPanel(PKM pk)
+    {
+        while (CompatList.Children.Count > 1)
+            CompatList.Children.RemoveAt(1);
+
+        var saves = App.LoadedSaves;
+        if (saves.Count == 0)
+        {
+            CompatList.Children.Add(new Label
+            {
+                Text = "No other saves loaded",
+                FontFamily = "Nunito",
+                FontSize = 10,
+                TextColor = Color.FromArgb("#88AABBCC"),
+            });
+            return;
+        }
+
+        foreach (var save in saves)
+        {
+            var status = GetCompatStatus(pk, save);
+            var dotColor = status switch
+            {
+                CompatStatus.Green  => Color.FromArgb("#4ADE80"),
+                CompatStatus.Yellow => Color.FromArgb("#FACC15"),
+                _                   => Color.FromArgb("#F87171"),
+            };
+            var statusText = status switch
+            {
+                CompatStatus.Green  => "Direct",
+                CompatStatus.Yellow => "Transfer",
+                _                   => "Incompatible",
+            };
+
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitionCollection(
+                    new ColumnDefinition(GridLength.Auto),
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Auto)),
+                ColumnSpacing = 6,
+            };
+
+            row.Add(new Ellipse
+            {
+                Fill = new SolidColorBrush(dotColor),
+                WidthRequest = 8, HeightRequest = 8,
+                VerticalOptions = LayoutOptions.Center,
+            }, 0, 0);
+
+            var nameStack = new VerticalStackLayout { Spacing = 0 };
+            nameStack.Add(new Label
+            {
+                Text = save.FileName,
+                FontFamily = "NunitoBold",
+                FontSize = 11,
+                TextColor = Color.FromArgb("#EDF0FF"),
+                LineBreakMode = LineBreakMode.TailTruncation,
+            });
+            nameStack.Add(new Label
+            {
+                Text = $"{save.Version}  ·  {save.TrainerName}",
+                FontFamily = "Nunito",
+                FontSize = 9,
+                TextColor = Color.FromArgb("#7080A0"),
+            });
+            row.Add(nameStack, 1, 0);
+
+            row.Add(new Label
+            {
+                Text = statusText,
+                FontFamily = "Nunito",
+                FontSize = 9,
+                TextColor = dotColor,
+                VerticalOptions = LayoutOptions.Center,
+            }, 2, 0);
+
+            CompatList.Children.Add(new Border
+            {
+                StrokeShape = new RoundRectangle { CornerRadius = 8 },
+                BackgroundColor = Color.FromArgb("#0D1A33"),
+                Stroke = Color.FromArgb("#1A2A44"),
+                StrokeThickness = 1,
+                Padding = new Thickness(8, 6),
+                Content = row,
+            });
+        }
+    }
+
+    private enum CompatStatus { Green, Yellow, Red }
+
+    private static CompatStatus GetCompatStatus(PKM pk, SaveEntry save)
+    {
+        if (save.Generation == pk.Format) return CompatStatus.Green;
+        if (EntityConverter.IsConvertibleToFormat(pk, (byte)save.Generation)) return CompatStatus.Yellow;
+        return CompatStatus.Red;
     }
 
     // ──────────────────────────────────────────────

@@ -46,17 +46,37 @@
         <!-- ── Main: radar | sprite | info/moves ── -->
         <Grid Grid.Row="1" ColumnDefinitions="2.5*,3.5*,3*" Padding="8,4">
 
-            <!-- Col 0: Stat radar in frosted glass -->
-            <Border x:Name="RadarBorder"
-                    Grid.Column="0"
-                    StrokeShape="RoundRectangle 16"
-                    BackgroundColor="{DynamicResource ThRadarBg}"
-                    Stroke="{DynamicResource ThRadarStroke}"
-                    StrokeThickness="1"
-                    Margin="4"
-                    VerticalOptions="Center">
-                <skia:SKCanvasView x:Name="RadarCanvas" PaintSurface="OnRadarPaint" />
-            </Border>
+            <!-- Col 0: Stat radar  /  Compatibility list (toggled by X) -->
+            <Grid Grid.Column="0">
+                <!-- Radar (default) -->
+                <Border x:Name="RadarBorder"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{DynamicResource ThRadarBg}"
+                        Stroke="{DynamicResource ThRadarStroke}"
+                        StrokeThickness="1"
+                        Margin="4"
+                        VerticalOptions="Center">
+                    <skia:SKCanvasView x:Name="RadarCanvas" PaintSurface="OnRadarPaint" />
+                </Border>
+
+                <!-- Compatibility list (shown on X) -->
+                <Border x:Name="CompatPanel" IsVisible="False"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{DynamicResource ThRadarBg}"
+                        Stroke="{DynamicResource ThRadarStroke}"
+                        StrokeThickness="1"
+                        Margin="4"
+                        VerticalOptions="Fill">
+                    <ScrollView>
+                        <VerticalStackLayout x:Name="CompatList"
+                                             Padding="10,8" Spacing="5">
+                            <Label Text="SAVES" FontFamily="NunitoBold" FontSize="8"
+                                   TextColor="{DynamicResource ThTextDim}"
+                                   CharacterSpacing="1.2" Margin="0,0,0,2" />
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Border>
+            </Grid>
 
             <!-- Col 1: HOME sprite -->
             <Grid Grid.Column="1" Margin="4">
