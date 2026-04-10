@@ -336,7 +336,9 @@ public partial class BankPage : ContentPage
         }
         else
         {
+            // Empty slot with nothing pending — go back to game to grab a Pokémon
             DeselectSlot();
+            _ = SwapToGame();
         }
     }
 

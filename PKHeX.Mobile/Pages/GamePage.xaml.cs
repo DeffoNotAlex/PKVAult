@@ -1180,7 +1180,7 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonL1: _ = SwapToBank(-1); break;
             case Android.Views.Keycode.ButtonR1: _ = SwapToBank(+1); break;
 
-            case Android.Views.Keycode.ButtonX: ToggleDetailView(); break;
+            case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonY:
                 if (_moveMode) { CancelMoveMode(); break; }
                 if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
