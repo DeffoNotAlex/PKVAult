@@ -675,10 +675,14 @@ public partial class BankViewPage : ContentPage
             for (int i = 0; i < GenRanges.Length; i++)
             {
                 var (start, end, region) = GenRanges[i];
-                Application.Current!.Resources.TryGetValue("ThCardBg",       out var cardBg);
-                Application.Current!.Resources.TryGetValue("ThTextPrimary",  out var textPrimary);
-                Application.Current!.Resources.TryGetValue("ThTextSecondary",out var textSecondary);
-                Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var stroke);
+                Application.Current!.Resources.TryGetValue("ThCardBg",        out var cardBgRes);
+                Application.Current!.Resources.TryGetValue("ThTextPrimary",   out var textPrimaryRes);
+                Application.Current!.Resources.TryGetValue("ThTextSecondary", out var textSecondaryRes);
+                Application.Current!.Resources.TryGetValue("ThNavBtnStroke",  out var strokeRes);
+                var cardBg    = cardBgRes       is Color cb ? cb : Color.FromArgb("#1A2A44");
+                var textPri   = textPrimaryRes  is Color tp ? tp : Color.FromArgb("#EDF0FF");
+                var textSec   = textSecondaryRes is Color ts ? ts : Color.FromArgb("#7080A0");
+                var strokeCol = strokeRes        is Color st ? st : Color.FromArgb("#334466");
 
                 var label = new VerticalStackLayout
                 {
@@ -691,14 +695,14 @@ public partial class BankViewPage : ContentPage
                         {
                             Text = $"GEN {i + 1}",
                             FontFamily = "NunitoExtraBold", FontSize = 14,
-                            TextColor = cardBg is Color c1 ? c1 : Color.FromArgb("#EDF0FF"),
+                            TextColor = textPri,
                             HorizontalOptions = LayoutOptions.Center,
                         },
                         new Label
                         {
                             Text = region,
                             FontFamily = "Nunito", FontSize = 10,
-                            TextColor = cardBg is Color c2 ? c2.WithAlpha(0.7f) : Color.FromArgb("#7080A0"),
+                            TextColor = textSec,
                             HorizontalOptions = LayoutOptions.Center,
                         },
                     },
@@ -707,8 +711,8 @@ public partial class BankViewPage : ContentPage
                 var border = new Border
                 {
                     StrokeShape = new RoundRectangle { CornerRadius = 12 },
-                    BackgroundColor = textPrimary is Color bg ? bg : Color.FromArgb("#1A2A44"),
-                    Stroke = stroke is Color st ? st : Color.FromArgb("#1A2A44"),
+                    BackgroundColor = cardBg,
+                    Stroke = strokeCol,
                     StrokeThickness = 1,
                     Padding = new Thickness(8, 12),
                     Content = label,
@@ -729,7 +733,7 @@ public partial class BankViewPage : ContentPage
     private void UpdateGenHighlight()
     {
         Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var strokeRes);
-        var inactive = strokeRes is Color c ? c : Color.FromArgb("#1A2A44");
+        var inactive = strokeRes is Color c ? c : Color.FromArgb("#334466");
         for (int i = 0; i < _genBorders.Count; i++)
         {
             _genBorders[i].Stroke         = i == _genCursor ? Color.FromArgb("#AED6F1") : inactive;
@@ -819,11 +823,16 @@ public partial class BankViewPage : ContentPage
         };
         cell.Add(nameBar, 0, 1);
 
+        Application.Current!.Resources.TryGetValue("ThCardBg",       out var cellBgRes);
+        Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var cellStrokeRes);
+        var cellBg     = cellBgRes     is Color cb2 ? cb2 : Color.FromArgb("#1A2A44");
+        var cellStroke = cellStrokeRes is Color cs2 ? cs2 : Color.FromArgb("#334466");
+
         var border = new Border
         {
             StrokeShape = new RoundRectangle { CornerRadius = 10 },
-            BackgroundColor = Color.FromArgb("#0D1A33"),
-            Stroke = Color.FromArgb("#1A2A44"),
+            BackgroundColor = cellBg,
+            Stroke = cellStroke,
             StrokeThickness = 1,
             Padding = new Thickness(0),
             Content = cell,
@@ -848,6 +857,15 @@ public partial class BankViewPage : ContentPage
             _speciesBorders[i].Stroke         = i == _speciesCursor ? Color.FromArgb("#AED6F1") : Color.FromArgb("#1A2A44");
             _speciesBorders[i].StrokeThickness = i == _speciesCursor ? 2 : 1;
         }
+        ScrollToSpeciesCursor();
+    }
+
+    private void ScrollToSpeciesCursor()
+    {
+        const int cols      = 8;
+        const int cellHeight = 102; // HeightRequest(96) + Margin(3*2)
+        int row = _speciesCursor / cols;
+        _ = SpeciesScroll.ScrollToAsync(0, row * cellHeight, false);
     }
 
     private void OnPickerBackTapped(object sender, EventArgs e) => ShowGenSelector();
