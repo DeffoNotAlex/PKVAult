@@ -258,7 +258,7 @@ public partial class SettingsPage : ContentPage
     private void OnSpriteSlugCompleted(string slug, bool success)
     {
         AppendLog(SpriteLogPanel, SpriteLogLabel, SpriteLogScroll,
-                  ref _spriteLog, ref _spriteLogLines, slug, success);
+                  _spriteLog, ref _spriteLogLines, slug, success);
     }
 
     private void UpdateSpriteStatus()
@@ -311,7 +311,7 @@ public partial class SettingsPage : ContentPage
     private void OnAnimSlugCompleted(string slug, bool success)
     {
         AppendLog(AnimLogPanel, AnimLogLabel, AnimLogScroll,
-                  ref _animLog, ref _animLogLines, slug, success);
+                  _animLog, ref _animLogLines, slug, success);
     }
 
     private void UpdateAnimSpriteStatus()
@@ -343,7 +343,7 @@ public partial class SettingsPage : ContentPage
     // ── Shared log helper ─────────────────────────────────────────────────────
 
     private void AppendLog(Border panel, Label label, ScrollView scroll,
-                           ref System.Text.StringBuilder sb, ref int lineCount,
+                           System.Text.StringBuilder sb, ref int lineCount,
                            string slug, bool success)
     {
         if (success) return;
