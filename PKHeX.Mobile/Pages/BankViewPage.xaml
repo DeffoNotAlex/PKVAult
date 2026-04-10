@@ -165,6 +165,17 @@
                         BackgroundColor="{DynamicResource ThHintBg}"
                         Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
                         WidthRequest="22" HeightRequest="22">
+                    <Label Text="Y" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FCD34D"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Delete" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        WidthRequest="22" HeightRequest="22">
                     <Label Text="X" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#A78BFA"
                            HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>

@@ -540,8 +540,8 @@ public partial class BankViewPage : ContentPage
     private static CompatStatus GetCompatStatus(PKM pk, SaveEntry save)
     {
         if (save.Generation == pk.Format) return CompatStatus.Green;
-        if (EntityConverter.IsConvertibleToFormat(pk, (byte)save.Generation)) return CompatStatus.Yellow;
-        return CompatStatus.Red;
+        if (save.Generation > pk.Format)  return CompatStatus.Yellow; // forward transfer
+        return CompatStatus.Red; // can't go backward
     }
 
     // ──────────────────────────────────────────────
@@ -595,6 +595,9 @@ public partial class BankViewPage : ContentPage
                 break;
             case Android.Views.Keycode.ButtonA:
                 if (_previewPk is null || _previewPk.Species == 0) OpenPicker();
+                break;
+            case Android.Views.Keycode.ButtonY:
+                if (_previewPk?.Species > 0) _ = TryDeleteSlotAsync();
                 break;
             case Android.Views.Keycode.ButtonX:
                 CycleDetailView(); break;
@@ -868,6 +871,17 @@ public partial class BankViewPage : ContentPage
         _ = SpeciesScroll.ScrollToAsync(0, row * cellHeight, false);
     }
 
+    private async Task TryDeleteSlotAsync()
+    {
+        var name = _previewPk?.Species > 0 && _previewPk.Species < _strings.specieslist.Length
+            ? _strings.specieslist[_previewPk.Species]
+            : "this Pokémon";
+        bool ok = await DisplayAlert("Remove from Bank", $"Remove {name} from the bank?", "Remove", "Cancel");
+        if (!ok) return;
+        _bank.ClearSlot(_boxIndex, _cursorSlot);
+        await LoadBoxAsync(_boxIndex, resetCursor: false);
+    }
+
     private void OnPickerBackTapped(object sender, EventArgs e) => ShowGenSelector();
 
     private void ClosePicker()
@@ -884,6 +898,8 @@ public partial class BankViewPage : ContentPage
         pk.Species      = sp;
         pk.CurrentLevel = 1;
         pk.Gender       = pk.GetSaneGender();
+        // Randomize PID until not shiny (PID=0 is shiny in most games)
+        do { pk.PID = (uint)Random.Shared.Next(); } while (pk.IsShiny);
         _bank.Deposit(_boxIndex, _cursorSlot, pk);
         _ = LoadBoxAsync(_boxIndex, resetCursor: false);
         ClosePicker();
