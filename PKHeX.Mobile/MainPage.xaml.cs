@@ -33,6 +33,12 @@ public partial class MainPage : ContentPage
     private IDispatcherTimer? _floatTimer;
     private DateTime          _floatStart = DateTime.UtcNow;
 
+    // Hero gradient animation
+    private Color         _heroColorLight = Colors.Transparent;
+    private Color         _heroColorDark  = Colors.Transparent;
+    private GradientStop? _heroTopStop;
+    private GradientStop? _heroMidStop;
+
     // Hero cross-fade cancellation
     private CancellationTokenSource? _heroAnimCts;
 
@@ -201,18 +207,24 @@ public partial class MainPage : ContentPage
             HeroBgGrad1.Color    = card.GameColorLight;
         }
 
-        // Game-colored panel background gradient
-        HeroPanel.Background = new LinearGradientBrush
+        // Game-colored panel background gradient (reuse brush; timer animates the stops)
+        _heroColorLight = card.GameColorLight;
+        _heroColorDark  = card.GameColorDark;
+        if (_heroTopStop is null)
         {
-            StartPoint = new Point(0.5, 0),
-            EndPoint   = new Point(0.5, 1),
-            GradientStops =
-            [
-                new GradientStop(card.GameColorLight.WithAlpha(55), 0f),
-                new GradientStop(card.GameColorDark.WithAlpha(20),  0.6f),
-                new GradientStop(Colors.Transparent,                 1f),
-            ],
-        };
+            _heroTopStop = new GradientStop(card.GameColorLight.WithAlpha(55), 0f);
+            _heroMidStop = new GradientStop(card.GameColorDark.WithAlpha(20), 0.6f);
+            HeroPanel.Background = new LinearGradientBrush
+            {
+                StartPoint = new Point(0.5, 0), EndPoint = new Point(0.5, 1),
+                GradientStops = [_heroTopStop, _heroMidStop, new GradientStop(Colors.Transparent, 1f)],
+            };
+        }
+        else
+        {
+            _heroTopStop.Color = card.GameColorLight.WithAlpha(55);
+            _heroMidStop!.Color = card.GameColorDark.WithAlpha(20);
+        }
 
         // Accent glow + card stroke from game color
         HeroGlow0.Color = card.GameColorLight.WithAlpha(64);
@@ -259,8 +271,7 @@ public partial class MainPage : ContentPage
             if (i < party.Length)
             {
                 var pk  = party[i];
-                var url = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny)
-                       ?? HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, 0, pk.IsShiny)!;
+                var url = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny);
                 _partyImages[i].Source    = new UriImageSource { Uri = new Uri(url), CacheValidity = TimeSpan.FromDays(30) };
                 _partyImages[i].IsVisible = true;
             }
@@ -305,6 +316,16 @@ public partial class MainPage : ContentPage
         HeroCard.RotationX    = 3.5  * Math.Sin(phaseA);
         HeroCard.RotationY    = 2.5  * Math.Sin(phaseB);
 
+        // Breathe the hero panel gradient
+        if (_heroTopStop is not null && _heroColorLight != Colors.Transparent)
+        {
+            double breath   = 0.5 + 0.5 * Math.Sin(t * Math.PI * 2 / 4.0); // 4s cycle
+            byte topAlpha = (byte)(22 + breath * 90); // 22 → 112
+            byte midAlpha = (byte)(8  + breath * 28); // 8  → 36
+            _heroTopStop.Color  = _heroColorLight.WithAlpha(topAlpha);
+            _heroMidStop!.Color = _heroColorDark.WithAlpha(midAlpha);
+        }
+
         HeroGridCanvas.InvalidateSurface();
     }
 
@@ -330,6 +351,22 @@ public partial class MainPage : ContentPage
         var dotColor = isDark
             ? new SKColor(255, 255, 255, 22)   // subtle white on dark
             : new SKColor(0,   0,   0,   28);  // subtle black on light
+
+        // Diagonal shimmer sweep — a bright stripe crosses the panel every 6 seconds
+        float stripeW = w * 0.5f;
+        float sweep   = (float)(t % 6.0) / 6.0f; // 0 → 1 over 6s
+        float cx      = -stripeW + sweep * (w + stripeW * 2f);
+        using (var shimmerPaint = new SKPaint { IsAntialias = true })
+        using (var shader = SKShader.CreateLinearGradient(
+            new SKPoint(cx - stripeW, 0f),
+            new SKPoint(cx + stripeW, h),
+            [SKColors.Transparent, new SKColor(255, 255, 255, 45), SKColors.Transparent],
+            [0f, 0.5f, 1f],
+            SKShaderTileMode.Clamp))
+        {
+            shimmerPaint.Shader = shader;
+            canvas.DrawRect(0, 0, w, h, shimmerPaint);
+        }
 
         using var paint = new SKPaint { Color = dotColor, IsAntialias = true };
 

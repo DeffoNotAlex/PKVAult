@@ -173,8 +173,7 @@ public partial class BankViewPage : ContentPage
         if (_previewPk?.Species > 0)
         {
             var pk = _previewPk;
-            var spriteUrl = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny)
-                         ?? HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, 0, pk.IsShiny)!;
+            var spriteUrl = HomeSpriteCacheService.GetHomeUrl((ushort)pk.Species, pk.Form, pk.IsShiny);
             HomeSpriteImage.Source = new UriImageSource
             {
                 Uri = new Uri(spriteUrl),
