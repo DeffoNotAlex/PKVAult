@@ -464,6 +464,15 @@ public partial class BankViewPage : ContentPage
             return;
         }
 
+        Application.Current!.Resources.TryGetValue("ThCardBg",        out var cardBgRes);
+        Application.Current!.Resources.TryGetValue("ThNavBtnStroke",  out var strokeRes);
+        Application.Current!.Resources.TryGetValue("ThTextPrimary",   out var textPriRes);
+        Application.Current!.Resources.TryGetValue("ThTextSecondary", out var textSecRes);
+        var cardBg  = cardBgRes  is Color cb ? cb : Color.FromArgb("#1A2A44");
+        var stroke  = strokeRes  is Color st ? st : Color.FromArgb("#334466");
+        var textPri = textPriRes is Color tp ? tp : Color.FromArgb("#EDF0FF");
+        var textSec = textSecRes is Color ts ? ts : Color.FromArgb("#7080A0");
+
         foreach (var save in saves)
         {
             var status = GetCompatStatus(pk, save);
@@ -496,21 +505,27 @@ public partial class BankViewPage : ContentPage
                 VerticalOptions = LayoutOptions.Center,
             }, 0, 0);
 
+            var gameIdx  = (int)save.Version;
+            var gameName = gameIdx > 0 && gameIdx < _strings.gamelist.Length
+                ? _strings.gamelist[gameIdx]
+                : save.Version.ToString();
+
             var nameStack = new VerticalStackLayout { Spacing = 0 };
             nameStack.Add(new Label
             {
-                Text = save.FileName,
+                Text = gameName,
                 FontFamily = "NunitoBold",
                 FontSize = 11,
-                TextColor = Color.FromArgb("#EDF0FF"),
+                TextColor = textPri,
                 LineBreakMode = LineBreakMode.TailTruncation,
             });
             nameStack.Add(new Label
             {
-                Text = $"{save.Version}  ·  {save.TrainerName}",
+                Text = $"{save.FileName}  ·  {save.TrainerName}",
                 FontFamily = "Nunito",
                 FontSize = 9,
-                TextColor = Color.FromArgb("#7080A0"),
+                TextColor = textSec,
+                LineBreakMode = LineBreakMode.TailTruncation,
             });
             row.Add(nameStack, 1, 0);
 
@@ -526,8 +541,8 @@ public partial class BankViewPage : ContentPage
             CompatList.Children.Add(new Border
             {
                 StrokeShape = new RoundRectangle { CornerRadius = 8 },
-                BackgroundColor = Color.FromArgb("#0D1A33"),
-                Stroke = Color.FromArgb("#1A2A44"),
+                BackgroundColor = cardBg,
+                Stroke = stroke,
                 StrokeThickness = 1,
                 Padding = new Thickness(8, 6),
                 Content = row,
