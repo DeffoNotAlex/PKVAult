@@ -537,11 +537,14 @@ public partial class BankViewPage : ContentPage
 
     private enum CompatStatus { Green, Yellow, Red }
 
+    // Max species index per generation (index = gen number)
+    private static readonly int[] MaxSpeciesPerGen = [0, 151, 251, 386, 493, 649, 721, 809, 905, 1025];
+
     private static CompatStatus GetCompatStatus(PKM pk, SaveEntry save)
     {
         if (save.Generation == pk.Format) return CompatStatus.Green;
-        if (save.Generation > pk.Format)  return CompatStatus.Yellow; // forward transfer
-        return CompatStatus.Red; // can't go backward
+        int maxSp = save.Generation < MaxSpeciesPerGen.Length ? MaxSpeciesPerGen[save.Generation] : 1025;
+        return pk.Species <= maxSp ? CompatStatus.Yellow : CompatStatus.Red;
     }
 
     // ──────────────────────────────────────────────
@@ -826,17 +829,15 @@ public partial class BankViewPage : ContentPage
         };
         cell.Add(nameBar, 0, 1);
 
-        Application.Current!.Resources.TryGetValue("ThCardBg",       out var cellBgRes);
-        Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var cellStrokeRes);
-        var cellBg     = cellBgRes     is Color cb2 ? cb2 : Color.FromArgb("#1A2A44");
-        var cellStroke = cellStrokeRes is Color cs2 ? cs2 : Color.FromArgb("#334466");
+        Application.Current!.Resources.TryGetValue("ThCardBg", out var cellBgRes);
+        var cellBg = cellBgRes is Color cb2 ? cb2 : Color.FromArgb("#1A2A44");
 
         var border = new Border
         {
             StrokeShape = new RoundRectangle { CornerRadius = 10 },
             BackgroundColor = cellBg,
-            Stroke = cellStroke,
-            StrokeThickness = 1,
+            Stroke = Colors.Transparent, // UpdateSpeciesHighlight paints the selected cell
+            StrokeThickness = 2,
             Padding = new Thickness(0),
             Content = cell,
             WidthRequest  = 86,
@@ -856,19 +857,40 @@ public partial class BankViewPage : ContentPage
     private void UpdateSpeciesHighlight()
     {
         for (int i = 0; i < _speciesBorders.Count; i++)
-        {
-            _speciesBorders[i].Stroke         = i == _speciesCursor ? Color.FromArgb("#AED6F1") : Color.FromArgb("#1A2A44");
-            _speciesBorders[i].StrokeThickness = i == _speciesCursor ? 2 : 1;
-        }
-        ScrollToSpeciesCursor();
+            _speciesBorders[i].Stroke = i == _speciesCursor ? Color.FromArgb("#AED6F1") : Colors.Transparent;
+        ScrollSpeciesIntoViewIfNeeded();
     }
 
-    private void ScrollToSpeciesCursor()
+    private void ScrollSpeciesIntoViewIfNeeded()
     {
-        const int cols      = 8;
-        const int cellHeight = 102; // HeightRequest(96) + Margin(3*2)
-        int row = _speciesCursor / cols;
-        _ = SpeciesScroll.ScrollToAsync(0, row * cellHeight, false);
+        const int cols    = 8;
+        const int cellH   = 102; // HeightRequest(96) + Margin(3*2)
+        int row   = _speciesCursor / cols;
+        double topY       = row * cellH;
+        double botY       = topY + cellH;
+        double scrollTop  = SpeciesScroll.ScrollY;
+        double viewH      = SpeciesScroll.Height;
+
+        if (botY > scrollTop + viewH)
+            _ = SpeciesScroll.ScrollToAsync(0, botY - viewH, false);
+        else if (topY < scrollTop)
+            _ = SpeciesScroll.ScrollToAsync(0, topY, false);
+    }
+
+    private static void SetDefaultMoves(PKM pk)
+    {
+        try
+        {
+            var learnset = LearnSource9SV.Instance.GetLearnset((ushort)pk.Species, 0);
+            byte level = (byte)Math.Min(pk.CurrentLevel, 100);
+            var moves = learnset.GetMoveRange(level);
+            if (moves.IsEmpty)
+                moves = learnset.GetAllMoves(); // fallback: full learnset
+            if (moves.IsEmpty) return;
+            int start = Math.Max(0, moves.Length - 4);
+            pk.SetMoves(moves[start..]);
+        }
+        catch { }
     }
 
     private async Task TryDeleteSlotAsync()
@@ -900,6 +922,7 @@ public partial class BankViewPage : ContentPage
         pk.Gender       = pk.GetSaneGender();
         // Randomize PID until not shiny (PID=0 is shiny in most games)
         do { pk.PID = (uint)Random.Shared.Next(); } while (pk.IsShiny);
+        SetDefaultMoves(pk);
         _bank.Deposit(_boxIndex, _cursorSlot, pk);
         _ = LoadBoxAsync(_boxIndex, resetCursor: false);
         ClosePicker();
