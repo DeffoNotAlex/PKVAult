@@ -468,51 +468,76 @@ public partial class BankPage : ContentPage
 
     private async Task OpenPickerAsync()
     {
-        _pickerSpecies.Clear();
-        _pickerRowBorders.Clear();
-        PickerList.Children.Clear();
-        _pickerCursor = 0;
-        _pickerOpen = true;
-        PickerOverlay.IsVisible = true;
-
-        // Build species index off main thread
-        var species = await Task.Run(() =>
+        try
         {
-            var list = new List<ushort>();
-            int max = _strings.specieslist.Length - 1;
-            for (ushort i = 1; i <= max; i++)
-                if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
-                    list.Add(i);
-            return list;
-        });
-        _pickerSpecies.AddRange(species);
+            _pickerSpecies.Clear();
+            _pickerRowBorders.Clear();
+            PickerList.Children.Clear();
+            _pickerCursor = 0;
+            _pickerOpen = true;
 
-        // Build rows in batches of 30 so UI stays responsive
-        int lastGen = -1;
-        for (int idx = 0; idx < _pickerSpecies.Count; idx++)
-        {
-            var sp  = _pickerSpecies[idx];
-            int gen = GenForSpecies(sp);
-            if (gen != lastGen)
+            // Show overlay with loading message immediately
+            PickerList.Children.Add(new Label
             {
-                lastGen = gen;
-                PickerList.Children.Add(new Label
+                Text = "Loading Pokédex…",
+                FontFamily = "Nunito", FontSize = 12,
+                TextColor = Color.FromArgb("#88AABBCC"),
+                HorizontalOptions = LayoutOptions.Center,
+                Margin = new Thickness(0, 12),
+            });
+            PickerOverlay.IsVisible = true;
+
+            // Build species list off main thread
+            var species = await Task.Run(() =>
+            {
+                var list = new List<ushort>();
+                int max = _strings.specieslist.Length - 1;
+                for (ushort i = 1; i <= max; i++)
+                    if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
+                        list.Add(i);
+                return list;
+            });
+            _pickerSpecies.AddRange(species);
+            PickerList.Children.Clear();
+
+            // Build rows in batches of 30 so UI stays responsive
+            int lastGen = -1;
+            for (int idx = 0; idx < _pickerSpecies.Count; idx++)
+            {
+                var sp  = _pickerSpecies[idx];
+                int gen = GenForSpecies(sp);
+                if (gen != lastGen)
                 {
-                    Text = $"GENERATION {gen}",
-                    FontFamily = "NunitoBold", FontSize = 9,
-                    TextColor = Color.FromArgb("#5580AA"),
-                    CharacterSpacing = 1.2,
-                    Margin = new Thickness(2, idx == 0 ? 0 : 8, 0, 2),
-                });
+                    lastGen = gen;
+                    PickerList.Children.Add(new Label
+                    {
+                        Text = $"GENERATION {gen}",
+                        FontFamily = "NunitoBold", FontSize = 9,
+                        TextColor = Color.FromArgb("#5580AA"),
+                        CharacterSpacing = 1.2,
+                        Margin = new Thickness(2, idx == 0 ? 0 : 8, 0, 2),
+                    });
+                }
+                var border = BuildPickerRow(sp, _pickerRowBorders.Count);
+                _pickerRowBorders.Add(border);
+                PickerList.Children.Add(border);
+
+                if (idx % 30 == 0) await Task.Yield();
             }
-            var border = BuildPickerRow(sp, _pickerRowBorders.Count);
-            _pickerRowBorders.Add(border);
-            PickerList.Children.Add(border);
 
-            if (idx % 30 == 0) await Task.Yield();
+            UpdatePickerHighlight();
         }
-
-        UpdatePickerHighlight();
+        catch (Exception ex)
+        {
+            PickerList.Children.Clear();
+            PickerList.Children.Add(new Label
+            {
+                Text = $"Error: {ex.Message}",
+                FontFamily = "Nunito", FontSize = 11,
+                TextColor = Color.FromArgb("#FF6B6B"),
+                Margin = new Thickness(8),
+            });
+        }
     }
 
     private Border BuildPickerRow(ushort species, int index)
