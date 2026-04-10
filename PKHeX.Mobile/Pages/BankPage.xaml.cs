@@ -26,10 +26,9 @@ public partial class BankPage : ContentPage
     private PKM? _movePk;
     private int  _moveSourceSlot;
 
-    // Picker state (A on empty slot)
-    private record PickerEntry(PKM Pk, string GenLabel);
-    private readonly List<PickerEntry> _pickerEntries = [];
-    private readonly List<Border>      _pickerRowBorders = [];
+    // Picker state (A on empty slot — species browser)
+    private readonly List<ushort> _pickerSpecies     = [];
+    private readonly List<Border> _pickerRowBorders  = [];
     private int  _pickerCursor;
     private bool _pickerOpen;
 
@@ -313,7 +312,7 @@ public partial class BankPage : ContentPage
                 if (_pickerCursor > 0) { _pickerCursor--; UpdatePickerHighlight(); }
                 break;
             case Android.Views.Keycode.DpadDown:
-                if (_pickerCursor < _pickerEntries.Count - 1) { _pickerCursor++; UpdatePickerHighlight(); }
+                if (_pickerCursor < _pickerSpecies.Count - 1) { _pickerCursor++; UpdatePickerHighlight(); }
                 break;
             case Android.Views.Keycode.ButtonA:
                 ConfirmPickerSelection();
@@ -460,69 +459,48 @@ public partial class BankPage : ContentPage
     //  Picker (A on empty slot)
     // ──────────────────────────────────────────────
 
+    private static int GenForSpecies(ushort s) => s switch
+    {
+        <= 151 => 1, <= 251 => 2, <= 386 => 3,
+        <= 493 => 4, <= 649 => 5, <= 721 => 6,
+        <= 809 => 7, <= 905 => 8, _      => 9,
+    };
+
     private void OpenPicker()
     {
-        _pickerEntries.Clear();
+        _pickerSpecies.Clear();
         _pickerRowBorders.Clear();
         PickerList.Children.Clear();
 
-        // Active save
-        if (App.ActiveSave is { } sav)
+        // Build full Pokédex list (skip index 0 = "---")
+        int maxSpecies = _strings.specieslist.Length - 1;
+        for (ushort i = 1; i <= maxSpecies; i++)
         {
-            for (int b = 0; b < sav.BoxCount; b++)
-            for (int s = 0; s < sav.BoxSlotCount; s++)
-            {
-                var pk = sav.GetBoxSlotAtIndex(b, s);
-                if (pk.Species > 0)
-                    _pickerEntries.Add(new PickerEntry(pk, $"Gen {sav.Generation} — {sav.OT}"));
-            }
+            if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
+                _pickerSpecies.Add(i);
         }
 
-        // Other loaded saves
-        foreach (var entry in App.LoadedSaves)
+        // Build rows grouped by generation
+        int lastGen = -1;
+        for (int idx = 0; idx < _pickerSpecies.Count; idx++)
         {
-            var mem = entry.RawData.AsMemory();
-            if (!SaveUtil.TryGetSaveFile(mem, out var other)) continue;
-            for (int b = 0; b < other.BoxCount; b++)
-            for (int s = 0; s < other.BoxSlotCount; s++)
+            var species = _pickerSpecies[idx];
+            int gen = GenForSpecies(species);
+            if (gen != lastGen)
             {
-                var pk = other.GetBoxSlotAtIndex(b, s);
-                if (pk.Species > 0)
-                    _pickerEntries.Add(new PickerEntry(pk, $"Gen {other.Generation} — {entry.TrainerName}"));
-            }
-        }
-
-        // Build rows grouped by generation label
-        string? lastLabel = null;
-        foreach (var e in _pickerEntries)
-        {
-            if (e.GenLabel != lastLabel)
-            {
-                lastLabel = e.GenLabel;
+                lastGen = gen;
                 PickerList.Children.Add(new Label
                 {
-                    Text = e.GenLabel.ToUpper(),
+                    Text = $"GENERATION {gen}",
                     FontFamily = "NunitoBold", FontSize = 9,
                     TextColor = Color.FromArgb("#5580AA"),
                     CharacterSpacing = 1.2,
-                    Margin = new Thickness(2, _pickerRowBorders.Count == 0 ? 0 : 6, 0, 2),
+                    Margin = new Thickness(2, idx == 0 ? 0 : 8, 0, 2),
                 });
             }
-
-            var border = BuildPickerRow(e, _pickerRowBorders.Count);
+            var border = BuildPickerRow(species, _pickerRowBorders.Count);
             _pickerRowBorders.Add(border);
             PickerList.Children.Add(border);
-        }
-
-        if (_pickerEntries.Count == 0)
-        {
-            PickerList.Children.Add(new Label
-            {
-                Text = "No Pokémon found in loaded saves",
-                FontFamily = "Nunito", FontSize = 12,
-                TextColor = Color.FromArgb("#88AABBCC"),
-                Margin = new Thickness(4, 8),
-            });
         }
 
         _pickerCursor = 0;
@@ -531,18 +509,17 @@ public partial class BankPage : ContentPage
         UpdatePickerHighlight();
     }
 
-    private Border BuildPickerRow(PickerEntry e, int index)
+    private Border BuildPickerRow(ushort species, int index)
     {
-        var spriteUrl = e.Pk.IsShiny
-            ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{e.Pk.Species}.png"
-            : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{e.Pk.Species}.png";
-        var name = e.Pk.Species < _strings.specieslist.Length ? _strings.specieslist[e.Pk.Species] : "?";
+        var spriteUrl = $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{species}.png";
+        var name = _strings.specieslist[species];
 
         var grid = new Grid
         {
             ColumnDefinitions = new ColumnDefinitionCollection(
-                new ColumnDefinition(new GridLength(36)),
-                new ColumnDefinition(GridLength.Star)),
+                new ColumnDefinition(new GridLength(40)),
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Auto)),
             ColumnSpacing = 8,
         };
 
@@ -550,24 +527,25 @@ public partial class BankPage : ContentPage
         {
             Source = new UriImageSource { Uri = new Uri(spriteUrl), CacheValidity = TimeSpan.FromDays(30) },
             Aspect = Aspect.AspectFit,
-            WidthRequest = 32, HeightRequest = 32,
+            WidthRequest = 36, HeightRequest = 36,
             VerticalOptions = LayoutOptions.Center,
         }, 0, 0);
 
-        var info = new VerticalStackLayout { Spacing = 0, VerticalOptions = LayoutOptions.Center };
-        info.Add(new Label
+        grid.Add(new Label
         {
-            Text = name + (e.Pk.IsShiny ? "  ✦" : ""),
-            FontFamily = "NunitoBold", FontSize = 13,
+            Text = name,
+            FontFamily = "NunitoBold", FontSize = 14,
             TextColor = Color.FromArgb("#EDF0FF"),
-        });
-        info.Add(new Label
+            VerticalOptions = LayoutOptions.Center,
+        }, 1, 0);
+
+        grid.Add(new Label
         {
-            Text = $"Lv. {e.Pk.CurrentLevel}  ·  OT: {e.Pk.OriginalTrainerName}",
-            FontFamily = "Nunito", FontSize = 10,
-            TextColor = Color.FromArgb("#7080A0"),
-        });
-        grid.Add(info, 1, 0);
+            Text = $"#{species:000}",
+            FontFamily = "Nunito", FontSize = 11,
+            TextColor = Color.FromArgb("#5580AA"),
+            VerticalOptions = LayoutOptions.Center,
+        }, 2, 0);
 
         var border = new Border
         {
@@ -575,7 +553,7 @@ public partial class BankPage : ContentPage
             BackgroundColor = Color.FromArgb("#0D1A33"),
             Stroke = Color.FromArgb("#1A2A44"),
             StrokeThickness = 1,
-            Padding = new Thickness(8, 4),
+            Padding = new Thickness(8, 5),
             Content = grid,
         };
         int captured = index;
@@ -590,7 +568,7 @@ public partial class BankPage : ContentPage
     {
         for (int i = 0; i < _pickerRowBorders.Count; i++)
         {
-            _pickerRowBorders[i].Stroke        = i == _pickerCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
+            _pickerRowBorders[i].Stroke         = i == _pickerCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
             _pickerRowBorders[i].StrokeThickness = i == _pickerCursor ? 2 : 1;
         }
     }
@@ -603,10 +581,17 @@ public partial class BankPage : ContentPage
 
     private void ConfirmPickerSelection()
     {
-        if (_pickerCursor >= _pickerEntries.Count) return;
-        _bank.Deposit(_boxIndex, _cursorSlot, _pickerEntries[_pickerCursor].Pk);
+        if (_pickerCursor >= _pickerSpecies.Count) return;
+        var species = _pickerSpecies[_pickerCursor];
+
+        // Create a blank PKM in the active save's format, or fall back to PK9
+        PKM pk = App.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
+        pk.Species      = species;
+        pk.CurrentLevel = 1;
+        pk.Gender       = pk.GetSaneGender();
+
+        _bank.Deposit(_boxIndex, _cursorSlot, pk);
         LoadBox(_boxIndex);
-        UpdateModeBanner();
         ClosePicker();
     }
 

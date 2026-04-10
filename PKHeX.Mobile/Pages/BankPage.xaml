@@ -81,7 +81,7 @@
                 <Grid RowDefinitions="Auto,Auto,Auto">
                     <!-- Title -->
                     <Label Grid.Row="0"
-                           Text="Choose a Pokémon to deposit"
+                           Text="Choose any Pokémon"
                            FontFamily="NunitoBold" FontSize="13"
                            TextColor="{DynamicResource ThTextPrimary}"
                            HorizontalOptions="Center"
