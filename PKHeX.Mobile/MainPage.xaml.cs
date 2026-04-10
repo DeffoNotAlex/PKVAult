@@ -27,6 +27,7 @@ public partial class MainPage : ContentPage
     private Image[]  _partyImages = [];
     private SaveEntry? _selectedSave;
     private bool _gpNavigating;
+    private int  _lastHeroDisplayIndex = -2; // -2 = never shown
 
     // Floating card animation
     private IDispatcherTimer? _floatTimer;
@@ -138,6 +139,10 @@ public partial class MainPage : ContentPage
             if (sel >= 0) displayIndex = sel;
         }
 
+        // Nothing changed — skip the whole update (key for cursor navigation while locked)
+        if (displayIndex == _lastHeroDisplayIndex) return;
+        _lastHeroDisplayIndex = displayIndex;
+
         if (displayIndex < 0 || displayIndex >= _saveCards.Count)
         {
             if (HeroPreview.IsVisible)
@@ -148,9 +153,10 @@ public partial class MainPage : ContentPage
                 HeroGridCanvas.IsVisible = false;
                 HeroCard.Opacity         = 1;
             }
-            HeroEmptyState.IsVisible = true;
-            PartyStrip.IsVisible     = false;
-            HeroPanel.Background     = null; // revert to XAML BackgroundColor
+            HeroEmptyState.IsVisible  = true;
+            PartyStrip.IsVisible      = false;
+            HeroPanel.Background      = null; // revert to XAML BackgroundColor
+            _lastHeroDisplayIndex     = -1;
             StopFloatAnimation();
             return;
         }
