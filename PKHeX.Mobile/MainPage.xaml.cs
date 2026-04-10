@@ -442,9 +442,17 @@ public partial class MainPage : ContentPage
         var normalBg     = Color.FromArgb(light ? "#FFFFFF" : "#131B35");
         var normalStroke = Color.FromArgb(light ? "#E0E4EC" : "#0DFFFFFF");
 
-        // Primary button focus — use white stroke so it's visible against the blue gradient
+        // Primary button — enforce pastel blue background (overrides any theme reset)
+        Btn_OpenBoxes.Background = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0), EndPoint = new Point(1, 1),
+            GradientStops = [
+                new GradientStop(Color.FromArgb("#EAF5FF"), 0f),
+                new GradientStop(Color.FromArgb("#CCE8FF"), 1f),
+            ],
+        };
         bool primaryFocused = _focusSection == 1 && _actionCursor == 0;
-        Btn_OpenBoxes.Stroke          = primaryFocused ? Colors.White : Colors.Transparent;
+        Btn_OpenBoxes.Stroke          = primaryFocused ? Color.FromArgb("#5AAAD0") : Colors.Transparent;
         Btn_OpenBoxes.StrokeThickness = primaryFocused ? 2.5 : 1.5;
 
         // Tiles
