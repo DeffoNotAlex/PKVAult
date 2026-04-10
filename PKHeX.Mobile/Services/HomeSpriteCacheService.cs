@@ -36,9 +36,38 @@ public static class HomeSpriteCacheService
     // ── Form slug table ───────────────────────────────────────────────────────
     // Maps (species, form) → PokeAPI HOME path segment for alternate forms.
     // Only includes forms that have distinct sprites in the PokeAPI HOME set.
-    // All unlisted forms fall back to the base species number.
+    // All unlisted forms fall back to the base species number (form 0 sprite).
+    // NOTE: Furfrou trims are intentionally omitted — PokeAPI HOME only has the
+    //       Natural form; trims have no HOME sprite variant.
     private static readonly Dictionary<(ushort Species, byte Form), string> FormSlugs = new()
     {
+        // Flabébé (669) — flower colours
+        { (669, 1), "669-yellow" }, { (669, 2), "669-orange" },
+        { (669, 3), "669-blue"   }, { (669, 4), "669-white"  },
+
+        // Floette (670) — flower colours + Eternal Flower
+        { (670, 1), "670-yellow" }, { (670, 2), "670-orange" },
+        { (670, 3), "670-blue"   }, { (670, 4), "670-white"  },
+        { (670, 5), "670-eternal" },
+
+        // Florges (671) — flower colours
+        { (671, 1), "671-yellow" }, { (671, 2), "671-orange" },
+        { (671, 3), "671-blue"   }, { (671, 4), "671-white"  },
+
+        // Shellos (422) / Gastrodon (423) — East Sea
+        { (422, 1), "422-east" }, { (423, 1), "423-east" },
+
+        // Basculin (550) — Blue-Striped
+        { (550, 1), "550-blue-striped" },
+
+        // Deerling (585) / Sawsbuck (586) — seasons
+        { (585, 1), "585-summer" }, { (585, 2), "585-autumn" }, { (585, 3), "585-winter" },
+        { (586, 1), "586-summer" }, { (586, 2), "586-autumn" }, { (586, 3), "586-winter" },
+
+        // Pumpkaboo (710) / Gourgeist (711) — sizes
+        { (710, 1), "710-small" }, { (710, 2), "710-large" }, { (710, 3), "710-super" },
+        { (711, 1), "711-small" }, { (711, 2), "711-large" }, { (711, 3), "711-super" },
+
         // Vivillon (666) — 20 wing patterns
         { (666,  1), "666-polar"       }, { (666,  2), "666-tundra"      },
         { (666,  3), "666-continental" }, { (666,  4), "666-garden"      },
@@ -58,13 +87,6 @@ public static class HomeSpriteCacheService
 
         // Oricorio (741) dance styles
         { (741, 1), "741-pom-pom" }, { (741, 2), "741-pau" }, { (741, 3), "741-sensu" },
-
-        // Furfrou (676) trims
-        { (676, 1), "676-heart"    }, { (676, 2), "676-star"      },
-        { (676, 3), "676-diamond"  }, { (676, 4), "676-debutante" },
-        { (676, 5), "676-matron"   }, { (676, 6), "676-dandy"     },
-        { (676, 7), "676-la-reine" }, { (676, 8), "676-kabuki"    },
-        { (676, 9), "676-pharaoh"  },
 
         // Lycanroc (745)
         { (745, 1), "745-midnight" }, { (745, 2), "745-dusk" },
@@ -87,14 +109,8 @@ public static class HomeSpriteCacheService
         // Calyrex riders (898)
         { (898, 1), "898-ice" }, { (898, 2), "898-shadow" },
 
-        // Zacian (888) / Zamazenta (889) — Crowned
-        { (888, 1), "888-crowned" }, { (889, 1), "889-crowned" },
-
-        // Eternatus (890) — Eternamax
-        { (890, 1), "890-eternamax" },
-
-        // Zarude (893) — Dada
-        { (893, 1), "893-dada" },
+        // Zacian (888) / Zamazenta (889) — Crowned (corrected slugs)
+        { (888, 1), "888-crowned-sword" }, { (889, 1), "889-crowned-shield" },
 
         // Eiscue (875) — No-Ice face
         { (875, 1), "875-noice" },
@@ -102,8 +118,8 @@ public static class HomeSpriteCacheService
         // Morpeko (877) — Hangry mode
         { (877, 1), "877-hangry" },
 
-        // Necrozma (800) — fused / Ultra forms
-        { (800, 1), "800-dusk" }, { (800, 2), "800-dawn" }, { (800, 3), "800-ultra" },
+        // Necrozma (800) — fused / Ultra forms (corrected slugs)
+        { (800, 1), "800-dusk-mane" }, { (800, 2), "800-dawn-wings" }, { (800, 3), "800-ultra" },
     };
 
     /// <summary>
