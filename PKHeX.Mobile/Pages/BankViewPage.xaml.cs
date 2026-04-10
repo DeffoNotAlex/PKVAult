@@ -627,7 +627,7 @@ public partial class BankViewPage : ContentPage
         }
         else
         {
-            const int cols = 4;
+            const int cols = 8;
             switch (keyCode)
             {
                 case Android.Views.Keycode.DpadLeft:
@@ -675,6 +675,11 @@ public partial class BankViewPage : ContentPage
             for (int i = 0; i < GenRanges.Length; i++)
             {
                 var (start, end, region) = GenRanges[i];
+                Application.Current!.Resources.TryGetValue("ThCardBg",       out var cardBg);
+                Application.Current!.Resources.TryGetValue("ThTextPrimary",  out var textPrimary);
+                Application.Current!.Resources.TryGetValue("ThTextSecondary",out var textSecondary);
+                Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var stroke);
+
                 var label = new VerticalStackLayout
                 {
                     Spacing = 2,
@@ -686,14 +691,14 @@ public partial class BankViewPage : ContentPage
                         {
                             Text = $"GEN {i + 1}",
                             FontFamily = "NunitoExtraBold", FontSize = 14,
-                            TextColor = Color.FromArgb("#EDF0FF"),
+                            TextColor = cardBg is Color c1 ? c1 : Color.FromArgb("#EDF0FF"),
                             HorizontalOptions = LayoutOptions.Center,
                         },
                         new Label
                         {
                             Text = region,
                             FontFamily = "Nunito", FontSize = 10,
-                            TextColor = Color.FromArgb("#7080A0"),
+                            TextColor = cardBg is Color c2 ? c2.WithAlpha(0.7f) : Color.FromArgb("#7080A0"),
                             HorizontalOptions = LayoutOptions.Center,
                         },
                     },
@@ -702,8 +707,8 @@ public partial class BankViewPage : ContentPage
                 var border = new Border
                 {
                     StrokeShape = new RoundRectangle { CornerRadius = 12 },
-                    BackgroundColor = Color.FromArgb("#0D1A33"),
-                    Stroke = Color.FromArgb("#1A2A44"),
+                    BackgroundColor = textPrimary is Color bg ? bg : Color.FromArgb("#1A2A44"),
+                    Stroke = stroke is Color st ? st : Color.FromArgb("#1A2A44"),
                     StrokeThickness = 1,
                     Padding = new Thickness(8, 12),
                     Content = label,
@@ -723,9 +728,11 @@ public partial class BankViewPage : ContentPage
 
     private void UpdateGenHighlight()
     {
+        Application.Current!.Resources.TryGetValue("ThNavBtnStroke", out var strokeRes);
+        var inactive = strokeRes is Color c ? c : Color.FromArgb("#1A2A44");
         for (int i = 0; i < _genBorders.Count; i++)
         {
-            _genBorders[i].Stroke         = i == _genCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
+            _genBorders[i].Stroke         = i == _genCursor ? Color.FromArgb("#AED6F1") : inactive;
             _genBorders[i].StrokeThickness = i == _genCursor ? 2 : 1;
         }
     }
@@ -838,7 +845,7 @@ public partial class BankViewPage : ContentPage
     {
         for (int i = 0; i < _speciesBorders.Count; i++)
         {
-            _speciesBorders[i].Stroke         = i == _speciesCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
+            _speciesBorders[i].Stroke         = i == _speciesCursor ? Color.FromArgb("#AED6F1") : Color.FromArgb("#1A2A44");
             _speciesBorders[i].StrokeThickness = i == _speciesCursor ? 2 : 1;
         }
     }
