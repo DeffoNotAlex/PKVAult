@@ -207,22 +207,49 @@
               Grid.RowSpan="3"
               IsVisible="False"
               BackgroundColor="#CC000020">
-            <Border HorizontalOptions="Center" VerticalOptions="Center"
+            <Border HorizontalOptions="Fill" VerticalOptions="Fill"
+                    Margin="12"
                     BackgroundColor="{DynamicResource ThActionMenuPanel}"
                     Stroke="{DynamicResource ThActionMenuStroke}"
                     StrokeShape="RoundRectangle 16"
-                    Padding="0"
-                    MinimumWidthRequest="300"
-                    MaximumWidthRequest="440">
-                <Grid RowDefinitions="Auto,Auto,Auto">
-                    <Label Grid.Row="0" Text="Choose any Pokémon"
-                           FontFamily="NunitoBold" FontSize="13"
-                           TextColor="{DynamicResource ThTextPrimary}"
-                           HorizontalOptions="Center"
-                           Margin="20,14,20,8"/>
-                    <ScrollView Grid.Row="1" x:Name="PickerScroll" MaximumHeightRequest="400">
-                        <VerticalStackLayout x:Name="PickerList" Spacing="3" Padding="12,4"/>
+                    Padding="0">
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <!-- Title row -->
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="12,12,12,8">
+                        <Border x:Name="PickerBackBtn"
+                                StrokeShape="RoundRectangle 8"
+                                BackgroundColor="{DynamicResource ThHintBg}"
+                                Stroke="{DynamicResource ThHintStroke}"
+                                IsVisible="False" Padding="10,4">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPickerBackTapped"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="← Back" FontFamily="NunitoBold" FontSize="11"
+                                   TextColor="{DynamicResource ThTextSecondary}"/>
+                        </Border>
+                        <Label Grid.Column="1" x:Name="PickerTitle"
+                               Text="Choose Generation"
+                               FontFamily="NunitoBold" FontSize="14"
+                               TextColor="{DynamicResource ThTextPrimary}"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Grid>
+
+                    <!-- Generation selector (3×3 grid, populated in code) -->
+                    <Grid Grid.Row="1" x:Name="GenSelectorGrid"
+                          RowDefinitions="*,*,*" ColumnDefinitions="*,*,*"
+                          Padding="12" RowSpacing="8" ColumnSpacing="8"/>
+
+                    <!-- Species grid (hidden until gen selected) -->
+                    <ScrollView Grid.Row="1" x:Name="SpeciesScroll" IsVisible="False">
+                        <FlexLayout x:Name="SpeciesGrid"
+                                    Wrap="Wrap" Direction="Row"
+                                    JustifyContent="Start"
+                                    AlignContent="Start"
+                                    Padding="8" />
                     </ScrollView>
+
+                    <!-- Hint bar -->
                     <HorizontalStackLayout Grid.Row="2" HorizontalOptions="Center"
                                            Spacing="16" Padding="0,6,0,12">
                         <HorizontalStackLayout Spacing="4">
@@ -230,10 +257,11 @@
                                     BackgroundColor="{DynamicResource ThHintBg}"
                                     Stroke="{DynamicResource ThHintStroke}"
                                     WidthRequest="22" HeightRequest="22">
-                                <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
+                                <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9"
+                                       TextColor="#34D990"
                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
-                            <Label Text="Add" FontFamily="Nunito" FontSize="11"
+                            <Label Text="Select" FontFamily="Nunito" FontSize="11"
                                    TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                         <HorizontalStackLayout Spacing="4">
@@ -241,13 +269,15 @@
                                     BackgroundColor="{DynamicResource ThHintBg}"
                                     Stroke="{DynamicResource ThHintStroke}"
                                     WidthRequest="22" HeightRequest="22">
-                                <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
+                                <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9"
+                                       TextColor="#FF6B9D"
                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
-                            <Label Text="Cancel" FontFamily="Nunito" FontSize="11"
+                            <Label Text="Back / Cancel" FontFamily="Nunito" FontSize="11"
                                    TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
+
                 </Grid>
             </Border>
         </Grid>

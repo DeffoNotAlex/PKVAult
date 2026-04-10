@@ -24,10 +24,45 @@ public partial class BankViewPage : ContentPage
     private bool   _detailToggled;
 
     // Picker state
-    private readonly List<ushort> _pickerSpecies    = [];
-    private readonly List<Border> _pickerRowBorders = [];
-    private int  _pickerCursor;
-    private bool _pickerOpen;
+    private enum PickerState { Generation, Species }
+    private PickerState        _pickerState;
+    private int                _genCursor;
+    private int                _speciesCursor;
+    private readonly List<ushort> _genSpeciesList  = [];
+    private readonly List<Border> _genBorders      = [];
+    private readonly List<Border> _speciesBorders  = [];
+    private bool               _pickerOpen;
+
+    private static readonly (int Start, int End, string Region)[] GenRanges =
+    [
+        (  1, 151, "Kanto"),  (152, 251, "Johto"),
+        (252, 386, "Hoenn"),  (387, 493, "Sinnoh"),
+        (494, 649, "Unova"),  (650, 721, "Kalos"),
+        (722, 809, "Alola"),  (810, 905, "Galar"),
+        (906, 9999, "Paldea"),
+    ];
+
+    private static readonly Color[] TypeColors =
+    [
+        Color.FromArgb("#A8A878"), // Normal
+        Color.FromArgb("#C03028"), // Fighting
+        Color.FromArgb("#A890F0"), // Flying
+        Color.FromArgb("#A040A0"), // Poison
+        Color.FromArgb("#E0C068"), // Ground
+        Color.FromArgb("#B8A038"), // Rock
+        Color.FromArgb("#A8B820"), // Bug
+        Color.FromArgb("#705898"), // Ghost
+        Color.FromArgb("#B8B8D0"), // Steel
+        Color.FromArgb("#F08030"), // Fire
+        Color.FromArgb("#6890F0"), // Water
+        Color.FromArgb("#78C850"), // Grass
+        Color.FromArgb("#F8D030"), // Electric
+        Color.FromArgb("#F85888"), // Psychic
+        Color.FromArgb("#98D8D8"), // Ice
+        Color.FromArgb("#7038F8"), // Dragon
+        Color.FromArgb("#705848"), // Dark
+        Color.FromArgb("#EE99AC"), // Fairy
+    ];
     private PKM?   _previewPk;
 
     // Radar animation
@@ -559,7 +594,7 @@ public partial class BankViewPage : ContentPage
                 if (_boxIndex < _bank.Boxes.Count - 1) _ = LoadBoxAsync(_boxIndex + 1);
                 break;
             case Android.Views.Keycode.ButtonA:
-                if (_previewPk is null || _previewPk.Species == 0) _ = OpenPickerAsync();
+                if (_previewPk is null || _previewPk.Species == 0) OpenPicker();
                 break;
             case Android.Views.Keycode.ButtonX:
                 CycleDetailView(); break;
@@ -570,20 +605,46 @@ public partial class BankViewPage : ContentPage
 
     private void HandlePickerKey(Android.Views.Keycode keyCode)
     {
-        switch (keyCode)
+        if (_pickerState == PickerState.Generation)
         {
-            case Android.Views.Keycode.DpadUp:
-                if (_pickerCursor > 0) { _pickerCursor--; UpdatePickerHighlight(); }
-                break;
-            case Android.Views.Keycode.DpadDown:
-                if (_pickerCursor < _pickerSpecies.Count - 1) { _pickerCursor++; UpdatePickerHighlight(); }
-                break;
-            case Android.Views.Keycode.ButtonA:
-                ConfirmPickerSelection();
-                break;
-            case Android.Views.Keycode.ButtonB:
-                ClosePicker();
-                break;
+            const int cols = 3;
+            switch (keyCode)
+            {
+                case Android.Views.Keycode.DpadLeft:
+                    if (_genCursor % cols > 0) { _genCursor--; UpdateGenHighlight(); } break;
+                case Android.Views.Keycode.DpadRight:
+                    if (_genCursor % cols < cols - 1 && _genCursor + 1 < GenRanges.Length)
+                    { _genCursor++; UpdateGenHighlight(); } break;
+                case Android.Views.Keycode.DpadUp:
+                    if (_genCursor >= cols) { _genCursor -= cols; UpdateGenHighlight(); } break;
+                case Android.Views.Keycode.DpadDown:
+                    if (_genCursor + cols < GenRanges.Length) { _genCursor += cols; UpdateGenHighlight(); } break;
+                case Android.Views.Keycode.ButtonA:
+                    _ = SelectGenerationAsync(_genCursor); break;
+                case Android.Views.Keycode.ButtonB:
+                    ClosePicker(); break;
+            }
+        }
+        else
+        {
+            const int cols = 4;
+            switch (keyCode)
+            {
+                case Android.Views.Keycode.DpadLeft:
+                    if (_speciesCursor % cols > 0) { _speciesCursor--; UpdateSpeciesHighlight(); } break;
+                case Android.Views.Keycode.DpadRight:
+                    if (_speciesCursor % cols < cols - 1 && _speciesCursor + 1 < _genSpeciesList.Count)
+                    { _speciesCursor++; UpdateSpeciesHighlight(); } break;
+                case Android.Views.Keycode.DpadUp:
+                    if (_speciesCursor >= cols) { _speciesCursor -= cols; UpdateSpeciesHighlight(); } break;
+                case Android.Views.Keycode.DpadDown:
+                    if (_speciesCursor + cols < _genSpeciesList.Count)
+                    { _speciesCursor += cols; UpdateSpeciesHighlight(); } break;
+                case Android.Views.Keycode.ButtonA:
+                    ConfirmPickerSelection(); break;
+                case Android.Views.Keycode.ButtonB:
+                    ShowGenSelector(); break;
+            }
         }
     }
 #endif
@@ -592,112 +653,164 @@ public partial class BankViewPage : ContentPage
     //  Pokémon picker (A on empty slot)
     // ──────────────────────────────────────────────
 
-    private static int GenForSpecies(ushort s) => s switch
+    private void OpenPicker()
     {
-        <= 151 => 1, <= 251 => 2, <= 386 => 3,
-        <= 493 => 4, <= 649 => 5, <= 721 => 6,
-        <= 809 => 7, <= 905 => 8, _      => 9,
-    };
+        _genCursor = 0;
+        _pickerOpen = true;
+        PickerOverlay.IsVisible = true;
+        ShowGenSelector();
+    }
 
-    private async Task OpenPickerAsync()
+    private void ShowGenSelector()
     {
-        try
+        _pickerState = PickerState.Generation;
+        PickerTitle.Text = "Choose Generation";
+        PickerBackBtn.IsVisible = false;
+        SpeciesScroll.IsVisible = false;
+        GenSelectorGrid.IsVisible = true;
+
+        // Build gen buttons once
+        if (_genBorders.Count == 0)
         {
-            _pickerSpecies.Clear();
-            _pickerRowBorders.Clear();
-            PickerList.Children.Clear();
-            _pickerCursor = 0;
-            _pickerOpen = true;
-
-            PickerList.Children.Add(new Label
+            for (int i = 0; i < GenRanges.Length; i++)
             {
-                Text = "Loading Pokédex…",
-                FontFamily = "Nunito", FontSize = 12,
-                TextColor = Color.FromArgb("#88AABBCC"),
-                HorizontalOptions = LayoutOptions.Center,
-                Margin = new Thickness(0, 12),
-            });
-            PickerOverlay.IsVisible = true;
-
-            var species = await Task.Run(() =>
-            {
-                var list = new List<ushort>();
-                int max = _strings.specieslist.Length - 1;
-                for (ushort i = 1; i <= max; i++)
-                    if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
-                        list.Add(i);
-                return list;
-            });
-            _pickerSpecies.AddRange(species);
-            PickerList.Children.Clear();
-
-            int lastGen = -1;
-            for (int idx = 0; idx < _pickerSpecies.Count; idx++)
-            {
-                var sp  = _pickerSpecies[idx];
-                int gen = GenForSpecies(sp);
-                if (gen != lastGen)
+                var (start, end, region) = GenRanges[i];
+                var label = new VerticalStackLayout
                 {
-                    lastGen = gen;
-                    PickerList.Children.Add(new Label
+                    Spacing = 2,
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions   = LayoutOptions.Center,
+                    Children =
                     {
-                        Text = $"GENERATION {gen}",
-                        FontFamily = "NunitoBold", FontSize = 9,
-                        TextColor = Color.FromArgb("#5580AA"),
-                        CharacterSpacing = 1.2,
-                        Margin = new Thickness(2, idx == 0 ? 0 : 8, 0, 2),
-                    });
-                }
-                var border = BuildPickerRow(sp, _pickerRowBorders.Count);
-                _pickerRowBorders.Add(border);
-                PickerList.Children.Add(border);
-                if (idx % 30 == 0) await Task.Yield();
-            }
+                        new Label
+                        {
+                            Text = $"GEN {i + 1}",
+                            FontFamily = "NunitoExtraBold", FontSize = 14,
+                            TextColor = Color.FromArgb("#EDF0FF"),
+                            HorizontalOptions = LayoutOptions.Center,
+                        },
+                        new Label
+                        {
+                            Text = region,
+                            FontFamily = "Nunito", FontSize = 10,
+                            TextColor = Color.FromArgb("#7080A0"),
+                            HorizontalOptions = LayoutOptions.Center,
+                        },
+                    },
+                };
 
-            UpdatePickerHighlight();
+                var border = new Border
+                {
+                    StrokeShape = new RoundRectangle { CornerRadius = 12 },
+                    BackgroundColor = Color.FromArgb("#0D1A33"),
+                    Stroke = Color.FromArgb("#1A2A44"),
+                    StrokeThickness = 1,
+                    Padding = new Thickness(8, 12),
+                    Content = label,
+                };
+                int captured = i;
+                border.GestureRecognizers.Add(new TapGestureRecognizer
+                {
+                    Command = new Command(() => _ = SelectGenerationAsync(captured)),
+                });
+                _genBorders.Add(border);
+                GenSelectorGrid.Add(border, i % 3, i / 3);
+            }
         }
-        catch (Exception ex)
+
+        UpdateGenHighlight();
+    }
+
+    private void UpdateGenHighlight()
+    {
+        for (int i = 0; i < _genBorders.Count; i++)
         {
-            PickerList.Children.Clear();
-            PickerList.Children.Add(new Label
-            {
-                Text = $"Error: {ex.Message}",
-                FontFamily = "Nunito", FontSize = 11,
-                TextColor = Color.FromArgb("#FF6B6B"),
-                Margin = new Thickness(8),
-            });
+            _genBorders[i].Stroke         = i == _genCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
+            _genBorders[i].StrokeThickness = i == _genCursor ? 2 : 1;
         }
     }
 
-    private Border BuildPickerRow(ushort species, int index)
+    private async Task SelectGenerationAsync(int genIndex)
+    {
+        _pickerState = PickerState.Species;
+        _speciesCursor = 0;
+        _genCursor = genIndex;
+
+        var (start, end, region) = GenRanges[genIndex];
+        PickerTitle.Text = $"Gen {genIndex + 1}  —  {region}";
+        PickerBackBtn.IsVisible = true;
+        GenSelectorGrid.IsVisible = false;
+        SpeciesScroll.IsVisible = true;
+        SpeciesGrid.Children.Clear();
+        _genSpeciesList.Clear();
+        _speciesBorders.Clear();
+
+        // Collect species for this generation
+        int maxSpecies = _strings.specieslist.Length - 1;
+        for (ushort sp = (ushort)start; sp <= Math.Min(end, maxSpecies); sp++)
+        {
+            if (!string.IsNullOrWhiteSpace(_strings.specieslist[sp]))
+                _genSpeciesList.Add(sp);
+        }
+
+        // Build cells in batches
+        for (int idx = 0; idx < _genSpeciesList.Count; idx++)
+        {
+            SpeciesGrid.Children.Add(BuildSpeciesCell(_genSpeciesList[idx], idx));
+            if (idx % 20 == 0) await Task.Yield();
+        }
+
+        UpdateSpeciesHighlight();
+    }
+
+    private Border BuildSpeciesCell(ushort species, int index)
     {
         var url  = $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{species}.png";
         var name = _strings.specieslist[species];
 
-        var grid = new Grid
+        // Get primary type color
+        Color typeColor;
+        try
         {
-            ColumnDefinitions = new ColumnDefinitionCollection(
-                new ColumnDefinition(new GridLength(40)),
-                new ColumnDefinition(GridLength.Star),
-                new ColumnDefinition(GridLength.Auto)),
-            ColumnSpacing = 8,
+            var pi = PersonalTable.SV.GetFormEntry(species, 0);
+            int t  = pi.Type1;
+            typeColor = t < TypeColors.Length ? TypeColors[t] : TypeColors[0];
+        }
+        catch { typeColor = TypeColors[0]; }
+
+        var cell = new Grid
+        {
+            RowDefinitions = new RowDefinitionCollection(
+                new RowDefinition(GridLength.Star),
+                new RowDefinition(GridLength.Auto)),
+            WidthRequest  = 80,
+            HeightRequest = 90,
+            Margin        = new Thickness(3),
         };
-        grid.Add(new Image
+
+        cell.Add(new Image
         {
             Source = new UriImageSource { Uri = new Uri(url), CacheValidity = TimeSpan.FromDays(30) },
-            Aspect = Aspect.AspectFit, WidthRequest = 36, HeightRequest = 36,
-            VerticalOptions = LayoutOptions.Center,
+            Aspect = Aspect.AspectFit,
+            Margin = new Thickness(4),
         }, 0, 0);
-        grid.Add(new Label
+
+        // Type-colored name overlay
+        var nameBar = new Border
         {
-            Text = name, FontFamily = "NunitoBold", FontSize = 14,
-            TextColor = Color.FromArgb("#EDF0FF"), VerticalOptions = LayoutOptions.Center,
-        }, 1, 0);
-        grid.Add(new Label
-        {
-            Text = $"#{species:000}", FontFamily = "Nunito", FontSize = 11,
-            TextColor = Color.FromArgb("#5580AA"), VerticalOptions = LayoutOptions.Center,
-        }, 2, 0);
+            BackgroundColor = typeColor.WithAlpha(0.75f),
+            StrokeThickness = 0,
+            Padding = new Thickness(2, 2),
+            Content = new Label
+            {
+                Text = name,
+                FontFamily = "NunitoBold", FontSize = 9,
+                TextColor = Colors.White,
+                HorizontalOptions = LayoutOptions.Center,
+                LineBreakMode = LineBreakMode.TailTruncation,
+            },
+        };
+        cell.Add(nameBar, 0, 1);
 
         var border = new Border
         {
@@ -705,25 +818,32 @@ public partial class BankViewPage : ContentPage
             BackgroundColor = Color.FromArgb("#0D1A33"),
             Stroke = Color.FromArgb("#1A2A44"),
             StrokeThickness = 1,
-            Padding = new Thickness(8, 5),
-            Content = grid,
+            Padding = new Thickness(0),
+            Content = cell,
+            WidthRequest  = 86,
+            HeightRequest = 96,
+            Margin        = new Thickness(3),
         };
+
         int captured = index;
         border.GestureRecognizers.Add(new TapGestureRecognizer
         {
-            Command = new Command(() => { _pickerCursor = captured; ConfirmPickerSelection(); }),
+            Command = new Command(() => { _speciesCursor = captured; ConfirmPickerSelection(); }),
         });
+        _speciesBorders.Add(border);
         return border;
     }
 
-    private void UpdatePickerHighlight()
+    private void UpdateSpeciesHighlight()
     {
-        for (int i = 0; i < _pickerRowBorders.Count; i++)
+        for (int i = 0; i < _speciesBorders.Count; i++)
         {
-            _pickerRowBorders[i].Stroke          = i == _pickerCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
-            _pickerRowBorders[i].StrokeThickness = i == _pickerCursor ? 2 : 1;
+            _speciesBorders[i].Stroke         = i == _speciesCursor ? Color.FromArgb("#4A90D9") : Color.FromArgb("#1A2A44");
+            _speciesBorders[i].StrokeThickness = i == _speciesCursor ? 2 : 1;
         }
     }
+
+    private void OnPickerBackTapped(object sender, EventArgs e) => ShowGenSelector();
 
     private void ClosePicker()
     {
@@ -733,8 +853,8 @@ public partial class BankViewPage : ContentPage
 
     private void ConfirmPickerSelection()
     {
-        if (_pickerCursor >= _pickerSpecies.Count) return;
-        var sp = _pickerSpecies[_pickerCursor];
+        if (_speciesCursor >= _genSpeciesList.Count) return;
+        var sp = _genSpeciesList[_speciesCursor];
         PKM pk = App.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
         pk.Species      = sp;
         pk.CurrentLevel = 1;
