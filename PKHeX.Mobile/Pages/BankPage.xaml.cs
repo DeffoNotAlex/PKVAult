@@ -365,7 +365,7 @@ public partial class BankPage : ContentPage
         {
             // Empty slot — open picker to choose a Pokémon from any loaded save
             DeselectSlot();
-            OpenPicker();
+            _ = OpenPickerAsync();
         }
     }
 
@@ -466,26 +466,33 @@ public partial class BankPage : ContentPage
         <= 809 => 7, <= 905 => 8, _      => 9,
     };
 
-    private void OpenPicker()
+    private async Task OpenPickerAsync()
     {
         _pickerSpecies.Clear();
         _pickerRowBorders.Clear();
         PickerList.Children.Clear();
+        _pickerCursor = 0;
+        _pickerOpen = true;
+        PickerOverlay.IsVisible = true;
 
-        // Build full Pokédex list (skip index 0 = "---")
-        int maxSpecies = _strings.specieslist.Length - 1;
-        for (ushort i = 1; i <= maxSpecies; i++)
+        // Build species index off main thread
+        var species = await Task.Run(() =>
         {
-            if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
-                _pickerSpecies.Add(i);
-        }
+            var list = new List<ushort>();
+            int max = _strings.specieslist.Length - 1;
+            for (ushort i = 1; i <= max; i++)
+                if (!string.IsNullOrWhiteSpace(_strings.specieslist[i]))
+                    list.Add(i);
+            return list;
+        });
+        _pickerSpecies.AddRange(species);
 
-        // Build rows grouped by generation
+        // Build rows in batches of 30 so UI stays responsive
         int lastGen = -1;
         for (int idx = 0; idx < _pickerSpecies.Count; idx++)
         {
-            var species = _pickerSpecies[idx];
-            int gen = GenForSpecies(species);
+            var sp  = _pickerSpecies[idx];
+            int gen = GenForSpecies(sp);
             if (gen != lastGen)
             {
                 lastGen = gen;
@@ -498,14 +505,13 @@ public partial class BankPage : ContentPage
                     Margin = new Thickness(2, idx == 0 ? 0 : 8, 0, 2),
                 });
             }
-            var border = BuildPickerRow(species, _pickerRowBorders.Count);
+            var border = BuildPickerRow(sp, _pickerRowBorders.Count);
             _pickerRowBorders.Add(border);
             PickerList.Children.Add(border);
+
+            if (idx % 30 == 0) await Task.Yield();
         }
 
-        _pickerCursor = 0;
-        _pickerOpen = true;
-        PickerOverlay.IsVisible = true;
         UpdatePickerHighlight();
     }
 
