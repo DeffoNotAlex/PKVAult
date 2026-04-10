@@ -54,12 +54,13 @@ public static class EmulatorSaveFinderService
                 if (saveZeroDocId == null) return results;
 
                 // Enumerate uid_high / uid_low / title_id
+                // We try SaveUtil on the "main" file at every title directory —
+                // same approach as Azahar — so unexpected title ID formats don't
+                // cause silent misses. The dict is only used for the display name.
                 foreach (var (hiDocId, _) in ListChildren(resolver, treeUri, saveZeroDocId))
                 foreach (var (loDocId, _) in ListChildren(resolver, treeUri, hiDocId))
                 foreach (var (titleDocId, titleName) in ListChildren(resolver, treeUri, loDocId))
                 {
-                    if (!PokemonSwitchGames.ContainsKey(titleName)) continue;
-
                     var mainDocId = FindChildDocId(resolver, treeUri, titleDocId, "main");
                     if (mainDocId == null) continue;
 
@@ -67,7 +68,19 @@ public static class EmulatorSaveFinderService
                         .BuildDocumentUriUsingTree(treeUri, mainDocId);
                     if (mainUri == null) continue;
 
-                    results.Add((mainUri.ToString()!, SwitchGameName(titleName)));
+                    try
+                    {
+                        using var stream = resolver.OpenInputStream(mainUri);
+                        if (stream == null) continue;
+                        using var ms = new System.IO.MemoryStream();
+                        stream.CopyTo(ms);
+                        var data = ms.ToArray();
+                        if (data.Length == 0 || !PKHeX.Core.SaveUtil.TryGetSaveFile(data, out _))
+                            continue;
+                        var name = SwitchGameName(titleName); // falls back to titleName if unknown
+                        results.Add((mainUri.ToString()!, name));
+                    }
+                    catch { }
                 }
             }
             catch { /* permission denied or unexpected structure — return what we have */ }
