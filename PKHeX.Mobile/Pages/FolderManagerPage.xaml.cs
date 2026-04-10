@@ -67,12 +67,16 @@ public partial class FolderManagerPage : ContentPage
 
     private void OnRemoveClicked(object sender, EventArgs e)
     {
-        if (sender is Button btn && btn.CommandParameter is WatchedEntry entry)
-        {
-            if (entry.IsFile) _dirService.RemoveFile(entry.Uri);
-            else              _dirService.RemoveDirectory(entry.Uri);
-            RefreshList();
-        }
+        WatchedEntry? entry = null;
+        if (sender is Button btn)
+            entry = btn.CommandParameter as WatchedEntry;
+        else if (sender is TapGestureRecognizer tap)
+            entry = tap.CommandParameter as WatchedEntry;
+
+        if (entry is null) return;
+        if (entry.IsFile) _dirService.RemoveFile(entry.Uri);
+        else              _dirService.RemoveDirectory(entry.Uri);
+        RefreshList();
     }
 
     private async void OnBackClicked(object sender, EventArgs e)
@@ -129,7 +133,7 @@ public partial class FolderManagerPage : ContentPage
 
     public sealed record WatchedEntry(string Uri, bool IsFile)
     {
-        public string Icon  => IsFile ? "📄" : "📁";
+        public string Icon  => IsFile ? Theme.Ph.FloppyDisk : Theme.Ph.Folder;
         public string Label => ExtractLabel(Uri);
 
         private static string ExtractLabel(string uri)

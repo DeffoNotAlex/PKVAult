@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              x:Class="PKHeX.Mobile.Pages.FolderManagerPage"
              Title="Manage Save Folders/Files"
              Shell.NavBarIsVisible="False"
@@ -11,11 +12,21 @@
 
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,12,0,8">
-            <Button Grid.Column="0" Text="← Back"
-                    Clicked="OnBackClicked"
-                    BackgroundColor="Transparent"
-                    TextColor="{DynamicResource ThAccent}"
-                    FontFamily="NunitoBold" FontSize="14" Padding="0,6" />
+            <Border Grid.Column="0" BackgroundColor="Transparent" Stroke="Transparent" Padding="0">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackClicked" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout Spacing="4" VerticalOptions="Center" Padding="0,6">
+                    <Label Text="{x:Static theme:Ph.ArrowLeft}"
+                           FontFamily="Phosphor" FontSize="18"
+                           TextColor="{DynamicResource ThAccent}"
+                           VerticalOptions="Center" />
+                    <Label Text="Back"
+                           FontFamily="NunitoBold" FontSize="14"
+                           TextColor="{DynamicResource ThAccent}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Border>
             <Label Grid.Column="1" Text="Save Folders / Files"
                    FontFamily="NunitoBold" FontSize="20"
                    TextColor="{DynamicResource ThTextPrimary}"
@@ -44,22 +55,32 @@
                             BackgroundColor="{DynamicResource ThSettingsRow}"
                             Stroke="Transparent" Padding="12,10">
                         <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Label Grid.Column="0" Text="{Binding Icon}"
-                                   FontSize="16" VerticalOptions="Center"
-                                   Margin="0,0,8,0" />
+                            <Label Grid.Column="0"
+                                   Text="{Binding Icon}"
+                                   FontFamily="Phosphor" FontSize="18"
+                                   TextColor="{DynamicResource ThAccentLight}"
+                                   VerticalOptions="Center" Margin="0,0,10,0" />
                             <Label Grid.Column="1"
                                    Text="{Binding Label}"
                                    TextColor="{DynamicResource ThTextPrimary}"
                                    FontSize="13"
                                    LineBreakMode="MiddleTruncation"
                                    VerticalOptions="Center" />
-                            <Button Grid.Column="2" Text="✕"
-                                    Clicked="OnRemoveClicked"
-                                    CommandParameter="{Binding .}"
+                            <Border Grid.Column="2"
                                     BackgroundColor="{DynamicResource ThNavBtnBg}"
-                                    TextColor="#FF6060"
-                                    FontSize="12" Padding="10,6"
-                                    VerticalOptions="Center" />
+                                    StrokeShape="RoundRectangle 6"
+                                    Stroke="Transparent" Padding="10,6">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Tapped="OnRemoveClicked"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="{x:Static theme:Ph.Trash}"
+                                       FontFamily="Phosphor" FontSize="16"
+                                       TextColor="#FF6060"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="Center" />
+                            </Border>
                         </Grid>
                     </Border>
                 </DataTemplate>
@@ -71,22 +92,38 @@
             <Border Grid.Column="0" StrokeShape="RoundRectangle 8"
                     BackgroundColor="{DynamicResource ThNavBtnBg}"
                     Stroke="{DynamicResource ThAccent}" Padding="0">
-                <Button Text="📁  Add Folder"
-                        Clicked="OnAddFolderClicked"
-                        BackgroundColor="Transparent"
-                        TextColor="{DynamicResource ThAccentLight}"
-                        FontFamily="NunitoBold" FontSize="15"
-                        Padding="0,14" HorizontalOptions="Fill" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddFolderClicked" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center"
+                                       Spacing="8" Padding="0,14">
+                    <Label Text="{x:Static theme:Ph.Folder}"
+                           FontFamily="Phosphor" FontSize="20"
+                           TextColor="{DynamicResource ThAccentLight}"
+                           VerticalOptions="Center" />
+                    <Label Text="Add Folder"
+                           FontFamily="NunitoBold" FontSize="15"
+                           TextColor="{DynamicResource ThAccentLight}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
             </Border>
             <Border Grid.Column="1" StrokeShape="RoundRectangle 8"
                     BackgroundColor="{DynamicResource ThNavBtnBg}"
                     Stroke="{DynamicResource ThAccent}" Padding="0">
-                <Button Text="📄  Add File"
-                        Clicked="OnAddFileClicked"
-                        BackgroundColor="Transparent"
-                        TextColor="{DynamicResource ThAccentLight}"
-                        FontFamily="NunitoBold" FontSize="15"
-                        Padding="0,14" HorizontalOptions="Fill" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddFileClicked" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center"
+                                       Spacing="8" Padding="0,14">
+                    <Label Text="{x:Static theme:Ph.FloppyDisk}"
+                           FontFamily="Phosphor" FontSize="20"
+                           TextColor="{DynamicResource ThAccentLight}"
+                           VerticalOptions="Center" />
+                    <Label Text="Add File"
+                           FontFamily="NunitoBold" FontSize="15"
+                           TextColor="{DynamicResource ThAccentLight}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
             </Border>
         </Grid>
 
