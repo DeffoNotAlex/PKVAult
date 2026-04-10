@@ -871,8 +871,8 @@ public partial class GamePage : ContentPage
         if (slug == _lastCrySlug) return;
         _lastCrySlug = slug;
 
-        var cryDir  = Path.Combine(FileSystem.CacheDirectory, "cries");
-        var cryPath = Path.Combine(cryDir, slug + ".ogg");
+        var cryDir  = System.IO.Path.Combine(FileSystem.CacheDirectory, "cries");
+        var cryPath = System.IO.Path.Combine(cryDir, slug + ".ogg");
 
         if (!File.Exists(cryPath))
         {
