@@ -32,9 +32,11 @@ public partial class SettingsPage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
+        GamepadRouter.KeyReceived -= OnGamepadKey;
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
         HomeSpriteCacheService.BulkProgressChanged += OnBulkProgress;
+        SpriteCacheService.BulkProgressChanged     += OnAnimProgress;
         _loading = true;
 
         var lang = Preferences.Default.Get(KeyLanguage, "en");
@@ -50,6 +52,8 @@ public partial class SettingsPage : ContentPage
 
         BuildRows();
         UpdateHighlight();
+        UpdateSpriteStatus();
+        UpdateAnimSpriteStatus();
     }
 
     protected override void OnDisappearing()
@@ -59,11 +63,12 @@ public partial class SettingsPage : ContentPage
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
         HomeSpriteCacheService.BulkProgressChanged -= OnBulkProgress;
+        SpriteCacheService.BulkProgressChanged     -= OnAnimProgress;
     }
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites];
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites, Row_AnimSprites];
     }
 
     private void UpdateHighlight()
@@ -91,7 +96,6 @@ public partial class SettingsPage : ContentPage
     {
         if (rowIndex < 0 || rowIndex >= _rows.Length) return;
         var row = _rows[rowIndex];
-        // ScrollToAsync with the element handles viewport visibility automatically
         _ = RootScroll.ScrollToAsync(row, ScrollToPosition.MakeVisible, false);
     }
 
@@ -129,22 +133,36 @@ public partial class SettingsPage : ContentPage
 
     private void AdjustRow(int delta)
     {
-        if (_focusRow == 0)
+        switch (_focusRow)
         {
-            // Language picker
-            int count = LanguagePicker.Items.Count;
-            if (count == 0) return;
-            LanguagePicker.SelectedIndex = Math.Clamp(LanguagePicker.SelectedIndex + delta, 0, count - 1);
+            case 0: // Language — left/right cycles through options
+                int count = LanguagePicker.Items.Count;
+                if (count == 0) return;
+                LanguagePicker.SelectedIndex = Math.Clamp(LanguagePicker.SelectedIndex + delta, 0, count - 1);
+                break;
+
+            case 1: SetToggle(ShinySwitch,         delta); break;
+            case 2: SetToggle(RadarAdaptiveSwitch, delta); break;
+            case 4: SetToggle(LegalitySwitch,      delta); break;
+            case 5: SetToggle(ThemeSwitch,         delta); break;
         }
-        // Row 1 (Shiny) — left/right does nothing for a toggle
+
+        static void SetToggle(Switch sw, int delta)
+        {
+            // Right = on, Left = off
+            if (delta > 0 && !sw.IsToggled) sw.IsToggled = true;
+            else if (delta < 0 && sw.IsToggled) sw.IsToggled = false;
+        }
     }
 
     private void ActivateRow()
     {
         switch (_focusRow)
         {
-            case 0:
-                LanguagePicker.Focus();
+            case 0: // Language — A cycles forward (wraps)
+                int count = LanguagePicker.Items.Count;
+                if (count > 0)
+                    LanguagePicker.SelectedIndex = (LanguagePicker.SelectedIndex + 1) % count;
                 break;
             case 1:
                 ShinySwitch.IsToggled = !ShinySwitch.IsToggled;
@@ -163,6 +181,9 @@ public partial class SettingsPage : ContentPage
                 break;
             case 6:
                 StartBulkDownload();
+                break;
+            case 7:
+                StartAnimBulkDownload();
                 break;
         }
     }
@@ -202,7 +223,7 @@ public partial class SettingsPage : ContentPage
         await DisplayAlertAsync("Theme changed", "Restart the app for full effect.", "OK");
     }
 
-    // ── Sprite download ───────────────────────────────────────────────────────
+    // ── HOME sprite download ──────────────────────────────────────────────────
 
     private void OnSpriteDownloadTapped(object? sender, EventArgs e) => StartBulkDownload();
 
@@ -226,29 +247,76 @@ public partial class SettingsPage : ContentPage
 
         if (running)
         {
-            SpriteStatusLabel.Text  = $"Downloading…  {done} / {total} sprites";
-            SpriteRingLabel.Text    = $"{done}";
+            SpriteStatusLabel.Text = $"Downloading…  {done} / {total} sprites";
+            SpriteRingLabel.Text   = $"{done}";
         }
         else if (total > 0)
         {
             string failNote = failed > 0 ? $"  ·  {failed} failed" : "";
-            SpriteStatusLabel.Text  = $"Done — {done} sprites cached{failNote}";
-            SpriteRingLabel.Text    = "✓";
+            SpriteStatusLabel.Text = $"Done — {done} sprites cached{failNote}";
+            SpriteRingLabel.Text   = "✓";
         }
         else
         {
-            SpriteStatusLabel.Text  = "~120 MB · caches HOME sprites for all Pokémon";
-            SpriteRingLabel.Text    = "";
+            SpriteStatusLabel.Text = "~120 MB · caches HOME sprites for all Pokémon";
+            SpriteRingLabel.Text   = "";
         }
     }
 
     private void OnSpriteRingPaint(object sender, SKPaintSurfaceEventArgs e)
+        => PaintProgressRing(e, HomeSpriteCacheService.BulkProgress, HomeSpriteCacheService.IsBulkDownloading);
+
+    // ── Animated sprite download ──────────────────────────────────────────────
+
+    private void OnAnimSpriteDownloadTapped(object? sender, EventArgs e) => StartAnimBulkDownload();
+
+    private void StartAnimBulkDownload()
+    {
+        if (SpriteCacheService.IsBulkDownloading) return;
+        _ = SpriteCacheService.BulkDownloadAllAsync();
+        UpdateAnimSpriteStatus();
+    }
+
+    private void OnAnimProgress(int done, int total)
+    {
+        AnimRingCanvas.InvalidateSurface();
+        UpdateAnimSpriteStatus();
+    }
+
+    private void UpdateAnimSpriteStatus()
+    {
+        var (done, total, failed) = SpriteCacheService.BulkProgress;
+        bool running = SpriteCacheService.IsBulkDownloading;
+
+        if (running)
+        {
+            AnimSpriteStatusLabel.Text = $"Downloading…  {done} / {total} sprites";
+            AnimRingLabel.Text         = $"{done}";
+        }
+        else if (total > 0)
+        {
+            string failNote = failed > 0 ? $"  ·  {failed} failed" : "";
+            AnimSpriteStatusLabel.Text = $"Done — {done} sprites cached{failNote}";
+            AnimRingLabel.Text         = "✓";
+        }
+        else
+        {
+            AnimSpriteStatusLabel.Text = "~200 MB · caches animated GIFs for all Pokémon";
+            AnimRingLabel.Text         = "";
+        }
+    }
+
+    private void OnAnimRingPaint(object sender, SKPaintSurfaceEventArgs e)
+        => PaintProgressRing(e, SpriteCacheService.BulkProgress, SpriteCacheService.IsBulkDownloading);
+
+    // ── Shared ring painter ───────────────────────────────────────────────────
+
+    private static void PaintProgressRing(SKPaintSurfaceEventArgs e, (int Done, int Total, int Failed) progress, bool running)
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        var (done, total, _) = HomeSpriteCacheService.BulkProgress;
-        bool running = HomeSpriteCacheService.IsBulkDownloading;
+        var (done, total, _) = progress;
         float pct = total > 0 ? Math.Clamp((float)done / total, 0f, 1f) : 0f;
 
         float cx = e.Info.Width  / 2f;
@@ -257,7 +325,6 @@ public partial class SettingsPage : ContentPage
 
         bool light = ThemeService.Current == PkTheme.Light;
 
-        // Track ring
         using var trackPaint = new SKPaint
         {
             Style       = SKPaintStyle.Stroke,
@@ -269,7 +336,6 @@ public partial class SettingsPage : ContentPage
 
         if (!running && total == 0)
         {
-            // Idle — draw a subtle download arrow
             using var arrowPaint = new SKPaint { Color = new SKColor(100, 160, 220), IsAntialias = true, StrokeWidth = 2.5f, Style = SKPaintStyle.Stroke, StrokeCap = SKStrokeCap.Round };
             float ax = cx, ay1 = cy - r * 0.45f, ay2 = cy + r * 0.2f;
             canvas.DrawLine(ax, ay1, ax, ay2, arrowPaint);
@@ -281,10 +347,9 @@ public partial class SettingsPage : ContentPage
             return;
         }
 
-        // Progress arc
         var arcColor = !running && total > 0
-            ? new SKColor(52, 217, 144)   // complete — green
-            : new SKColor(59, 139, 255);  // downloading — blue
+            ? new SKColor(52, 217, 144)
+            : new SKColor(59, 139, 255);
 
         using var arcPaint = new SKPaint
         {
