@@ -1459,7 +1459,7 @@ public partial class GamePage : ContentPage
 
     private enum CompatStatus { Green, Yellow, Red }
 
-    private static CompatStatus GetCompatStatus(PKM pk, SaveDirectoryService.SaveEntry save)
+    private static CompatStatus GetCompatStatus(PKM pk, SaveEntry save)
     {
         // Same format/generation: directly placeable
         if (save.Generation == pk.Format)

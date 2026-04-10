@@ -10,7 +10,7 @@ public partial class App : Application
     public static SaveFile? ActiveSave { get; set; }
 
     /// <summary>All save entries discovered by the last directory scan, used for compatibility checks.</summary>
-    public static List<SaveDirectoryService.SaveEntry> LoadedSaves { get; set; } = [];
+    public static List<SaveEntry> LoadedSaves { get; set; } = [];
 
     /// <summary>Original filename of the loaded save, used for export.</summary>
     public static string ActiveSaveFileName { get; set; } = "save.bin";
