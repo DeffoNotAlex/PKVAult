@@ -127,20 +127,20 @@ public static class HomeSpriteCacheService
     /// Returns <c>null</c> for non-zero forms that are not in the slug table,
     /// meaning no form-specific HOME sprite is available.
     /// </summary>
-    public static string? GetHomeSlug(ushort species, byte form)
+    public static string GetHomeSlug(ushort species, byte form)
     {
         if (form == 0) return $"{species}";
-        return FormSlugs.TryGetValue((species, form), out var slug) ? slug : null;
+        // Unknown form variants fall back to the base species sprite
+        return FormSlugs.TryGetValue((species, form), out var slug) ? slug : $"{species}";
     }
 
     /// <summary>
     /// Returns the full PokeAPI HOME sprite URL for a species/form/shiny combination.
     /// Returns <c>null</c> if no HOME sprite is available for this form.
     /// </summary>
-    public static string? GetHomeUrl(ushort species, byte form, bool shiny)
+    public static string GetHomeUrl(ushort species, byte form, bool shiny)
     {
         var slug = GetHomeSlug(species, form);
-        if (slug is null) return null;
         return shiny ? $"{BaseUrl}/shiny/{slug}.png" : $"{BaseUrl}/{slug}.png";
     }
 
@@ -254,7 +254,6 @@ public static class HomeSpriteCacheService
     public static SKBitmap? GetCached(ushort species, byte form, bool shiny)
     {
         var slug = GetHomeSlug(species, form);
-        if (slug is null) return null;
         lock (_lock)
             return _mem.GetValueOrDefault(MemKey(slug, shiny));
     }
@@ -268,9 +267,7 @@ public static class HomeSpriteCacheService
     {
         if (species == 0) return null;
 
-        var slug = GetHomeSlug(species, form);
-        if (slug is null) return null;   // unknown form variant — no HOME sprite
-
+        var slug = GetHomeSlug(species, form); // always non-null; unknown forms use base slug
         var mkey = MemKey(slug, shiny);
 
         // 1. Memory cache
