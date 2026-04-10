@@ -7,7 +7,7 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="{DynamicResource ThSettingsBg}">
 
-    <ScrollView Padding="16" BackgroundColor="{DynamicResource ThSettingsBg}">
+    <ScrollView x:Name="RootScroll" Padding="16" BackgroundColor="{DynamicResource ThSettingsBg}">
         <VerticalStackLayout Spacing="12">
 
             <!-- Gamepad hint -->

@@ -262,12 +262,12 @@
                         Padding="0" HeightRequest="48">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#3B8BFF" Offset="0" />
-                            <GradientStop Color="#4F6BF0" Offset="1" />
+                            <GradientStop Color="#EAF5FF" Offset="0" />
+                            <GradientStop Color="#CCE8FF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Label Text="Open Boxes" FontFamily="NunitoExtraBold" FontSize="15"
-                           TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+                           TextColor="#1A5A96" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
                     <Border x:Name="Menu_Search" Grid.Column="0" StrokeShape="RoundRectangle 8"

@@ -288,7 +288,15 @@ public partial class SecondScreenPage : ContentPage
         var normalStroke = Color.FromArgb(light ? "#E0E4EC" : "#0DFFFFFF");
 
         bool primaryFocused = focusSection == 1 && actionCursor == 0;
-        Menu_OpenBoxes.Stroke = primaryFocused ? focusStroke : Colors.Transparent;
+        Menu_OpenBoxes.Background = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0), EndPoint = new Point(1, 1),
+            GradientStops = [
+                new GradientStop(Color.FromArgb("#EAF5FF"), 0f),
+                new GradientStop(Color.FromArgb("#CCE8FF"), 1f),
+            ],
+        };
+        Menu_OpenBoxes.Stroke = primaryFocused ? Color.FromArgb("#5AAAD0") : Colors.Transparent;
 
         Border[] tiles = [Menu_Search, Menu_Gifts, Menu_Export, Menu_Bank];
         for (int i = 0; i < tiles.Length; i++)

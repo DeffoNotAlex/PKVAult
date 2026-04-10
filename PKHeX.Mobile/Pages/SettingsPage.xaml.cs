@@ -84,6 +84,15 @@ public partial class SettingsPage : ContentPage
     {
         _focusRow = Math.Clamp(_focusRow + delta, 0, _rows.Length - 1);
         UpdateHighlight();
+        ScrollRowIntoView(_focusRow);
+    }
+
+    private void ScrollRowIntoView(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= _rows.Length) return;
+        var row = _rows[rowIndex];
+        // ScrollToAsync with the element handles viewport visibility automatically
+        _ = RootScroll.ScrollToAsync(row, ScrollToPosition.MakeVisible, false);
     }
 
 #if ANDROID
