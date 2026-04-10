@@ -1,4 +1,4 @@
-# PKVault
+<h1><img src="PKHeX.Mobile/Resources/AppIcon/appicon.png" width="48" valign="middle" style="margin-right:10px"/> PKVault</h1>
 
 **PKVault** is a Pokémon save editor for Android, built on top of [PKHeX](https://github.com/kwsch/PKHeX) — the most complete Pokémon core-series save editor available.
 
@@ -16,14 +16,21 @@
 - Manage multiple watched folders and individual files from the folder manager
 - Supports all major save formats: GB/GBC (Gen 1–2), GBA (Gen 3), NDS (Gen 4–5), 3DS (Gen 6–7), Switch (Gen 8–9), and more
 - Cross-fade hero card animation when scrolling between saves on the home screen
+- **Emulator save auto-detection** — automatically finds Pokémon saves from:
+  - **Eden** (Switch Gen 8–9): grant access to your Eden folder and the app scans `nand/user/save/` automatically
+  - **MelonDS** (DS Gen 4–5): point to your ROM or saves folder; `.sav` files are picked up automatically
+  - **Azahar** (3DS Gen 6–7): scans `sdmc/Nintendo 3DS/` automatically for save files
+  - **RetroArch** (GBA/GBC Gen 1–3): point to your saves folder; `.srm` files are picked up automatically
 
 ### Box Browser
 - Full box grid rendered with SkiaSharp — fast and smooth on any Android device
-- High-quality Pokémon HOME sprites loaded on demand and cached for offline use
+- High-quality Pokémon HOME sprites loaded on demand and cached for offline use — form-aware (Vivillon patterns, Rotom appliances, alternate formes, gender variants, and more)
+- Animated Pokémon Showdown sprites, also cached for offline use
 - Bounce/spring animation when the cursor lands on a new slot
 - Slide transition between boxes (left/right)
 - Navigate boxes with on-screen buttons or a connected gamepad (L/R shoulder buttons)
 - Cursor highlight and slot selection fully gamepad-driven
+- Optional legality badge — green/red dot on each slot showing at a glance whether a Pokémon is legal
 - Game-specific icons for each save (Ruby, Sapphire, Emerald, FireRed, LeafGreen, Platinum, and more)
 
 ### Pokémon Preview
@@ -56,11 +63,15 @@
 - **Display Language** — affects species, move, and ability names throughout the app
 - **Shiny Sprites** — toggle alternate-colour sprites for shiny Pokémon
 - **Adaptive Radar Scale** — scale the stat chart to the Pokémon's best stat so weaker Pokémon fill more of the graph (off = fixed 0–255 scale)
-- **Manage Save Folders/Files** — add or remove folders and individual files scanned on startup
+- **Legality Badges** — show a green/red dot on each Pokémon in the box view
 - **Light / Dark Theme** — full theme system with SkiaSharp palette switching
+- **Manage Save Folders/Files** — add or remove folders and individual files scanned on startup
+- **Download HOME Sprites** — bulk-download and cache all Pokémon HOME-style sprites (~120 MB) for offline use
+- **Download Animated Sprites** — bulk-download and cache all animated GIF sprites (~200 MB) for offline use
+- **Emulator Save Finders** — one-tap auto-detection for Eden, MelonDS, Azahar, and RetroArch saves
 
 ### Gamepad Support
-- Full D-pad navigation on the home screen, box browser, database, and mystery gift pages
+- Full D-pad navigation on the home screen, box browser, box editor, settings, database, and mystery gift pages
 - A/B/X/Y and shoulder buttons mapped throughout the app
 - L1/R1 to switch boxes; R3 to play the Pokémon cry for the current slot
 - Animated dot-grid background on the hero card panel
@@ -103,7 +114,7 @@ CI automatically publishes a signed APK to [GitHub Releases](../../releases) on 
 PKHeX.Core/           # Core library — all game logic, legality, save parsing (no GUI deps)
 PKHeX.Mobile/         # .NET MAUI Android app (PKVault)
   Pages/              # ContentPages: MainPage, GamePage, SettingsPage, FolderManagerPage, ...
-  Services/           # IFileService, SaveDirectoryService, SpriteCacheService, HomeSpriteCacheService, ...
+  Services/           # IFileService, SaveDirectoryService, SpriteCacheService, HomeSpriteCacheService, EmulatorSaveFinderService, ...
   Platforms/Android/  # Android-specific: MainActivity, AndroidFilePicker, GamepadRouter
 PKHeX.Drawing.Mobile/ # SkiaSharp sprite rendering helpers
 PKHeX.WinForms/       # Original Windows desktop app (unchanged)
@@ -129,4 +140,5 @@ This project is not affiliated with Nintendo, Game Freak, or The Pokémon Compan
 - **[pokesprite](https://github.com/msikma/pokesprite)** — shiny sprite collection (MIT)
 - **[QRCoder](https://github.com/codebude/QRCoder)** — QR code generation (MIT)
 - **[SkiaSharp](https://github.com/mono/SkiaSharp)** — 2D graphics for MAUI
+- **[Phosphor Icons](https://phosphoricons.com)** — icon font used throughout the UI (MIT)
 - Pokémon Legends: Arceus sprites from the [National Pokédex Icon Dex](https://www.deviantart.com/pikafan2000/art/National-Pokedex-Version-Delta-Icon-Dex-824897934) project
