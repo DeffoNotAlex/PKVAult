@@ -297,8 +297,8 @@
                         Padding="0" HeightRequest="48">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#C8E6FF" Offset="0" />
-                            <GradientStop Color="#B0D4F8" Offset="1" />
+                            <GradientStop Color="#EAF5FF" Offset="0" />
+                            <GradientStop Color="#CCE8FF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.GestureRecognizers>
