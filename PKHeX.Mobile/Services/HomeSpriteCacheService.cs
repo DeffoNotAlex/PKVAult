@@ -32,6 +32,90 @@ public static class HomeSpriteCacheService
     private static readonly HashSet<string>              _inFlight = [];
     private static readonly object                       _lock = new();
 
+    // ── Bulk download state ───────────────────────────────────────────────────
+
+    public static bool IsBulkDownloading { get; private set; }
+
+    /// <summary>(Downloaded, Total, Failed) — updated during bulk download.</summary>
+    public static (int Done, int Total, int Failed) BulkProgress { get; private set; }
+
+    /// <summary>Fired on the main thread each time a sprite completes during bulk download.</summary>
+    public static event Action<int, int>? BulkProgressChanged; // done, total
+
+    private const int MaxSpecies  = 1025;
+    private const int Concurrency = 5;
+
+    /// <summary>
+    /// Downloads all regular + shiny HOME sprites that aren't already on disk,
+    /// using a sliding window of 5 concurrent requests.
+    /// Safe to fire-and-forget; progress is observable via <see cref="BulkProgressChanged"/>.
+    /// </summary>
+    public static async Task BulkDownloadAsync(CancellationToken ct = default)
+    {
+        if (IsBulkDownloading) return;
+
+        // Build queue — skip anything already cached on disk
+        var queue = new List<(ushort Species, bool Shiny)>(MaxSpecies * 2);
+        for (ushort sp = 1; sp <= MaxSpecies; sp++)
+        {
+            if (!File.Exists(DiskPath(sp, false))) queue.Add((sp, false));
+            if (!File.Exists(DiskPath(sp, true)))  queue.Add((sp, true));
+        }
+
+        int total  = queue.Count;
+        int done   = 0;
+        int failed = 0;
+
+        IsBulkDownloading = true;
+        BulkProgress      = (0, total, 0);
+        MainThread.BeginInvokeOnMainThread(() => BulkProgressChanged?.Invoke(0, total));
+
+        if (total > 0)
+        {
+            using var sem = new SemaphoreSlim(Concurrency);
+            var tasks = queue.Select(async item =>
+            {
+                await sem.WaitAsync(ct).ConfigureAwait(false);
+                try
+                {
+                    if (ct.IsCancellationRequested) return;
+                    var bytes = await DownloadAsync(item.Species, item.Shiny).ConfigureAwait(false);
+                    if (bytes is not null)
+                    {
+                        var disk = DiskPath(item.Species, item.Shiny);
+                        Directory.CreateDirectory(Path.GetDirectoryName(disk)!);
+                        await File.WriteAllBytesAsync(disk, bytes, ct).ConfigureAwait(false);
+                    }
+                    else
+                        Interlocked.Increment(ref failed);
+                }
+                catch { Interlocked.Increment(ref failed); }
+                finally
+                {
+                    sem.Release();
+                    int d = Interlocked.Increment(ref done);
+                    BulkProgress = (d, total, failed);
+                    MainThread.BeginInvokeOnMainThread(() => BulkProgressChanged?.Invoke(d, total));
+                }
+            }).ToArray();
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+
+        IsBulkDownloading = false;
+        BulkProgress      = (done, total, failed);
+        MainThread.BeginInvokeOnMainThread(() => BulkProgressChanged?.Invoke(done, total));
+    }
+
+    /// <summary>How many regular sprites are already on disk.</summary>
+    public static int CountCached()
+    {
+        int count = 0;
+        for (ushort sp = 1; sp <= MaxSpecies; sp++)
+            if (File.Exists(DiskPath(sp, false))) count++;
+        return count;
+    }
+
     // ── Public API ────────────────────────────────────────────────────────────
 
     /// <summary>

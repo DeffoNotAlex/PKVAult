@@ -1,6 +1,8 @@
 using PKHeX.Core;
 using PKHeX.Drawing.Mobile.Sprites;
 using PKHeX.Mobile.Services;
+using SkiaSharp;
+using SkiaSharp.Views.Maui;
 using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;
@@ -32,6 +34,7 @@ public partial class SettingsPage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
+        HomeSpriteCacheService.BulkProgressChanged += OnBulkProgress;
         _loading = true;
 
         var lang = Preferences.Default.Get(KeyLanguage, "en");
@@ -55,11 +58,12 @@ public partial class SettingsPage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
+        HomeSpriteCacheService.BulkProgressChanged -= OnBulkProgress;
     }
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme];
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites];
     }
 
     private void UpdateHighlight()
@@ -148,6 +152,9 @@ public partial class SettingsPage : ContentPage
             case 5:
                 ThemeSwitch.IsToggled = !ThemeSwitch.IsToggled;
                 break;
+            case 6:
+                StartBulkDownload();
+                break;
         }
     }
 
@@ -185,6 +192,106 @@ public partial class SettingsPage : ContentPage
         UpdateHighlight();
         await DisplayAlertAsync("Theme changed", "Restart the app for full effect.", "OK");
     }
+
+    // ── Sprite download ───────────────────────────────────────────────────────
+
+    private void OnSpriteDownloadTapped(object? sender, EventArgs e) => StartBulkDownload();
+
+    private void StartBulkDownload()
+    {
+        if (HomeSpriteCacheService.IsBulkDownloading) return;
+        _ = HomeSpriteCacheService.BulkDownloadAsync();
+        UpdateSpriteStatus();
+    }
+
+    private void OnBulkProgress(int done, int total)
+    {
+        SpriteRingCanvas.InvalidateSurface();
+        UpdateSpriteStatus();
+    }
+
+    private void UpdateSpriteStatus()
+    {
+        var (done, total, failed) = HomeSpriteCacheService.BulkProgress;
+        bool running = HomeSpriteCacheService.IsBulkDownloading;
+
+        if (running)
+        {
+            SpriteStatusLabel.Text  = $"Downloading…  {done} / {total} sprites";
+            SpriteRingLabel.Text    = $"{done}";
+        }
+        else if (total > 0)
+        {
+            string failNote = failed > 0 ? $"  ·  {failed} failed" : "";
+            SpriteStatusLabel.Text  = $"Done — {done} sprites cached{failNote}";
+            SpriteRingLabel.Text    = "✓";
+        }
+        else
+        {
+            SpriteStatusLabel.Text  = "~120 MB · caches HOME sprites for all Pokémon";
+            SpriteRingLabel.Text    = "";
+        }
+    }
+
+    private void OnSpriteRingPaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        var (done, total, _) = HomeSpriteCacheService.BulkProgress;
+        bool running = HomeSpriteCacheService.IsBulkDownloading;
+        float pct = total > 0 ? Math.Clamp((float)done / total, 0f, 1f) : 0f;
+
+        float cx = e.Info.Width  / 2f;
+        float cy = e.Info.Height / 2f;
+        float r  = Math.Min(cx, cy) - 4f;
+
+        bool light = ThemeService.Current == PkTheme.Light;
+
+        // Track ring
+        using var trackPaint = new SKPaint
+        {
+            Style       = SKPaintStyle.Stroke,
+            StrokeWidth = 5f,
+            Color       = light ? new SKColor(200, 210, 230) : new SKColor(40, 55, 80),
+            IsAntialias = true,
+        };
+        canvas.DrawCircle(cx, cy, r, trackPaint);
+
+        if (!running && total == 0)
+        {
+            // Idle — draw a subtle download arrow
+            using var arrowPaint = new SKPaint { Color = new SKColor(100, 160, 220), IsAntialias = true, StrokeWidth = 2.5f, Style = SKPaintStyle.Stroke, StrokeCap = SKStrokeCap.Round };
+            float ax = cx, ay1 = cy - r * 0.45f, ay2 = cy + r * 0.2f;
+            canvas.DrawLine(ax, ay1, ax, ay2, arrowPaint);
+            using var path = new SKPath();
+            path.MoveTo(ax - r * 0.3f, ay2 - r * 0.25f);
+            path.LineTo(ax, ay2);
+            path.LineTo(ax + r * 0.3f, ay2 - r * 0.25f);
+            canvas.DrawPath(path, arrowPaint);
+            return;
+        }
+
+        // Progress arc
+        var arcColor = !running && total > 0
+            ? new SKColor(52, 217, 144)   // complete — green
+            : new SKColor(59, 139, 255);  // downloading — blue
+
+        using var arcPaint = new SKPaint
+        {
+            Style       = SKPaintStyle.Stroke,
+            StrokeWidth = 5f,
+            Color       = arcColor,
+            IsAntialias = true,
+            StrokeCap   = SKStrokeCap.Round,
+        };
+
+        float sweep = pct * 360f;
+        var rect = new SKRect(cx - r, cy - r, cx + r, cy + r);
+        canvas.DrawArc(rect, -90f, sweep, false, arcPaint);
+    }
+
+    // ── Startup ───────────────────────────────────────────────────────────────
 
     /// <summary>
     /// Apply persisted settings on app startup.
