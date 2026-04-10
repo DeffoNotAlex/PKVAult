@@ -9,6 +9,9 @@ public partial class App : Application
     /// <summary>The currently loaded save file, set by MainPage after a successful parse.</summary>
     public static SaveFile? ActiveSave { get; set; }
 
+    /// <summary>All save entries discovered by the last directory scan, used for compatibility checks.</summary>
+    public static List<SaveDirectoryService.SaveEntry> LoadedSaves { get; set; } = [];
+
     /// <summary>Original filename of the loaded save, used for export.</summary>
     public static string ActiveSaveFileName { get; set; } = "save.bin";
 

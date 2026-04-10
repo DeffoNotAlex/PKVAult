@@ -85,6 +85,7 @@ public partial class MainPage : ContentPage
     private async Task RefreshSavesAsync()
     {
         var entries = await _dirService.ScanAllAsync();
+        App.LoadedSaves = entries;
         _saveCards = entries.Select(e => new SaveCardViewModel(e)).ToList();
         SaveCardsList.ItemsSource = _saveCards;
         SaveCountLabel.Text = $"{_saveCards.Count} save{(_saveCards.Count != 1 ? "s" : "")}";

@@ -103,18 +103,38 @@
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
-                <!-- Column 0: Stat radar in frosted glass box -->
-                <Border x:Name="RadarBorder"
-                        Grid.Column="0"
-                        StrokeShape="RoundRectangle 16"
-                        BackgroundColor="{DynamicResource ThRadarBg}"
-                        Stroke="{DynamicResource ThRadarStroke}"
-                        StrokeThickness="1"
-                        Margin="4"
-                        VerticalOptions="Center">
-                    <skia:SKCanvasView x:Name="RadarCanvas"
-                                       PaintSurface="OnRadarPaint" />
-                </Border>
+                <!-- Column 0: Stat radar  /  Compatibility list (toggled by X) -->
+                <Grid Grid.Column="0">
+                    <!-- Radar (default) -->
+                    <Border x:Name="RadarBorder"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{DynamicResource ThRadarBg}"
+                            Stroke="{DynamicResource ThRadarStroke}"
+                            StrokeThickness="1"
+                            Margin="4"
+                            VerticalOptions="Center">
+                        <skia:SKCanvasView x:Name="RadarCanvas"
+                                           PaintSurface="OnRadarPaint" />
+                    </Border>
+
+                    <!-- Compatibility list (shown on X) -->
+                    <Border x:Name="CompatPanel" IsVisible="False"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{DynamicResource ThRadarBg}"
+                            Stroke="{DynamicResource ThRadarStroke}"
+                            StrokeThickness="1"
+                            Margin="4"
+                            VerticalOptions="Fill">
+                        <ScrollView>
+                            <VerticalStackLayout x:Name="CompatList"
+                                                 Padding="10,8" Spacing="5">
+                                <Label Text="SAVES" FontFamily="NunitoBold" FontSize="8"
+                                       TextColor="{DynamicResource ThTextDim}"
+                                       CharacterSpacing="1.2" Margin="0,0,0,2" />
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </Border>
+                </Grid>
 
                 <!-- Column 1: Type badges + Sprite + Name plate -->
                 <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" Margin="6">
@@ -146,106 +166,158 @@
                     </VerticalStackLayout>
                 </Grid>
 
-                <!-- Column 2: Moves + Ability/Item -->
-                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
-                                     Spacing="4" Padding="8,14,14,14">
-                    <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
-                           TextColor="{DynamicResource ThTextPrimary}" CharacterSpacing="1.2"
-                           Margin="0,0,0,4" />
+                <!-- Column 2: Info panel (default) / Moves panel (X toggle) -->
+                <Grid Grid.Column="2" VerticalOptions="Fill">
 
-                    <!-- 4 move rows -->
-                    <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{DynamicResource ThMoveRowBg}"
-                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
-                            Padding="8,6">
-                        <Grid ColumnDefinitions="10,*,Auto">
-                            <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
-                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
-                                <Label x:Name="MoveName0" FontFamily="NunitoBold" FontSize="12"
-                                       TextColor="{DynamicResource ThTextPrimary}" />
-                                <Label x:Name="MoveCat0" FontFamily="Nunito" FontSize="9"
-                                       TextColor="{DynamicResource ThTextDim}" />
-                            </VerticalStackLayout>
-                            <Label x:Name="MovePP0" Grid.Column="2"
-                                   FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
-                        </Grid>
-                    </Border>
-                    <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{DynamicResource ThMoveRowBg}"
-                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
-                            Padding="8,6">
-                        <Grid ColumnDefinitions="10,*,Auto">
-                            <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
-                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
-                                <Label x:Name="MoveName1" FontFamily="NunitoBold" FontSize="12"
-                                       TextColor="{DynamicResource ThTextPrimary}" />
-                                <Label x:Name="MoveCat1" FontFamily="Nunito" FontSize="9"
-                                       TextColor="{DynamicResource ThTextDim}" />
-                            </VerticalStackLayout>
-                            <Label x:Name="MovePP1" Grid.Column="2"
-                                   FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
-                        </Grid>
-                    </Border>
-                    <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{DynamicResource ThMoveRowBg}"
-                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
-                            Padding="8,6">
-                        <Grid ColumnDefinitions="10,*,Auto">
-                            <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
-                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
-                                <Label x:Name="MoveName2" FontFamily="NunitoBold" FontSize="12"
-                                       TextColor="{DynamicResource ThTextPrimary}" />
-                                <Label x:Name="MoveCat2" FontFamily="Nunito" FontSize="9"
-                                       TextColor="{DynamicResource ThTextDim}" />
-                            </VerticalStackLayout>
-                            <Label x:Name="MovePP2" Grid.Column="2"
-                                   FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
-                        </Grid>
-                    </Border>
-                    <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{DynamicResource ThMoveRowBg}"
-                            Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
-                            Padding="8,6">
-                        <Grid ColumnDefinitions="10,*,Auto">
-                            <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
-                                     WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
-                                <Label x:Name="MoveName3" FontFamily="NunitoBold" FontSize="12"
-                                       TextColor="{DynamicResource ThTextPrimary}" />
-                                <Label x:Name="MoveCat3" FontFamily="Nunito" FontSize="9"
-                                       TextColor="{DynamicResource ThTextDim}" />
-                            </VerticalStackLayout>
-                            <Label x:Name="MovePP3" Grid.Column="2"
-                                   FontFamily="NunitoBold" FontSize="10"
-                                   TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
-                        </Grid>
-                    </Border>
+                    <!-- Info panel — shown by default -->
+                    <VerticalStackLayout x:Name="DetailInfoPanel"
+                                         VerticalOptions="Center"
+                                         Spacing="8" Padding="8,14,14,14">
+                        <Label Text="INFO" FontFamily="NunitoBold" FontSize="9"
+                               TextColor="{DynamicResource ThTextPrimary}" CharacterSpacing="1.2"
+                               Margin="0,0,0,2" />
 
-                    <!-- Divider -->
-                    <BoxView HeightRequest="1" Color="{DynamicResource ThDividerLine}" Margin="0,4" />
+                        <!-- Ability -->
+                        <Border StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="10,8">
+                            <VerticalStackLayout Spacing="1">
+                                <Label Text="ABILITY" FontFamily="NunitoBold" FontSize="8"
+                                       TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.6" />
+                                <Label x:Name="DetailAbility" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                            </VerticalStackLayout>
+                        </Border>
 
-                    <!-- Ability / Item -->
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <VerticalStackLayout>
-                            <Label Text="ABILITY" FontFamily="NunitoBold" FontSize="8"
-                                   TextColor="{DynamicResource ThTextPrimary}" CharacterSpacing="0.6" />
-                            <Label x:Name="DetailAbility" FontFamily="NunitoBold" FontSize="11"
-                                   TextColor="{DynamicResource ThTextPrimary}" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1">
-                            <Label Text="ITEM" FontFamily="NunitoBold" FontSize="8"
-                                   TextColor="{DynamicResource ThTextPrimary}" CharacterSpacing="0.6" />
-                            <Label x:Name="DetailItem" FontFamily="NunitoBold" FontSize="11"
-                                   TextColor="{DynamicResource ThTextPrimary}" />
-                        </VerticalStackLayout>
-                    </Grid>
-                </VerticalStackLayout>
+                        <!-- Held Item -->
+                        <Border StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="10,8">
+                            <VerticalStackLayout Spacing="1">
+                                <Label Text="ITEM" FontFamily="NunitoBold" FontSize="8"
+                                       TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.6" />
+                                <Label x:Name="DetailItem" FontFamily="NunitoBold" FontSize="12"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Gender / Ball -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Border StrokeShape="RoundRectangle 10"
+                                    BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                    Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                    Padding="10,8">
+                                <VerticalStackLayout Spacing="1">
+                                    <Label Text="GENDER" FontFamily="NunitoBold" FontSize="8"
+                                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.6" />
+                                    <Label x:Name="DetailGender" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" StrokeShape="RoundRectangle 10"
+                                    BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                    Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                    Padding="10,8">
+                                <VerticalStackLayout Spacing="1">
+                                    <Label Text="BALL" FontFamily="NunitoBold" FontSize="8"
+                                           TextColor="{DynamicResource ThTextDim}" CharacterSpacing="0.6" />
+                                    <Label x:Name="DetailBall" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <!-- Hint -->
+                        <Label Text="X — moves &amp; compat" FontFamily="Nunito" FontSize="9"
+                               TextColor="{DynamicResource ThTextHint}"
+                               HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                    </VerticalStackLayout>
+
+                    <!-- Moves panel — shown on X press -->
+                    <VerticalStackLayout x:Name="DetailMovesPanel" IsVisible="False"
+                                         VerticalOptions="Center"
+                                         Spacing="4" Padding="8,14,14,14">
+                        <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
+                               TextColor="{DynamicResource ThTextPrimary}" CharacterSpacing="1.2"
+                               Margin="0,0,0,4" />
+
+                        <Border x:Name="MoveRow0" StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="8,6">
+                            <Grid ColumnDefinitions="10,*,Auto">
+                                <Ellipse x:Name="MoveDot0" Grid.Column="0" Fill="#A8A878"
+                                         WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                    <Label x:Name="MoveName0" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label x:Name="MoveCat0" FontFamily="Nunito" FontSize="9"
+                                           TextColor="{DynamicResource ThTextDim}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="MovePP0" Grid.Column="2"
+                                       FontFamily="NunitoBold" FontSize="10"
+                                       TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                        <Border x:Name="MoveRow1" StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="8,6">
+                            <Grid ColumnDefinitions="10,*,Auto">
+                                <Ellipse x:Name="MoveDot1" Grid.Column="0" Fill="#A8A878"
+                                         WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                    <Label x:Name="MoveName1" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label x:Name="MoveCat1" FontFamily="Nunito" FontSize="9"
+                                           TextColor="{DynamicResource ThTextDim}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="MovePP1" Grid.Column="2"
+                                       FontFamily="NunitoBold" FontSize="10"
+                                       TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                        <Border x:Name="MoveRow2" StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="8,6">
+                            <Grid ColumnDefinitions="10,*,Auto">
+                                <Ellipse x:Name="MoveDot2" Grid.Column="0" Fill="#A8A878"
+                                         WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                    <Label x:Name="MoveName2" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label x:Name="MoveCat2" FontFamily="Nunito" FontSize="9"
+                                           TextColor="{DynamicResource ThTextDim}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="MovePP2" Grid.Column="2"
+                                       FontFamily="NunitoBold" FontSize="10"
+                                       TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                        <Border x:Name="MoveRow3" StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThMoveRowBg}"
+                                Stroke="{DynamicResource ThMoveRowStroke}" StrokeThickness="1"
+                                Padding="8,6">
+                            <Grid ColumnDefinitions="10,*,Auto">
+                                <Ellipse x:Name="MoveDot3" Grid.Column="0" Fill="#A8A878"
+                                         WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Margin="6,0,0,0">
+                                    <Label x:Name="MoveName3" FontFamily="NunitoBold" FontSize="12"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label x:Name="MoveCat3" FontFamily="Nunito" FontSize="9"
+                                           TextColor="{DynamicResource ThTextDim}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="MovePP3" Grid.Column="2"
+                                       FontFamily="NunitoBold" FontSize="10"
+                                       TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
+                </Grid>
 
             </Grid>
 

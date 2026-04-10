@@ -28,6 +28,9 @@ public partial class GamePage : ContentPage
     private bool _showLegalityBadges;
     private bool?[] _legalityCache = [];
 
+    // X-toggle: false = info+radar (default), true = moves+compat
+    private bool _detailToggled;
+
     // Action menu (Start button)
     private bool _menuOpen;
     private int  _menuCursor; // 0 = Save, 1 = Export
@@ -1176,7 +1179,7 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonL1: _ = SwapToBank(-1); break;
             case Android.Views.Keycode.ButtonR1: _ = SwapToBank(+1); break;
 
-            case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonX: ToggleDetailView(); break;
             case Android.Views.Keycode.ButtonY:
                 if (_moveMode) { CancelMoveMode(); break; }
                 if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
@@ -1297,13 +1300,17 @@ public partial class GamePage : ContentPage
         // Moves
         UpdateMoveRows(pk);
 
-        // Ability / Item
-        var abilityName = pk.Ability < _strings.abilitylist.Length
+        // Info panel fields
+        DetailAbility.Text = pk.Ability < _strings.abilitylist.Length
             ? _strings.abilitylist[pk.Ability] : "—";
-        DetailAbility.Text = abilityName;
-        var itemName = pk.HeldItem > 0 && pk.HeldItem < _strings.itemlist.Length
+        DetailItem.Text = pk.HeldItem > 0 && pk.HeldItem < _strings.itemlist.Length
             ? _strings.itemlist[pk.HeldItem] : "None";
-        DetailItem.Text = itemName;
+        DetailGender.Text = pk.Gender switch { 0 => "♂ Male", 1 => "♀ Female", _ => "—" };
+        DetailBall.Text = pk.Ball > 0 && pk.Ball < _strings.balllist.Length
+            ? _strings.balllist[pk.Ball] : "—";
+
+        // Apply current toggle state
+        ApplyDetailToggle();
 
         TopIdlePanel.IsVisible     = false;
         TopSelectedPanel.IsVisible = true;
@@ -1328,10 +1335,141 @@ public partial class GamePage : ContentPage
     private void ShowIdlePanel()
     {
         _previewPk = null;
+        _detailToggled = false; // reset toggle when cursor leaves a Pokémon
         SpriteWebView.IsVisible    = false;
         PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
+    }
+
+    // ──────────────────────────────────────────────
+    //  X toggle: info+radar  ↔  moves+compat
+    // ──────────────────────────────────────────────
+
+    private void ToggleDetailView()
+    {
+        if (_previewPk is null) return;
+        _detailToggled = !_detailToggled;
+        ApplyDetailToggle();
+        if (_detailToggled)
+            UpdateCompatPanel(_previewPk);
+    }
+
+    private void ApplyDetailToggle()
+    {
+        // Left column
+        RadarBorder.IsVisible  = !_detailToggled;
+        CompatPanel.IsVisible  =  _detailToggled;
+
+        // Right column
+        DetailInfoPanel.IsVisible  = !_detailToggled;
+        DetailMovesPanel.IsVisible =  _detailToggled;
+    }
+
+    private void UpdateCompatPanel(PKM pk)
+    {
+        // Clear existing rows (keep the header label at index 0)
+        while (CompatList.Children.Count > 1)
+            CompatList.Children.RemoveAt(1);
+
+        var saves = App.LoadedSaves;
+        if (saves.Count == 0)
+        {
+            CompatList.Children.Add(new Label
+            {
+                Text = "No other saves loaded",
+                FontFamily = "Nunito",
+                FontSize = 10,
+                TextColor = Color.FromArgb("#88AABBCC"),
+            });
+            return;
+        }
+
+        foreach (var save in saves)
+        {
+            var status = GetCompatStatus(pk, save);
+            var dotColor = status switch
+            {
+                CompatStatus.Green  => Color.FromArgb("#4ADE80"),
+                CompatStatus.Yellow => Color.FromArgb("#FACC15"),
+                _                   => Color.FromArgb("#F87171"),
+            };
+            var statusText = status switch
+            {
+                CompatStatus.Green  => "Direct",
+                CompatStatus.Yellow => "Transfer",
+                _                   => "Incompatible",
+            };
+
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitionCollection(
+                    new ColumnDefinition(GridLength.Auto),
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Auto)),
+                ColumnSpacing = 6,
+            };
+
+            row.Add(new Ellipse
+            {
+                Fill = new SolidColorBrush(dotColor),
+                WidthRequest = 8, HeightRequest = 8,
+                VerticalOptions = LayoutOptions.Center,
+            }, 0, 0);
+
+            var nameStack = new VerticalStackLayout { Spacing = 0 };
+            nameStack.Add(new Label
+            {
+                Text = save.FileName,
+                FontFamily = "NunitoBold",
+                FontSize = 11,
+                TextColor = Color.FromArgb("#EDF0FF"),
+                LineBreakMode = LineBreakMode.TailTruncation,
+            });
+            nameStack.Add(new Label
+            {
+                Text = $"{save.Version}  ·  {save.TrainerName}",
+                FontFamily = "Nunito",
+                FontSize = 9,
+                TextColor = Color.FromArgb("#7080A0"),
+            });
+            row.Add(nameStack, 1, 0);
+
+            row.Add(new Label
+            {
+                Text = statusText,
+                FontFamily = "Nunito",
+                FontSize = 9,
+                TextColor = dotColor,
+                VerticalOptions = LayoutOptions.Center,
+            }, 2, 0);
+
+            var rowBorder = new Border
+            {
+                StrokeShape = new RoundRectangle { CornerRadius = 8 },
+                BackgroundColor = Color.FromArgb("#0D1A33"),
+                Stroke = Color.FromArgb("#1A2A44"),
+                StrokeThickness = 1,
+                Padding = new Thickness(8, 6),
+                Content = row,
+            };
+            CompatList.Children.Add(rowBorder);
+        }
+    }
+
+    private enum CompatStatus { Green, Yellow, Red }
+
+    private static CompatStatus GetCompatStatus(PKM pk, SaveDirectoryService.SaveEntry save)
+    {
+        // Same format/generation: directly placeable
+        if (save.Generation == pk.Format)
+            return CompatStatus.Green;
+
+        // Different generation: check forward-transfer path
+        if (EntityConverter.IsConvertibleToFormat(pk, (byte)save.Generation))
+            return CompatStatus.Yellow;
+
+        return CompatStatus.Red;
     }
 
     // ──────────────────────────────────────────────
