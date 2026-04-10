@@ -24,6 +24,7 @@ public partial class MainPage : ContentPage
     private int _actionCursor;
 
     private Border[] _actionTiles = [];
+    private Image[]  _partyImages = [];
     private SaveEntry? _selectedSave;
     private bool _gpNavigating;
 
@@ -51,6 +52,7 @@ public partial class MainPage : ContentPage
         ThemeService.ThemeChanged += OnThemeChanged;
         _secondary.Show();
         _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank];
+        _partyImages  = [Party0, Party1, Party2, Party3, Party4, Party5];
 
         // On dual-screen: hero panel fills the entire primary display (Row 0 = *),
         // and the save list + action bar moves to the secondary screen.
@@ -147,6 +149,8 @@ public partial class MainPage : ContentPage
                 HeroCard.Opacity         = 1;
             }
             HeroEmptyState.IsVisible = true;
+            PartyStrip.IsVisible     = false;
+            HeroPanel.Background     = null; // revert to XAML BackgroundColor
             StopFloatAnimation();
             return;
         }
@@ -191,6 +195,19 @@ public partial class MainPage : ContentPage
             HeroBgGrad1.Color    = card.GameColorLight;
         }
 
+        // Game-colored panel background gradient
+        HeroPanel.Background = new LinearGradientBrush
+        {
+            StartPoint = new Point(0.5, 0),
+            EndPoint   = new Point(0.5, 1),
+            GradientStops =
+            [
+                new GradientStop(card.GameColorLight.WithAlpha(55), 0f),
+                new GradientStop(card.GameColorDark.WithAlpha(20),  0.6f),
+                new GradientStop(Colors.Transparent,                 1f),
+            ],
+        };
+
         // Accent glow + card stroke from game color
         HeroGlow0.Color = card.GameColorLight.WithAlpha(64);
         HeroCard.Stroke = new SolidColorBrush(card.GameColorLight.WithAlpha(80));
@@ -205,11 +222,46 @@ public partial class MainPage : ContentPage
         // Active pill
         HeroActivePill.IsVisible = card.IsLoaded;
 
+        // Party strip
+        _ = LoadPartyAsync(card.Entry);
+
         StartFloatAnimation();
 
         // Fade card in
         HeroCard.Opacity = 0;
         await HeroCard.FadeTo(1, 160, Easing.CubicOut);
+    }
+
+    private async Task LoadPartyAsync(SaveEntry entry)
+    {
+        PartyStrip.IsVisible = false;
+        foreach (var img in _partyImages)
+            img.IsVisible = false;
+
+        var sav = await Task.Run(() =>
+        {
+            PKHeX.Core.SaveUtil.TryGetSaveFile(entry.RawData, out var s);
+            return s;
+        });
+        if (sav is null || !sav.HasParty) return;
+
+        var party = sav.PartyData.Where(p => p.Species > 0).ToArray();
+        if (party.Length == 0) return;
+
+        for (int i = 0; i < _partyImages.Length; i++)
+        {
+            if (i < party.Length)
+            {
+                var pk  = party[i];
+                var url = pk.IsShiny
+                    ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{pk.Species}.png"
+                    : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{pk.Species}.png";
+                _partyImages[i].Source    = new UriImageSource { Uri = new Uri(url), CacheValidity = TimeSpan.FromDays(30) };
+                _partyImages[i].IsVisible = true;
+            }
+        }
+
+        PartyStrip.IsVisible = true;
     }
 
     // ── Floating card animation ──────────────────────────────────────────────

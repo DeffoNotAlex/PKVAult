@@ -15,7 +15,7 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="HeroPanel" Grid.Row="0"
               BackgroundColor="{DynamicResource ThPageBg}"
-              MinimumHeightRequest="160">
+              MinimumHeightRequest="190">
 
             <!-- Animated dot grid background -->
             <skia:SKCanvasView x:Name="HeroGridCanvas"
@@ -165,6 +165,21 @@
                     </Grid>
                 </Border>
             </Grid>
+            <!-- Party sprite strip (shown when save has party data) -->
+            <HorizontalStackLayout x:Name="PartyStrip"
+                                   IsVisible="False"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="End"
+                                   Spacing="6"
+                                   Padding="0,0,0,14">
+                <Image x:Name="Party0" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+                <Image x:Name="Party1" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+                <Image x:Name="Party2" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+                <Image x:Name="Party3" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+                <Image x:Name="Party4" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+                <Image x:Name="Party5" WidthRequest="50" HeightRequest="50" Aspect="AspectFit" IsVisible="False" />
+            </HorizontalStackLayout>
+
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
