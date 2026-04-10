@@ -179,7 +179,7 @@ public class SaveDirectoryService
                 if (childDocId == null) continue;
 
                 var ext = Path.GetExtension(name).ToLowerInvariant();
-                if (ext is not ("" or ".sav" or ".bin" or ".dat" or ".gci" or ".dsv" or ".bak" or ".main")) continue;
+                if (ext is not ("" or ".sav" or ".srm" or ".bin" or ".dat" or ".gci" or ".dsv" or ".bak" or ".main")) continue;
 
                 var fileUri = global::Android.Provider.DocumentsContract.BuildDocumentUriUsingTree(treeUri, childDocId);
                 if (fileUri == null) continue;
@@ -218,7 +218,7 @@ public class SaveDirectoryService
             foreach (var filePath in Directory.EnumerateFiles(dirUri))
             {
                 var ext = Path.GetExtension(filePath).ToLowerInvariant();
-                if (ext is not ("" or ".sav" or ".bin" or ".dat" or ".gci" or ".dsv" or ".bak" or ".main")) continue;
+                if (ext is not ("" or ".sav" or ".srm" or ".bin" or ".dat" or ".gci" or ".dsv" or ".bak" or ".main")) continue;
                 try
                 {
                     var data = File.ReadAllBytes(filePath);
