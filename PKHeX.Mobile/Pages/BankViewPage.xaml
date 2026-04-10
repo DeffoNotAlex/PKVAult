@@ -58,12 +58,12 @@
                 <skia:SKCanvasView x:Name="RadarCanvas" PaintSurface="OnRadarPaint" />
             </Border>
 
-            <!-- Col 1: 3D sprite (WebView) + static fallback (Canvas) -->
+            <!-- Col 1: HOME sprite -->
             <Grid Grid.Column="1" Margin="4">
-                <skia:SKCanvasView x:Name="PreviewCanvas" PaintSurface="OnPreviewPaint" />
-                <WebView x:Name="SpriteWebView"
-                         BackgroundColor="Transparent"
-                         IsVisible="False" />
+                <Image x:Name="HomeSpriteImage"
+                       Aspect="AspectFit"
+                       VerticalOptions="Fill"
+                       HorizontalOptions="Fill" />
             </Grid>
 
             <!-- Col 2: Info panel / Moves panel (toggled by X) -->

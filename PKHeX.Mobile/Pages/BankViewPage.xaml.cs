@@ -23,10 +23,6 @@ public partial class BankViewPage : ContentPage
     private int    _detailView;   // 0 = info, 1 = moves
     private PKM?   _previewPk;
 
-    // WebView 3D sprite
-    private bool _spriteWebViewReady;
-    private int  _previewSpecies = -1;
-
     // Radar animation
     private float[]                  _radarCurrent = new float[6];
     private float                    _radarVisMax  = 255f;
@@ -72,9 +68,6 @@ public partial class BankViewPage : ContentPage
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
 
-        _spriteWebViewReady = false;
-        _previewSpecies     = -1;
-
         await LoadBoxAsync(_boxIndex, resetCursor: false);
     }
 
@@ -93,7 +86,6 @@ public partial class BankViewPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            PreviewCanvas.InvalidateSurface();
             RadarCanvas.InvalidateSurface();
         });
     }
@@ -133,28 +125,23 @@ public partial class BankViewPage : ContentPage
 
         UpdateInfoLabels();
         UpdateMoveLabels();
-        PreviewCanvas.InvalidateSurface();
 
         if (_previewPk?.Species > 0)
         {
-            int key = _previewPk.Species * 2 + (_previewPk.IsShiny ? 1 : 0);
-            if (key != _previewSpecies)
+            var pk = _previewPk;
+            var spriteUrl = pk.IsShiny
+                ? $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/{pk.Species}.png"
+                : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{pk.Species}.png";
+            HomeSpriteImage.Source = new UriImageSource
             {
-                _previewSpecies = key;
-                LoadAnimatedSprite(_previewPk);
-            }
-            else if (_spriteWebViewReady)
-            {
-                SpriteWebView.IsVisible = true;
-                PreviewCanvas.IsVisible = false;
-            }
+                Uri = new Uri(spriteUrl),
+                CacheValidity = TimeSpan.FromDays(30),
+            };
             StartRadarAnimation(GetRadarStats(_previewPk));
         }
         else
         {
-            SpriteWebView.IsVisible = false;
-            PreviewCanvas.IsVisible = true;
-            _previewSpecies = -1;
+            HomeSpriteImage.Source = null;
             _radarAnimCts?.Cancel();
             _radarCurrent = new float[6];
             RadarCanvas.InvalidateSurface();
@@ -208,115 +195,9 @@ public partial class BankViewPage : ContentPage
     //  WebView 3D sprite
     // ──────────────────────────────────────────────
 
-    private async void LoadAnimatedSprite(PKM pk)
-    {
-        var name = pk.Species < _strings.specieslist.Length
-            ? _strings.specieslist[pk.Species]
-            : pk.Species.ToString();
-
-        var speciesSlug = ToShowdownSlug(name);
-
-        string slug = speciesSlug;
-        string? baseSlug = null;
-        if (pk.Form != 0)
-        {
-            var formName = ShowdownParsing.GetStringFromForm(pk.Form, _strings, pk.Species, pk.Context);
-            var formSuffix = ToShowdownFormSuffix(formName);
-            if (formSuffix.Length > 0)
-            {
-                slug     = $"{speciesSlug}-{formSuffix}";
-                baseSlug = speciesSlug;
-            }
-        }
-
-        var dataUri = await SpriteCacheService.GetDataUriAsync(slug, pk.IsShiny);
-        if (dataUri is null && baseSlug is not null)
-            dataUri = await SpriteCacheService.GetDataUriAsync(baseSlug, pk.IsShiny);
-        if (dataUri is null)
-        {
-            PreviewCanvas.IsVisible = true;
-            PreviewCanvas.InvalidateSurface();
-            return;
-        }
-
-        if (!_spriteWebViewReady)
-        {
-            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
-            SpriteWebView.IsVisible = true;
-            PreviewCanvas.IsVisible = false;
-            _spriteWebViewReady     = true;
-        }
-        else
-        {
-            var js = $$"""document.getElementById('s').src='{{dataUri}}';""";
-            await SpriteWebView.EvaluateJavaScriptAsync(js);
-        }
-    }
-
-    private static string ToShowdownSlug(string speciesName)
-    {
-        var s = speciesName.ToLowerInvariant()
-            .Replace("♀", "f").Replace("♂", "m")
-            .Replace("é", "e");
-        return System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9]", "");
-    }
-
-    private static string ToShowdownFormSuffix(string formName)
-    {
-        if (string.IsNullOrWhiteSpace(formName)) return "";
-
-        var s = formName.ToLowerInvariant()
-            .Replace("é", "e").Replace("♀", "f").Replace("♂", "m");
-
-        string[] dropSuffixes = [" forme", " form", " mode", " cloak", " style",
-                                  " size", " rider", " pattern", " face", " plumage"];
-        foreach (var suffix in dropSuffixes)
-        {
-            if (s.EndsWith(suffix, StringComparison.Ordinal))
-            {
-                s = s[..^suffix.Length];
-                break;
-            }
-        }
-
-        s = s.Replace(' ', '-').Replace('_', '-');
-        s = System.Text.RegularExpressions.Regex.Replace(s, "[^a-z0-9-]", "");
-        return s.Trim('-');
-    }
-
-    private static string BuildSpriteShell(string src) => $$"""
-        <!DOCTYPE html>
-        <html><head>
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
-        </head><body>
-        <img id="s" src="{{src}}"
-             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
-        </body></html>
-        """;
-
     // ──────────────────────────────────────────────
-    //  Canvas: static sprite fallback
+    //  Canvas: static sprite fallback (box grid only)
     // ──────────────────────────────────────────────
-
-    private void OnPreviewPaint(object sender, SKPaintSurfaceEventArgs e)
-    {
-        var canvas = e.Surface.Canvas;
-        canvas.Clear(SKColors.Transparent);
-
-        var pk = _previewPk;
-        if (pk is null || pk.Species == 0) return;
-
-        var sprite  = _sprites.GetSprite(pk);
-        float maxSz = Math.Min(e.Info.Width, e.Info.Height) * 0.82f;
-        float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
-        float drawW, drawH;
-        if (aspect >= 1f) { drawW = maxSz; drawH = maxSz / aspect; }
-        else              { drawH = maxSz; drawW = maxSz * aspect; }
-        float sx = (e.Info.Width  - drawW) / 2f;
-        float sy = (e.Info.Height - drawH) / 2f;
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
-    }
 
     // ──────────────────────────────────────────────
     //  Canvas: radar chart
