@@ -5,6 +5,10 @@ using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using static PKHeX.Mobile.Services.ThemeService;
 
+#if ANDROID
+using PKHeX.Mobile.Platforms.Android;
+#endif
+
 namespace PKHeX.Mobile.Pages;
 
 public partial class SettingsPage : ContentPage
@@ -20,6 +24,13 @@ public partial class SettingsPage : ContentPage
     private bool _loading;
     private int _focusRow = 0;
     private Border[] _rows = [];
+
+    private readonly SaveDirectoryService _dirService = new();
+#if ANDROID
+    private readonly IDirectoryPicker _dirPicker = new AndroidDirectoryPicker();
+#else
+    private readonly IDirectoryPicker _dirPicker = new NullDirectoryPicker();
+#endif
 
     // Download logs
     private readonly System.Text.StringBuilder _spriteLog = new();
@@ -79,7 +90,8 @@ public partial class SettingsPage : ContentPage
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites, Row_AnimSprites];
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Sprites, Row_AnimSprites,
+                 Row_EdenScan, Row_MelonDSScan, Row_AzaharScan];
     }
 
     private void UpdateHighlight()
@@ -195,6 +207,15 @@ public partial class SettingsPage : ContentPage
                 break;
             case 7:
                 StartAnimBulkDownload();
+                break;
+            case 8:
+                _ = FindEdenSavesAsync();
+                break;
+            case 9:
+                _ = FindMelonDSSavesAsync();
+                break;
+            case 10:
+                _ = FindAzaharSavesAsync();
                 break;
         }
     }
@@ -429,6 +450,71 @@ public partial class SettingsPage : ContentPage
         float sweep = pct * 360f;
         var rect = new SKRect(cx - r, cy - r, cx + r, cy + r);
         canvas.DrawArc(rect, -90f, sweep, false, arcPaint);
+    }
+
+    // ── Emulator save finder ──────────────────────────────────────────────────
+
+    private void OnFindEdenTapped(object? sender, EventArgs e)   => _ = FindEdenSavesAsync();
+    private void OnFindMelonDSTapped(object? sender, EventArgs e) => _ = FindMelonDSSavesAsync();
+    private void OnFindAzaharTapped(object? sender, EventArgs e)  => _ = FindAzaharSavesAsync();
+
+    private async Task FindEdenSavesAsync()
+    {
+        var uri = await _dirPicker.PickDirectoryAsync();
+        if (uri is null) return;
+
+        EdenStatusLabel.Text      = "Scanning…";
+        EdenStatusLabel.IsVisible = true;
+
+        var found = await EmulatorSaveFinderService.ScanEdenAsync(uri);
+        if (found.Count == 0)
+        {
+            EdenStatusLabel.Text = "No Pokémon saves found. Make sure you picked the eden folder.";
+            return;
+        }
+
+        foreach (var (fileUri, _) in found)
+            _dirService.AddFile(fileUri);
+
+        var names = string.Join(", ", found.Select(f => f.GameName));
+        EdenStatusLabel.Text = $"Added {found.Count} save{(found.Count == 1 ? "" : "s")}: {names}";
+    }
+
+    private async Task FindMelonDSSavesAsync()
+    {
+        var uri = await _dirPicker.PickDirectoryAsync();
+        if (uri is null) return;
+
+        _dirService.AddDirectory(uri);
+        await DisplayAlertAsync("MelonDS", "Folder added. Your save files will appear on the home screen after a refresh.", "OK");
+    }
+
+    private async Task FindAzaharSavesAsync()
+    {
+        var uri = await _dirPicker.PickDirectoryAsync();
+        if (uri is null) return;
+
+        AzaharStatusLabel.Text      = "Scanning…";
+        AzaharStatusLabel.IsVisible = true;
+
+        var found = await EmulatorSaveFinderService.ScanAzaharAsync(uri);
+        if (found.Count == 0)
+        {
+            AzaharStatusLabel.Text = "No Pokémon saves found. Make sure you picked the Azahar root folder (the one that contains sdmc/).";
+            return;
+        }
+
+        foreach (var (fileUri, _) in found)
+            _dirService.AddFile(fileUri);
+
+        AzaharStatusLabel.Text = $"Added {found.Count} save{(found.Count == 1 ? "" : "s")}.";
+    }
+
+    // ── Stub pickers for non-Android ─────────────────────────────────────────
+
+    private sealed class NullDirectoryPicker : IDirectoryPicker
+    {
+        public Task<string?> PickDirectoryAsync() => Task.FromResult<string?>(null);
     }
 
     // ── Startup ───────────────────────────────────────────────────────────────
