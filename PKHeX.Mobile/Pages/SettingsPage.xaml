@@ -212,6 +212,88 @@
                 </VerticalStackLayout>
             </Border>
 
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
+            <!-- Section header -->
+            <Label Text="EMULATOR SAVES"
+                   FontSize="10" FontAttributes="Bold" LetterSpacing="1.5"
+                   TextColor="{DynamicResource ThTextDim}" Margin="4,8,0,2" />
+
+            <!-- Eden (Switch Gen 8/9) -->
+            <Border x:Name="Row_EdenScan"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFindEdenTapped" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="Find Eden Saves  (Switch)"
+                                   FontAttributes="Bold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label Text="Grant access to your eden folder — scans for all Pokémon saves automatically."
+                                   FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="›" FontSize="20"
+                               TextColor="{DynamicResource ThAccent}"
+                               VerticalOptions="Center" Margin="8,0,0,0" />
+                    </Grid>
+                    <Label x:Name="EdenStatusLabel" FontSize="11"
+                           TextColor="{DynamicResource ThAccent}" IsVisible="False" />
+                </VerticalStackLayout>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
+            <!-- MelonDS (DS Gen 4/5) -->
+            <Border x:Name="Row_MelonDSScan"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFindMelonDSTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Add MelonDS Saves Folder  (DS)"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label Text="Saves are .sav files next to your ROMs. Point to your ROM or saves folder."
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="›" FontSize="20"
+                           TextColor="{DynamicResource ThAccent}"
+                           VerticalOptions="Center" Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
+            <!-- Azahar (3DS Gen 6/7) -->
+            <Border x:Name="Row_AzaharScan"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFindAzaharTapped" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="Find Azahar Saves  (3DS)"
+                                   FontAttributes="Bold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label Text="Grant access to your Azahar folder — scans sdmc/Nintendo 3DS automatically."
+                                   FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="›" FontSize="20"
+                               TextColor="{DynamicResource ThAccent}"
+                               VerticalOptions="Center" Margin="8,0,0,0" />
+                    </Grid>
+                    <Label x:Name="AzaharStatusLabel" FontSize="11"
+                           TextColor="{DynamicResource ThAccent}" IsVisible="False" />
+                </VerticalStackLayout>
+            </Border>
+
         </VerticalStackLayout>
     </ScrollView>
 
