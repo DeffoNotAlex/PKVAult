@@ -103,7 +103,16 @@
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
-                <!-- Column 0: Stat radar  /  Compatibility list (toggled by X) -->
+                <!-- Sprite — full-panel background layer, declared first so it renders behind all columns -->
+                <skia:SKCanvasView x:Name="PreviewCanvas"
+                                   Grid.ColumnSpan="3"
+                                   PaintSurface="OnPreviewPaint" />
+                <WebView x:Name="SpriteWebView"
+                         Grid.ColumnSpan="3"
+                         BackgroundColor="Transparent"
+                         IsVisible="False" />
+
+                <!-- Column 0: Stat radar / Compatibility list -->
                 <Grid Grid.Column="0">
                     <!-- Radar (default) -->
                     <Border x:Name="RadarBorder"
@@ -136,33 +145,22 @@
                     </Border>
                 </Grid>
 
-                <!-- Column 1: Type badges + Sprite (name plate overlaid at bottom) -->
-                <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="6">
-                    <!-- Type badges -->
-                    <HorizontalStackLayout x:Name="TypeBadgeRow" Grid.Row="0"
-                                           HorizontalOptions="Center" Spacing="5"
-                                           Margin="0,4,0,0" />
-
-                    <!-- Animated sprite (WebView) / static fallback (Canvas) + name plate overlay -->
-                    <Grid Grid.Row="1">
-                        <skia:SKCanvasView x:Name="PreviewCanvas"
-                                           PaintSurface="OnPreviewPaint" />
-                        <WebView x:Name="SpriteWebView"
-                                 BackgroundColor="Transparent"
-                                 IsVisible="False" />
-                        <!-- Name plate pinned to bottom of sprite area -->
-                        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="End"
-                                             Spacing="1" Margin="0,0,0,4">
-                            <Label x:Name="DetailSpeciesName"
-                                   FontFamily="NunitoExtraBold" FontSize="15"
-                                   TextColor="{DynamicResource ThTextPrimary}"
-                                   HorizontalTextAlignment="Center" />
-                            <Label x:Name="DetailLevelNature"
-                                   FontFamily="Nunito" FontSize="10"
-                                   TextColor="{DynamicResource ThTextPrimary}"
-                                   HorizontalTextAlignment="Center" />
-                        </VerticalStackLayout>
-                    </Grid>
+                <!-- Column 1: Type badges (top) + Name plate (bottom) -->
+                <Grid Grid.Column="1" Margin="6">
+                    <HorizontalStackLayout x:Name="TypeBadgeRow"
+                                           HorizontalOptions="Center" VerticalOptions="Start"
+                                           Spacing="5" Margin="0,4,0,0" />
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="End"
+                                         Spacing="1" Margin="0,0,0,4">
+                        <Label x:Name="DetailSpeciesName"
+                               FontFamily="NunitoExtraBold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}"
+                               HorizontalTextAlignment="Center" />
+                        <Label x:Name="DetailLevelNature"
+                               FontFamily="Nunito" FontSize="10"
+                               TextColor="{DynamicResource ThTextPrimary}"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
                 </Grid>
 
                 <!-- Column 2: Info panel (default) / Moves panel (X toggle) -->
