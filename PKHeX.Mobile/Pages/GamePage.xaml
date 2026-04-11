@@ -7,7 +7,7 @@
              Shell.NavBarIsVisible="False">
 
     <!-- Root: top screen / bottom screen, with floating menu overlay -->
-    <Grid x:Name="RootGrid" RowDefinitions="*,*" RowSpacing="2"
+    <Grid x:Name="RootGrid" RowDefinitions="3*,2*" RowSpacing="2"
           BackgroundColor="{DynamicResource ThRootBg}">
 
         <!-- ══════════════════════════════════════════════════════ -->
