@@ -483,22 +483,34 @@
 
                     <!-- Save option -->
                     <Border x:Name="MenuItem_Save"
-                            BackgroundColor="{DynamicResource ThSaveMenuBg}" Stroke="Transparent"
-                            StrokeShape="RoundRectangle 0" Padding="20,14"
-                            Margin="8,0,8,4">
-                        <Label Text="💾  Save to original file"
-                               TextColor="{DynamicResource ThSaveMenuText}" FontSize="14"
-                               HorizontalOptions="Center" />
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThDivider}"
+                            StrokeShape="RoundRectangle 8" Padding="16,12"
+                            Margin="8,0,8,6">
+                        <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Label Text="{x:Static theme:Ph.FloppyDisk}" FontFamily="Phosphor"
+                                   FontSize="20" TextColor="{DynamicResource ThSaveMenuText}"
+                                   VerticalOptions="Center" />
+                            <Label Text="Save to original file" FontFamily="NunitoBold"
+                                   FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
                     </Border>
 
                     <!-- Export option -->
                     <Border x:Name="MenuItem_Export"
-                            BackgroundColor="{DynamicResource ThExportMenuBg}" Stroke="Transparent"
-                            StrokeShape="RoundRectangle 0" Padding="20,14"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThDivider}"
+                            StrokeShape="RoundRectangle 8" Padding="16,12"
                             Margin="8,0,8,10">
-                        <Label Text="⬆  Export to new file"
-                               TextColor="{DynamicResource ThExportMenuText}" FontSize="14"
-                               HorizontalOptions="Center" />
+                        <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Label Text="{x:Static theme:Ph.Export}" FontFamily="Phosphor"
+                                   FontSize="20" TextColor="{DynamicResource ThExportMenuText}"
+                                   VerticalOptions="Center" />
+                            <Label Text="Export to new file" FontFamily="NunitoBold"
+                                   FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
                     </Border>
 
                 </VerticalStackLayout>
