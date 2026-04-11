@@ -808,7 +808,7 @@ public partial class GamePage : ContentPage
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{src}}"
-             style="max-width:88%;max-height:88%;image-rendering:pixelated;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
+             style="max-width:100%;max-height:100%;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
         </body></html>
         """;
 
@@ -1179,6 +1179,14 @@ public partial class GamePage : ContentPage
     {
         _menuOpen   = true;
         _menuCursor = 0;
+
+        // Apply theme colors in code — DynamicResource doesn't update on hidden elements
+        ActionMenuPanel.BackgroundColor = ThemeColor("ThActionMenuPanel", "#0D1528");
+        ActionMenuPanel.Stroke          = ThemeColor("ThActionMenuStroke", "#2A3F70");
+        var textPrimary = ThemeColor("ThTextPrimary", "#EDF0FF");
+        foreach (var label in new[] { SaveMenuLabel, ExportMenuLabel })
+            label.TextColor = textPrimary;
+
         ActionMenuOverlay.Opacity = 0;
         ActionMenuPanel.TranslationY = 48;
         ActionMenuOverlay.IsVisible = true;
@@ -1198,12 +1206,23 @@ public partial class GamePage : ContentPage
         ActionMenuPanel.TranslationY = 0;
     }
 
+    private static Color ThemeColor(string key, string fallback)
+    {
+        if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is Color c)
+            return c;
+        return Color.FromArgb(fallback);
+    }
+
     private void UpdateMenuHighlight()
     {
-        MenuItem_Save.BackgroundColor   = _menuCursor == 0 ? Color.FromArgb("#2A5A2A") : Color.FromArgb("#1A3A1A");
-        MenuItem_Export.BackgroundColor = _menuCursor == 1 ? Color.FromArgb("#3A2070") : Color.FromArgb("#1D1040");
-        MenuItem_Save.Stroke            = _menuCursor == 0 ? Color.FromArgb("#40CC40") : Colors.Transparent;
-        MenuItem_Export.Stroke          = _menuCursor == 1 ? Color.FromArgb("#8060DD") : Colors.Transparent;
+        var normalBg  = ThemeColor("ThSettingsRow",      "#111827");
+        var focusBg   = ThemeColor("ThSettingsRowFocus", "#182845");
+        var accent    = ThemeColor("ThAccent",           "#3B8BFF");
+
+        MenuItem_Save.BackgroundColor   = _menuCursor == 0 ? focusBg   : normalBg;
+        MenuItem_Export.BackgroundColor = _menuCursor == 1 ? focusBg   : normalBg;
+        MenuItem_Save.Stroke            = _menuCursor == 0 ? accent    : Colors.Transparent;
+        MenuItem_Export.Stroke          = _menuCursor == 1 ? accent    : Colors.Transparent;
     }
 
     // ──────────────────────────────────────────────

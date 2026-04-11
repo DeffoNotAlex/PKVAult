@@ -486,7 +486,7 @@
                             <Label Text="{x:Static theme:Ph.FloppyDisk}" FontFamily="Phosphor"
                                    FontSize="20" TextColor="{DynamicResource ThAccent}"
                                    VerticalOptions="Center" />
-                            <Label Text="Save to original file" FontFamily="NunitoBold"
+                            <Label x:Name="SaveMenuLabel" Text="Save to original file" FontFamily="NunitoBold"
                                    FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
@@ -502,7 +502,7 @@
                             <Label Text="{x:Static theme:Ph.Export}" FontFamily="Phosphor"
                                    FontSize="20" TextColor="{DynamicResource ThAccent}"
                                    VerticalOptions="Center" />
-                            <Label Text="Export to new file" FontFamily="NunitoBold"
+                            <Label x:Name="ExportMenuLabel" Text="Export to new file" FontFamily="NunitoBold"
                                    FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
