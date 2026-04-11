@@ -483,13 +483,13 @@
 
                     <!-- Save option -->
                     <Border x:Name="MenuItem_Save"
-                            BackgroundColor="{DynamicResource ThCardBg}"
+                            BackgroundColor="{DynamicResource ThSettingsRow}"
                             Stroke="{DynamicResource ThDivider}"
                             StrokeShape="RoundRectangle 8" Padding="16,12"
                             Margin="8,0,8,6">
                         <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
                             <Label Text="{x:Static theme:Ph.FloppyDisk}" FontFamily="Phosphor"
-                                   FontSize="20" TextColor="{DynamicResource ThSaveMenuText}"
+                                   FontSize="20" TextColor="{DynamicResource ThAccent}"
                                    VerticalOptions="Center" />
                             <Label Text="Save to original file" FontFamily="NunitoBold"
                                    FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
@@ -499,13 +499,13 @@
 
                     <!-- Export option -->
                     <Border x:Name="MenuItem_Export"
-                            BackgroundColor="{DynamicResource ThCardBg}"
+                            BackgroundColor="{DynamicResource ThSettingsRow}"
                             Stroke="{DynamicResource ThDivider}"
                             StrokeShape="RoundRectangle 8" Padding="16,12"
                             Margin="8,0,8,10">
                         <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
                             <Label Text="{x:Static theme:Ph.Export}" FontFamily="Phosphor"
-                                   FontSize="20" TextColor="{DynamicResource ThExportMenuText}"
+                                   FontSize="20" TextColor="{DynamicResource ThAccent}"
                                    VerticalOptions="Center" />
                             <Label Text="Export to new file" FontFamily="NunitoBold"
                                    FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
