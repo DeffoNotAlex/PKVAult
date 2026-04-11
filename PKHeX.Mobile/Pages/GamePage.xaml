@@ -136,41 +136,40 @@
                     </Border>
                 </Grid>
 
-                <!-- Column 1: Type badges + Sprite + Name plate -->
-                <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" Margin="6">
+                <!-- Column 1: Type badges + Sprite (name plate overlaid at bottom) -->
+                <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="6">
                     <!-- Type badges -->
                     <HorizontalStackLayout x:Name="TypeBadgeRow" Grid.Row="0"
                                            HorizontalOptions="Center" Spacing="5"
                                            Margin="0,4,0,0" />
 
-                    <!-- Animated sprite (WebView) / static fallback (Canvas) -->
+                    <!-- Animated sprite (WebView) / static fallback (Canvas) + name plate overlay -->
                     <Grid Grid.Row="1">
                         <skia:SKCanvasView x:Name="PreviewCanvas"
                                            PaintSurface="OnPreviewPaint" />
                         <WebView x:Name="SpriteWebView"
                                  BackgroundColor="Transparent"
                                  IsVisible="False" />
+                        <!-- Name plate pinned to bottom of sprite area -->
+                        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="End"
+                                             Spacing="1" Margin="0,0,0,4">
+                            <Label x:Name="DetailSpeciesName"
+                                   FontFamily="NunitoExtraBold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label x:Name="DetailLevelNature"
+                                   FontFamily="Nunito" FontSize="10"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
                     </Grid>
-
-                    <!-- Name plate -->
-                    <VerticalStackLayout Grid.Row="2" HorizontalOptions="Center"
-                                         Spacing="1" Margin="0,0,0,6">
-                        <Label x:Name="DetailSpeciesName"
-                               FontFamily="NunitoExtraBold" FontSize="15"
-                               TextColor="{DynamicResource ThTextPrimary}"
-                               HorizontalTextAlignment="Center" />
-                        <Label x:Name="DetailLevelNature"
-                               FontFamily="Nunito" FontSize="10"
-                               TextColor="{DynamicResource ThTextPrimary}"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
                 </Grid>
 
                 <!-- Column 2: Info panel (default) / Moves panel (X toggle) -->
                 <Grid Grid.Column="2" VerticalOptions="Fill">
 
-                    <!-- Info panel — shown by default -->
-                    <VerticalStackLayout x:Name="DetailInfoPanel"
+                    <!-- Info panel — hidden (moves shown by default) -->
+                    <VerticalStackLayout x:Name="DetailInfoPanel" IsVisible="False"
                                          VerticalOptions="Center"
                                          Spacing="8" Padding="8,14,14,14">
                         <Label Text="INFO" FontFamily="NunitoBold" FontSize="9"
@@ -229,14 +228,10 @@
                             </Border>
                         </Grid>
 
-                        <!-- Hint -->
-                        <Label Text="X — moves &amp; compat" FontFamily="Nunito" FontSize="9"
-                               TextColor="{DynamicResource ThTextHint}"
-                               HorizontalTextAlignment="Center" Margin="0,4,0,0" />
                     </VerticalStackLayout>
 
-                    <!-- Moves panel — shown on X press -->
-                    <VerticalStackLayout x:Name="DetailMovesPanel" IsVisible="False"
+                    <!-- Moves panel — always visible -->
+                    <VerticalStackLayout x:Name="DetailMovesPanel"
                                          VerticalOptions="Center"
                                          Spacing="4" Padding="8,14,14,14">
                         <Label Text="MOVES" FontFamily="NunitoBold" FontSize="9"
