@@ -377,24 +377,29 @@ public partial class MainPage : ContentPage
 
     // ── Save loading ─────────────────────────────────────────────────────────
 
-    private void LoadSave(SaveEntry entry)
+    private async Task LoadSaveAsync(SaveEntry entry)
     {
-        if (SaveUtil.TryGetSaveFile(entry.RawData, out var sav))
+        var sav = await Task.Run(() =>
         {
-            foreach (var card in _saveCards)
-                card.IsLoaded = false;
+            SaveUtil.TryGetSaveFile(entry.RawData, out var s);
+            return s;
+        });
 
-            App.ActiveSave = sav;
-            App.ActiveSaveFileName = entry.FileName;
-            App.ActiveSaveFileUri = entry.FileUri;
-            _selectedSave = entry;
+        if (sav is null) return;
 
-            var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
-            if (active != null) active.IsLoaded = true;
+        foreach (var card in _saveCards)
+            card.IsLoaded = false;
 
-            UpdateHeroPreview();
-            UpdateActionHighlight();
-        }
+        App.ActiveSave = sav;
+        App.ActiveSaveFileName = entry.FileName;
+        App.ActiveSaveFileUri = entry.FileUri;
+        _selectedSave = entry;
+
+        var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
+        if (active != null) active.IsLoaded = true;
+
+        UpdateHeroPreview();
+        UpdateActionHighlight();
     }
 
     // ── Actions ──────────────────────────────────────────────────────────────
@@ -449,7 +454,7 @@ public partial class MainPage : ContentPage
         if (e.CurrentSelection[0] is SaveCardViewModel vm)
         {
             SetCardCursor(_saveCards.IndexOf(vm));
-            LoadSave(vm.Entry);
+            _ = LoadSaveAsync(vm.Entry);
         }
     }
 
@@ -649,7 +654,7 @@ public partial class MainPage : ContentPage
                 }
                 else
                 {
-                    LoadSave(card.Entry);
+                    _ = LoadSaveAsync(card.Entry);
                 }
             }
         }

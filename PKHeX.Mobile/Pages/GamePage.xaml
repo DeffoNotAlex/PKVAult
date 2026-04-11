@@ -101,6 +101,7 @@
 
             <!-- ── SELECTED STATE — 3-column Pokémon detail ── -->
             <Grid x:Name="TopSelectedPanel" IsVisible="False"
+                  RowDefinitions="*"
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
                 <!-- Sprite — full-panel background layer, declared first so it renders behind all columns -->
