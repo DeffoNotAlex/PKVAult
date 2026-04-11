@@ -379,45 +379,43 @@ public partial class MainPage : ContentPage
 
     private async Task LoadSaveAsync(SaveEntry entry)
     {
-        SaveFile? sav;
         try
         {
-            sav = await Task.Run(() =>
+            var sav = await Task.Run(() =>
             {
                 SaveUtil.TryGetSaveFile(entry.RawData, out var s);
                 return s;
             });
+
+            if (sav is null)
+            {
+                await DisplayAlert("Load Failed",
+                    $"Could not parse \"{entry.FileName}\" ({entry.RawData.Length:N0} bytes). Unsupported format.",
+                    "OK");
+                return;
+            }
+
+            foreach (var card in _saveCards)
+                card.IsLoaded = false;
+
+            App.ActiveSave = sav;
+            App.ActiveSaveFileName = entry.FileName;
+            App.ActiveSaveFileUri = entry.FileUri;
+            _selectedSave = entry;
+
+            var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
+            if (active != null) active.IsLoaded = true;
+
+            // Force UpdateHeroPreview to do a full redraw so the Active pill appears.
+            // Without this reset it skips the update because the display index didn't change.
+            _lastHeroDisplayIndex = -2;
+            UpdateHeroPreview();
+            UpdateActionHighlight();
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Load Error", ex.Message, "OK");
-            return;
+            await DisplayAlert("Load Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
         }
-
-        if (sav is null)
-        {
-            await DisplayAlert("Load Failed",
-                $"Could not parse \"{entry.FileName}\". The file may be in an unsupported format.",
-                "OK");
-            return;
-        }
-
-        foreach (var card in _saveCards)
-            card.IsLoaded = false;
-
-        App.ActiveSave = sav;
-        App.ActiveSaveFileName = entry.FileName;
-        App.ActiveSaveFileUri = entry.FileUri;
-        _selectedSave = entry;
-
-        var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
-        if (active != null) active.IsLoaded = true;
-
-        // Force UpdateHeroPreview to do a full redraw so the Active pill appears.
-        // Without this reset it skips the update because the display index didn't change.
-        _lastHeroDisplayIndex = -2;
-        UpdateHeroPreview();
-        UpdateActionHighlight();
     }
 
     // ── Actions ──────────────────────────────────────────────────────────────
