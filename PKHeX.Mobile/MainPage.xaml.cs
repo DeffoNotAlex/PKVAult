@@ -379,13 +379,28 @@ public partial class MainPage : ContentPage
 
     private async Task LoadSaveAsync(SaveEntry entry)
     {
-        var sav = await Task.Run(() =>
+        SaveFile? sav;
+        try
         {
-            SaveUtil.TryGetSaveFile(entry.RawData, out var s);
-            return s;
-        });
+            sav = await Task.Run(() =>
+            {
+                SaveUtil.TryGetSaveFile(entry.RawData, out var s);
+                return s;
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Load Error", ex.Message, "OK");
+            return;
+        }
 
-        if (sav is null) return;
+        if (sav is null)
+        {
+            await DisplayAlert("Load Failed",
+                $"Could not parse \"{entry.FileName}\". The file may be in an unsupported format.",
+                "OK");
+            return;
+        }
 
         foreach (var card in _saveCards)
             card.IsLoaded = false;
@@ -529,7 +544,7 @@ public partial class MainPage : ContentPage
             case Android.Views.Keycode.DpadRight:
                 MoveRight(); break;
             case Android.Views.Keycode.ButtonA:
-                OnAPressed(); break;
+                _ = OnAPressedAsync(); break;
             case Android.Views.Keycode.ButtonX:
                 ActivateTile(0); break; // Quick jump to Search
             case Android.Views.Keycode.ButtonL1:
@@ -641,21 +656,16 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void OnAPressed()
+    private async Task OnAPressedAsync()
     {
         if (_focusSection == 0)
         {
             if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
             {
                 var card = _saveCards[_cardCursor];
-                if (card.IsLoaded)
-                {
-                    ActivatePrimaryButton();
-                }
-                else
-                {
-                    _ = LoadSaveAsync(card.Entry);
-                }
+                if (!card.IsLoaded)
+                    await LoadSaveAsync(card.Entry);
+                ActivatePrimaryButton();
             }
         }
         else
