@@ -5,408 +5,408 @@
              x:Class="PKHeX.Mobile.Pages.PkmEditorPage"
              Title="Edit Pokémon"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#0B0F1E">
+             BackgroundColor="{DynamicResource ThSettingsBg}">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="QRButton" Text="QR" Clicked="OnQRClicked" />
         <ToolbarItem Text="Save" Clicked="OnSaveClicked" />
     </ContentPage.ToolbarItems>
 
-    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto" Padding="0" BackgroundColor="#0B0F1E">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,*,Auto" Padding="0" BackgroundColor="{DynamicResource ThSettingsBg}">
 
         <!-- Row 0: Header: sprite + species/level + back button -->
         <Grid x:Name="HeaderPanel" Grid.Row="0" ColumnDefinitions="80,*,Auto" Padding="8"
-              BackgroundColor="#0D1121">
+              BackgroundColor="{DynamicResource ThSettingsBg}">
             <skia:SKCanvasView Grid.Column="0"
                                x:Name="SpriteCanvas"
                                WidthRequest="68" HeightRequest="56"
                                PaintSurface="OnSpritePaint" />
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2" Margin="8,0,0,0">
                 <Label x:Name="SpeciesLabel" FontSize="18" FontAttributes="Bold"
-                       TextColor="#EEEEFF" />
+                       TextColor="{DynamicResource ThTextPrimary}" />
                 <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                    <Label x:Name="SubtitleLabel" FontSize="13" TextColor="#8888BB" />
+                    <Label x:Name="SubtitleLabel" FontSize="13" TextColor="{DynamicResource ThTextSecondary}" />
                     <Label x:Name="LegalityBadge" FontSize="13" FontAttributes="Bold" Text="" />
                 </HorizontalStackLayout>
                 <Label Text="↕ row  ◀▶ change  A keyboard  L/R tabs  B back  ▶ save"
-                       FontSize="9" TextColor="#404060" />
+                       FontSize="9" TextColor="{DynamicResource ThTextDim}" />
             </VerticalStackLayout>
             <VerticalStackLayout Grid.Column="2" VerticalOptions="Center"
                                   Spacing="4" Margin="0,0,4,0">
                 <Button Text="← Back"
                         Clicked="OnBackClicked"
-                        BackgroundColor="#1D3A70" TextColor="#A0C0FF"
+                        BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThAccentLight}"
                         FontSize="13" Padding="14,8" />
             </VerticalStackLayout>
         </Grid>
 
         <!-- Row 1: Tab bar -->
         <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="0"
-              BackgroundColor="#0B0F1E">
+              BackgroundColor="{DynamicResource ThSettingsBg}">
             <Button x:Name="TabStats"  Grid.Column="0" Text="Stats"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#4F80FF" TextColor="White"
+                    BackgroundColor="{DynamicResource ThAccent}" TextColor="{DynamicResource ThTextPrimary}"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabMoves" Grid.Column="1" Text="Moves"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabMet"   Grid.Column="2" Text="Met"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabOT"    Grid.Column="3" Text="OT"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabLegal" Grid.Column="4" Text="⚖"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1A2035" TextColor="#8888BB"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
                     FontSize="13" Padding="0,8" CornerRadius="0" />
         </Grid>
 
         <!-- Row 2: Scrollable content panels (only one visible at a time) -->
-        <ScrollView x:Name="TabScrollView" Grid.Row="2" Padding="12" BackgroundColor="#0B0F1E">
+        <ScrollView x:Name="TabScrollView" Grid.Row="2" Padding="12" BackgroundColor="{DynamicResource ThSettingsBg}">
             <Grid>
 
                 <!-- ── STATS ── -->
                 <VerticalStackLayout x:Name="StatsPanel" Spacing="4">
 
                     <Border x:Name="Row_Nickname" StyleId="Text"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,*">
                             <Label Grid.Column="0" Text="Nickname"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Entry Grid.Column="1" x:Name="NicknameEntry"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Level" StyleId="Step:Level"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Level"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:Level"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="LevelEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:Level"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Nature" StyleId="Pick:Nature"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Nature"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Nature"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="NaturePicker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Nature"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Ability"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,*">
                             <Label Grid.Column="0" Text="Ability"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Label Grid.Column="1" x:Name="AbilityLabel"
-                                   VerticalOptions="Center" TextColor="#EEEEFF" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Gender" StyleId="Pick:Gender"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Gender"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Gender"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="GenderPicker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Gender"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Shiny" StyleId="Toggle"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,*">
                             <Label Grid.Column="0" Text="Shiny"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Switch Grid.Column="1" x:Name="ShinySwitch" HorizontalOptions="Start" />
                         </Grid>
                     </Border>
 
                     <!-- IVs -->
                     <Label Text="IVs  (0 – 31)" FontAttributes="Bold"
-                           TextColor="#4F80FF" Margin="0,8,0,0" />
+                           TextColor="{DynamicResource ThAccent}" Margin="0,8,0,0" />
 
                     <Border x:Name="Row_IvHp" StyleId="Step:IV_HP"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="HP"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_HP"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvHpEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_HP"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_IvAtk" StyleId="Step:IV_ATK"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Atk"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_ATK"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvAtkEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_ATK"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_IvDef" StyleId="Step:IV_DEF"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Def"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_DEF"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvDefEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_DEF"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_IvSpA" StyleId="Step:IV_SPA"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="SpA"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_SPA"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvSpaEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_SPA"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_IvSpD" StyleId="Step:IV_SPD"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="SpD"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_SPD"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvSpdEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_SPD"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_IvSpe" StyleId="Step:IV_SPE"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Spe"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:IV_SPE"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="IvSpeEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:IV_SPE"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <!-- EVs -->
                     <Label Text="EVs  (0 – 252)" FontAttributes="Bold"
-                           TextColor="#4F80FF" Margin="0,8,0,0" />
+                           TextColor="{DynamicResource ThAccent}" Margin="0,8,0,0" />
 
                     <Border x:Name="Row_EvHp" StyleId="Step:EV_HP"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="HP"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_HP"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvHpEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_HP"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_EvAtk" StyleId="Step:EV_ATK"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Atk"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_ATK"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvAtkEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_ATK"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_EvDef" StyleId="Step:EV_DEF"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Def"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_DEF"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvDefEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_DEF"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_EvSpA" StyleId="Step:EV_SPA"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="SpA"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_SPA"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvSpaEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_SPA"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_EvSpD" StyleId="Step:EV_SPD"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="SpD"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_SPD"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvSpdEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_SPD"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_EvSpe" StyleId="Step:EV_SPE"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="90,38,*,38">
                             <Label Grid.Column="0" Text="Spe"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:EV_SPE"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="EvSpeEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:EV_SPE"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
@@ -417,77 +417,77 @@
                 <VerticalStackLayout x:Name="MovesPanel" IsVisible="False" Spacing="4">
 
                     <Border x:Name="Row_Move1" StyleId="Pick:Move1"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="60,38,*,38">
                             <Label Grid.Column="0" Text="Move 1"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Move1"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="Move1Picker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Move1"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Move2" StyleId="Pick:Move2"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="60,38,*,38">
                             <Label Grid.Column="0" Text="Move 2"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Move2"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="Move2Picker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Move2"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Move3" StyleId="Pick:Move3"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="60,38,*,38">
                             <Label Grid.Column="0" Text="Move 3"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Move3"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="Move3Picker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Move3"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Move4" StyleId="Pick:Move4"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="60,38,*,38">
                             <Label Grid.Column="0" Text="Move 4"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Move4"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="Move4Picker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Move4"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
@@ -498,55 +498,55 @@
                 <VerticalStackLayout x:Name="MetPanel" IsVisible="False" Spacing="4">
 
                     <Border x:Name="Row_MetLevel" StyleId="Step:MetLevel"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="110,38,*,38">
                             <Label Grid.Column="0" Text="Met Level"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:MetLevel"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="MetLevelEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:MetLevel"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Ball"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="110,*">
                             <Label Grid.Column="0" Text="Ball"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Label Grid.Column="1" x:Name="BallLabel"
-                                   VerticalOptions="Center" TextColor="#EEEEFF" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_MetLoc"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="110,*">
                             <Label Grid.Column="0" Text="Met Location"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Label Grid.Column="1" x:Name="MetLocationLabel"
-                                   VerticalOptions="Center" TextColor="#EEEEFF" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_OriginGame"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="110,*">
                             <Label Grid.Column="0" Text="Origin Game"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Label Grid.Column="1" x:Name="OriginGameLabel"
-                                   VerticalOptions="Center" TextColor="#EEEEFF" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
                         </Grid>
                     </Border>
 
@@ -556,72 +556,72 @@
                 <VerticalStackLayout x:Name="OTPanel" IsVisible="False" Spacing="4">
 
                     <Border x:Name="Row_OTName" StyleId="Text"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="100,*">
                             <Label Grid.Column="0" Text="OT Name"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Entry Grid.Column="1" x:Name="OTNameEntry"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_TID" StyleId="Step:TID"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="100,38,*,38">
                             <Label Grid.Column="0" Text="TID"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:TID"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="TIDEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:TID"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_SID" StyleId="Step:SID"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="100,38,*,38">
                             <Label Grid.Column="0" Text="SID"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Step:SID"
                                     Clicked="OnStepDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Entry Grid.Column="2" x:Name="SIDEntry" Keyboard="Numeric"
-                                   BackgroundColor="Transparent" TextColor="White"
-                                   PlaceholderColor="#556080" HorizontalTextAlignment="Center" />
+                                   BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}"
+                                   PlaceholderColor="{DynamicResource ThTextHint}" HorizontalTextAlignment="Center" />
                             <Button Grid.Column="3" Text="▶" StyleId="Step:SID"
                                     Clicked="OnStepInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="Row_Language" StyleId="Pick:Language"
-                            BackgroundColor="#111827" Stroke="Transparent"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
                             StrokeShape="RoundRectangle 6" Padding="8,6">
                         <Grid ColumnDefinitions="100,38,*,38">
                             <Label Grid.Column="0" Text="Language"
-                                   VerticalOptions="Center" TextColor="#8888BB" />
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
                             <Button Grid.Column="1" Text="◀" StyleId="Pick:Language"
                                     Clicked="OnPickerDec"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                             <Picker Grid.Column="2" x:Name="LanguagePicker"
-                                    BackgroundColor="Transparent" TextColor="White" />
+                                    BackgroundColor="Transparent" TextColor="{DynamicResource ThTextPrimary}" />
                             <Button Grid.Column="3" Text="▶" StyleId="Pick:Language"
                                     Clicked="OnPickerInc"
-                                    BackgroundColor="#1A2035" TextColor="White"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
                     </Border>
@@ -643,7 +643,7 @@
         <Button Grid.Row="3"
                 Text="💾 Save Changes"
                 Clicked="OnSaveClicked"
-                BackgroundColor="#2D1B69" TextColor="#C0A0FF"
+                BackgroundColor="{DynamicResource ThExportMenuBg}" TextColor="{DynamicResource ThExportMenuText}"
                 FontSize="15" FontAttributes="Bold"
                 Padding="0,14"
                 Margin="12,8" CornerRadius="8" />

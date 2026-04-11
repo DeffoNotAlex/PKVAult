@@ -22,6 +22,7 @@ public partial class PkmEditorPage : ContentPage
 
     private int[] _focusRow = new int[4];
     private Border[][] _tabRows = null!;
+    private CancellationTokenSource? _dpadRepeatCts;
 
     public string? BoxIndexParam  { set => int.TryParse(value, out _boxIndex); }
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
@@ -73,12 +74,19 @@ public partial class PkmEditorPage : ContentPage
         ];
     }
 
+    private static Color ThemeColor(string key, string fallback)
+    {
+        if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is Color c)
+            return c;
+        return Color.FromArgb(fallback);
+    }
+
     private void UpdateRowHighlight()
     {
         var rows = _tabRows[_currentTab];
-        var focusedBg     = Color.FromArgb("#182845");
-        var focusedStroke = Color.FromArgb("#4F80FF");
-        var normalBg      = Color.FromArgb("#111827");
+        var focusedBg     = ThemeColor("ThSettingsRowFocus", "#182845");
+        var focusedStroke = ThemeColor("ThAccent",           "#3B8BFF");
+        var normalBg      = ThemeColor("ThSettingsRow",      "#111827");
 
         for (int i = 0; i < rows.Length; i++)
         {
@@ -115,6 +123,33 @@ public partial class PkmEditorPage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived -= OnGamepadKey;
 #endif
+        StopDpadRepeat();
+    }
+
+    private void StopDpadRepeat()
+    {
+        _dpadRepeatCts?.Cancel();
+        _dpadRepeatCts = null;
+    }
+
+    private void StartDpadRepeat(int delta)
+    {
+        StopDpadRepeat();
+        _dpadRepeatCts = new CancellationTokenSource();
+        var token = _dpadRepeatCts.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(400, token);
+                while (!token.IsCancellationRequested)
+                {
+                    MainThread.BeginInvokeOnMainThread(() => MoveFocus(delta));
+                    await Task.Delay(120, token);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
     }
 
     // ──────────────────────────────────────────────
@@ -142,10 +177,10 @@ public partial class PkmEditorPage : ContentPage
 
     private void UpdateTabHighlights()
     {
-        var selected   = Color.FromArgb("#4F80FF");
-        var unselected = Color.FromArgb("#1A2035");
-        var selText    = Colors.White;
-        var unselText  = Color.FromArgb("#8888BB");
+        var selected   = ThemeColor("ThAccent",         "#3B8BFF");
+        var unselected = ThemeColor("ThNavBtnBg",        "#1A2040");
+        var selText    = ThemeColor("ThTextPrimary",     "#EDF0FF");
+        var unselText  = ThemeColor("ThTextSecondary",   "#8892B5");
 
         TabStats.BackgroundColor  = _currentTab == 0 ? selected : unselected;
         TabMoves.BackgroundColor  = _currentTab == 1 ? selected : unselected;
@@ -177,6 +212,12 @@ public partial class PkmEditorPage : ContentPage
 #if ANDROID
     private void OnGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
     {
+        if (action == Android.Views.KeyEventActions.Up)
+        {
+            if (keyCode is Android.Views.Keycode.DpadUp or Android.Views.Keycode.DpadDown)
+                MainThread.BeginInvokeOnMainThread(StopDpadRepeat);
+            return;
+        }
         if (action != Android.Views.KeyEventActions.Down) return;
         MainThread.BeginInvokeOnMainThread(() => HandleGamepadKey(keyCode));
     }
@@ -200,10 +241,14 @@ public partial class PkmEditorPage : ContentPage
                 OnSaveClicked(this, EventArgs.Empty); break;
 
             case Android.Views.Keycode.DpadUp:
-                MoveFocus(-1); break;
+                MoveFocus(-1);
+                StartDpadRepeat(-1);
+                break;
 
             case Android.Views.Keycode.DpadDown:
-                MoveFocus(+1); break;
+                MoveFocus(+1);
+                StartDpadRepeat(+1);
+                break;
 
             case Android.Views.Keycode.DpadLeft:
                 AdjustCurrentRow(-1); break;
