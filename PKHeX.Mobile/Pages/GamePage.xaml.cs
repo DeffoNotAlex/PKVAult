@@ -1322,13 +1322,9 @@ public partial class GamePage : ContentPage
 
     private void ApplyDetailToggle()
     {
-        // Left column
-        RadarBorder.IsVisible  = !_detailToggled;
-        CompatPanel.IsVisible  =  _detailToggled;
-
-        // Right column
-        DetailInfoPanel.IsVisible  = !_detailToggled;
-        DetailMovesPanel.IsVisible =  _detailToggled;
+        // Left column only — moves are always shown in right column
+        RadarBorder.IsVisible = !_detailToggled;
+        CompatPanel.IsVisible =  _detailToggled;
     }
 
     private void UpdateCompatPanel(PKM pk)
