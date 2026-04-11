@@ -541,8 +541,9 @@ public partial class GamePage : ContentPage
         float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
         float w = e.Info.Width, h = e.Info.Height;
         float drawW, drawH;
-        if (aspect >= 1f) { drawW = w; drawH = w / aspect; }
-        else              { drawH = h; drawW = h * aspect; }
+        // Contain: fit within canvas bounds preserving aspect ratio
+        if (w / h <= aspect) { drawW = w; drawH = w / aspect; }
+        else                 { drawH = h; drawW = h * aspect; }
         float sx = (w - drawW) / 2f;
         float sy = (h - drawH) / 2f;
         canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
@@ -781,9 +782,13 @@ public partial class GamePage : ContentPage
 
         if (!_spriteWebViewReady)
         {
-            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
+            // Make WebView visible BEFORE loading HTML so the layout system
+            // gives it its proper bounds first. Without this, 100vw/100vh in
+            // the HTML resolve to 0 (WebView has no size while IsVisible=false).
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;
+            await Task.Delay(50); // one layout pass so WebView knows its dimensions
+            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
             _spriteWebViewReady     = true;
         }
         else
