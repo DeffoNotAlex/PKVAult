@@ -413,6 +413,9 @@ public partial class MainPage : ContentPage
         var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
         if (active != null) active.IsLoaded = true;
 
+        // Force UpdateHeroPreview to do a full redraw so the Active pill appears.
+        // Without this reset it skips the update because the display index didn't change.
+        _lastHeroDisplayIndex = -2;
         UpdateHeroPreview();
         UpdateActionHighlight();
     }
@@ -544,7 +547,7 @@ public partial class MainPage : ContentPage
             case Android.Views.Keycode.DpadRight:
                 MoveRight(); break;
             case Android.Views.Keycode.ButtonA:
-                _ = OnAPressedAsync(); break;
+                _ = OnAPressed(); break;
             case Android.Views.Keycode.ButtonX:
                 ActivateTile(0); break; // Quick jump to Search
             case Android.Views.Keycode.ButtonL1:
@@ -656,16 +659,17 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task OnAPressedAsync()
+    private async Task OnAPressed()
     {
         if (_focusSection == 0)
         {
             if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
             {
                 var card = _saveCards[_cardCursor];
-                if (!card.IsLoaded)
+                if (card.IsLoaded)
+                    ActivatePrimaryButton();
+                else
                     await LoadSaveAsync(card.Entry);
-                ActivatePrimaryButton();
             }
         }
         else
