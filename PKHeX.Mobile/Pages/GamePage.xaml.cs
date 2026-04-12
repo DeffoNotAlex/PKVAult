@@ -804,7 +804,10 @@ public partial class GamePage : ContentPage
         else
         {
             var js = $$"""
-                document.getElementById('s').src='{{dataUri}}';
+                var s=document.getElementById('s');
+                s.src='{{dataUri}}';
+                s.style.width='{{spriteW}}px';
+                s.style.height='{{spriteH}}px';
                 """;
             await SpriteWebView.EvaluateJavaScriptAsync(js);
         }
