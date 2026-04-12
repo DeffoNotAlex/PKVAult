@@ -25,7 +25,8 @@ public partial class GamePage : ContentPage
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
     private bool _loadingBox;
-    private bool _spriteWebViewReady; // true after first full HTML load
+    private bool   _spriteWebViewReady; // true after first full HTML load
+    private double _canvasW, _canvasH;  // cached after first layout (TopSelectedPanel is invisible during initial layout pass)
     private bool _showLegalityBadges;
     private bool?[] _legalityCache = [];
 
@@ -84,6 +85,14 @@ public partial class GamePage : ContentPage
         {
             if (RadarBorder.Width > 0)
                 RadarBorder.HeightRequest = RadarBorder.Width;
+        };
+
+        // Cache canvas bounds after first layout — TopSelectedPanel is invisible
+        // during the initial layout pass so Width/Height are -1 until it shows.
+        PreviewCanvas.SizeChanged += (_, _) =>
+        {
+            if (PreviewCanvas.Width > 0) _canvasW = PreviewCanvas.Width;
+            if (PreviewCanvas.Height > 0) _canvasH = PreviewCanvas.Height;
         };
     }
 
@@ -787,11 +796,11 @@ public partial class GamePage : ContentPage
             return;
         }
 
-        // Use PreviewCanvas dimensions as the authoritative size — it's in the same
-        // grid cell and renders HOME sprites at the correct size. CSS vw/vh inside
-        // the WebView resolve to the full device screen, not the element bounds.
-        int spriteW = (int)Math.Max(PreviewCanvas.Width  * 0.8, 40);
-        int spriteH = (int)Math.Max(PreviewCanvas.Height * 0.8, 40);
+        // Use cached canvas bounds — PreviewCanvas.Width is -1 during the first call
+        // because TopSelectedPanel is invisible during the initial layout pass.
+        // _canvasW/_canvasH are set by SizeChanged once the panel actually renders.
+        int spriteW = (int)Math.Max(_canvasW * 0.8, 80);
+        int spriteH = (int)Math.Max(_canvasH * 0.8, 80);
 
         if (!_spriteWebViewReady)
         {
