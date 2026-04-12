@@ -115,8 +115,11 @@ public partial class GamePage : ContentPage
         bool freshSave = _sav != sav;
         _sav = sav;
 
-        // Always reset so WebView reloads cleanly after any navigation away
+        // Always reset so WebView reloads cleanly after any navigation away.
+        // Also reset _previewSpecies so the scale/toggle changes from Settings
+        // take effect even when returning to the same Pokémon.
         _spriteWebViewReady = false;
+        _previewSpecies     = -1;
 
         if (freshSave)
         {
