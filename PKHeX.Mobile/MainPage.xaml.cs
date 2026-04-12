@@ -258,7 +258,8 @@ public partial class MainPage : ContentPage
 
         var sav = await Task.Run(() =>
         {
-            PKHeX.Core.SaveUtil.TryGetSaveFile(entry.RawData, out var s);
+            var data = entry.RawData.ToArray(); // copy — SwishCrypto decrypts in-place
+            PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var s);
             return s;
         });
         if (sav is null || !sav.HasParty) return;
@@ -383,7 +384,8 @@ public partial class MainPage : ContentPage
         {
             var sav = await Task.Run(() =>
             {
-                SaveUtil.TryGetSaveFile(entry.RawData, out var s);
+                var data = entry.RawData.ToArray(); // copy — SwishCrypto decrypts in-place
+                SaveUtil.TryGetSaveFile(data, out var s);
                 return s;
             });
 
