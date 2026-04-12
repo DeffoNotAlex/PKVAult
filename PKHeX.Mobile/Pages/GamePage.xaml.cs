@@ -134,7 +134,7 @@ public partial class GamePage : ContentPage
             TrainerPlaytimeLabel.Text = sav.PlayTimeString;
 
             // Set trainer circle game icon
-            var iconFile = GetTrainerIconFile(sav.Version);
+            var iconFile = GetTrainerIconFile(sav);
             if (iconFile != null)
                 TrainerGameIcon.Source = ImageSource.FromStream(
                     ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
@@ -1023,6 +1023,20 @@ public partial class GamePage : ContentPage
     // ──────────────────────────────────────────────
     //  Trainer icon helper
     // ──────────────────────────────────────────────
+
+    private static string? GetTrainerIconFile(SaveFile sav)
+    {
+        // SAV4HGSS always reports GameVersion.HGSS — never HG or SS individually.
+        // Detect from the first Pokémon with a known origin game in party or box 1.
+        if (sav.Version == GameVersion.HGSS)
+        {
+            var probe = sav.PartyData.FirstOrDefault(p => p.Species > 0 && (p.Version == GameVersion.HG || p.Version == GameVersion.SS))
+                     ?? sav.GetBoxData(0).FirstOrDefault(p => p.Species > 0 && (p.Version == GameVersion.HG || p.Version == GameVersion.SS));
+            if (probe?.Version == GameVersion.SS) return "soulsilver.png";
+            return "heartgold.png"; // default HG if can't determine
+        }
+        return GetTrainerIconFile(sav.Version);
+    }
 
     private static string? GetTrainerIconFile(GameVersion v) => v switch
     {
