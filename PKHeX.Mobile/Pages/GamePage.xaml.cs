@@ -799,8 +799,9 @@ public partial class GamePage : ContentPage
         // Use cached canvas bounds — PreviewCanvas.Width is -1 during the first call
         // because TopSelectedPanel is invisible during the initial layout pass.
         // _canvasW/_canvasH are set by SizeChanged once the panel actually renders.
-        int spriteW = (int)Math.Max(_canvasW * 0.8, 80);
-        int spriteH = (int)Math.Max(_canvasH * 0.8, 80);
+        double scale = Preferences.Default.Get(SettingsPage.KeySpriteScale, 0.8f);
+        int spriteW = (int)Math.Max(_canvasW * scale, 80);
+        int spriteH = (int)Math.Max(_canvasH * scale, 80);
 
         if (!_spriteWebViewReady)
         {
