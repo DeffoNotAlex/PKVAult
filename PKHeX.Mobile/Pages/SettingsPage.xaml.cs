@@ -16,6 +16,7 @@ public partial class SettingsPage : ContentPage
     public const string KeyLanguage      = "language";
     public const string KeyShinySprites    = "shiny_sprites";
     public const string KeyAnimated3D      = "animated_3d";
+    public const string KeySpriteScale     = "sprite_scale";
     public const string KeyRadarAdaptive   = "radar_adaptive";
     public const string KeyLegalityBadge   = "legality_badge";
 
@@ -66,6 +67,9 @@ public partial class SettingsPage : ContentPage
 
         ShinySwitch.IsToggled         = Preferences.Default.Get(KeyShinySprites, true);
         Animated3DSwitch.IsToggled    = Preferences.Default.Get(KeyAnimated3D, true);
+        var scale = Preferences.Default.Get(KeySpriteScale, 0.8f);
+        SpriteScaleSlider.Value       = scale;
+        SpriteScaleLabel.Text         = $"{(int)(scale * 100)}%";
         RadarAdaptiveSwitch.IsToggled = Preferences.Default.Get(KeyRadarAdaptive, false);
         LegalitySwitch.IsToggled      = Preferences.Default.Get(KeyLegalityBadge, false);
         ThemeSwitch.IsToggled         = ThemeService.Current == PkTheme.Light;
@@ -92,7 +96,7 @@ public partial class SettingsPage : ContentPage
 
     private void BuildRows()
     {
-        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Animated3D, Row_Sprites, Row_AnimSprites,
+        _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_Animated3D, Row_SpriteScale, Row_Sprites, Row_AnimSprites,
                  Row_EdenScan, Row_MelonDSScan, Row_AzaharScan, Row_RetroArchScan];
     }
 
@@ -171,6 +175,9 @@ public partial class SettingsPage : ContentPage
             case 4: SetToggle(LegalitySwitch,      delta); break;
             case 5: SetToggle(ThemeSwitch,         delta); break;
             case 6: SetToggle(Animated3DSwitch,    delta); break;
+            case 7: // SpriteScale — left/right adjusts slider
+                SpriteScaleSlider.Value = Math.Clamp(SpriteScaleSlider.Value + delta * 0.05, 0.3, 1.2);
+                break;
         }
 
         static void SetToggle(Switch sw, int delta)
@@ -208,22 +215,22 @@ public partial class SettingsPage : ContentPage
             case 6:
                 Animated3DSwitch.IsToggled = !Animated3DSwitch.IsToggled;
                 break;
-            case 7:
+            case 8:
                 StartBulkDownload();
                 break;
-            case 8:
+            case 9:
                 StartAnimBulkDownload();
                 break;
-            case 9:
+            case 10:
                 _ = FindEdenSavesAsync();
                 break;
-            case 10:
+            case 11:
                 _ = FindMelonDSSavesAsync();
                 break;
-            case 11:
+            case 12:
                 _ = FindAzaharSavesAsync();
                 break;
-            case 12:
+            case 13:
                 _ = FindRetroArchSavesAsync();
                 break;
         }
@@ -248,6 +255,14 @@ public partial class SettingsPage : ContentPage
     {
         if (_loading) return;
         Preferences.Default.Set(KeyAnimated3D, e.Value);
+    }
+
+    private void OnSpriteScaleChanged(object sender, ValueChangedEventArgs e)
+    {
+        if (_loading) return;
+        var scale = (float)e.NewValue;
+        Preferences.Default.Set(KeySpriteScale, scale);
+        SpriteScaleLabel.Text = $"{(int)(scale * 100)}%";
     }
 
     private void OnRadarAdaptiveToggled(object sender, ToggledEventArgs e)
