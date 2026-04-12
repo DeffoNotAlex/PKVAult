@@ -104,15 +104,6 @@
                   RowDefinitions="*"
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
-                <!-- Sprite — full-panel background layer, declared first so it renders behind all columns -->
-                <skia:SKCanvasView x:Name="PreviewCanvas"
-                                   Grid.ColumnSpan="3"
-                                   PaintSurface="OnPreviewPaint" />
-                <WebView x:Name="SpriteWebView"
-                         Grid.ColumnSpan="3"
-                         BackgroundColor="Transparent"
-                         IsVisible="False" />
-
                 <!-- Column 0: Stat radar / Compatibility list -->
                 <Grid Grid.Column="0">
                     <!-- Radar (default) -->
@@ -146,8 +137,14 @@
                     </Border>
                 </Grid>
 
-                <!-- Column 1: Type badges (top) + Name plate (bottom) -->
-                <Grid Grid.Column="1" Margin="6">
+                <!-- Column 1: Sprite fills full height, type badges + name overlaid -->
+                <Grid Grid.Column="1" RowDefinitions="*" Margin="6">
+                    <!-- Sprite — declared first so it renders behind badges/name -->
+                    <skia:SKCanvasView x:Name="PreviewCanvas"
+                                       PaintSurface="OnPreviewPaint" />
+                    <WebView x:Name="SpriteWebView"
+                             BackgroundColor="Transparent"
+                             IsVisible="False" />
                     <HorizontalStackLayout x:Name="TypeBadgeRow"
                                            HorizontalOptions="Center" VerticalOptions="Start"
                                            Spacing="5" Margin="0,4,0,0" />
