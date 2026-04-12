@@ -94,6 +94,9 @@ public class SaveDirectoryService
                 var data = ms.ToArray();
                 if (data.Length == 0) return null;
 
+                // Copy before TryGetSaveFile: Switch (Gen 8/9) saves are decrypted
+                // in-place by SwishCrypto, which would corrupt RawData for re-parsing.
+                var rawData = data.ToArray();
                 if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
 
                 // Query display name
@@ -114,7 +117,7 @@ public class SaveDirectoryService
                     PlayTime: sav.PlayTimeString,
                     BoxCount: sav.BoxCount,
                     SlotCount: sav.SlotCount,
-                    RawData: data);
+                    RawData: rawData);
             }
             catch { return null; }
         });
@@ -124,6 +127,7 @@ public class SaveDirectoryService
             try
             {
                 var data = File.ReadAllBytes(fileUri);
+                var rawData = data.ToArray();
                 if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
                 return new SaveEntry(
                     FileUri: fileUri,
@@ -136,7 +140,7 @@ public class SaveDirectoryService
                     PlayTime: sav.PlayTimeString,
                     BoxCount: sav.BoxCount,
                     SlotCount: sav.SlotCount,
-                    RawData: data);
+                    RawData: rawData);
             }
             catch { return null; }
         });
@@ -193,6 +197,7 @@ public class SaveDirectoryService
                     var data = ms.ToArray();
                     if (data.Length == 0) continue;
 
+                    var rawData = data.ToArray();
                     if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) continue;
 
                     entries.Add(new SaveEntry(
@@ -206,7 +211,7 @@ public class SaveDirectoryService
                         PlayTime: sav.PlayTimeString,
                         BoxCount: sav.BoxCount,
                         SlotCount: sav.SlotCount,
-                        RawData: data));
+                        RawData: rawData));
                 }
                 catch { /* skip unreadable files */ }
             }
@@ -222,6 +227,7 @@ public class SaveDirectoryService
                 try
                 {
                     var data = File.ReadAllBytes(filePath);
+                    var rawData = data.ToArray();
                     if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) continue;
                     entries.Add(new SaveEntry(
                         FileUri: filePath,
@@ -234,7 +240,7 @@ public class SaveDirectoryService
                         PlayTime: sav.PlayTimeString,
                         BoxCount: sav.BoxCount,
                         SlotCount: sav.SlotCount,
-                        RawData: data));
+                        RawData: rawData));
                 }
                 catch { }
             }
