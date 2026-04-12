@@ -790,8 +790,8 @@ public partial class GamePage : ContentPage
         // Use PreviewCanvas dimensions as the authoritative size — it's in the same
         // grid cell and renders HOME sprites at the correct size. CSS vw/vh inside
         // the WebView resolve to the full device screen, not the element bounds.
-        int spriteW = (int)Math.Max(PreviewCanvas.Width,  40);
-        int spriteH = (int)Math.Max(PreviewCanvas.Height, 40);
+        int spriteW = (int)Math.Max(PreviewCanvas.Width  * 0.6, 40);
+        int spriteH = (int)Math.Max(PreviewCanvas.Height * 0.6, 40);
 
         if (!_spriteWebViewReady)
         {
