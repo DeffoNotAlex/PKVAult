@@ -29,9 +29,10 @@ public class SaveDirectoryService
         return probe?.Version ?? PKHeX.Core.GameVersion.HGSS;
     }
 
-    private const string PrefKey     = "watched_dirs";
-    private const string FilePrefKey = "watched_files";
-    private const char   Sep         = '|';
+    private const string PrefKey      = "watched_dirs";
+    private const string FilePrefKey  = "watched_files";
+    private const string EdenRootKey  = "eden_roots";
+    private const char   Sep          = '|';
 
     public List<string> GetWatchedDirectories()
     {
@@ -77,6 +78,28 @@ public class SaveDirectoryService
         Preferences.Default.Set(FilePrefKey, string.Join(Sep, files));
     }
 
+    public List<string> GetEdenRoots()
+    {
+        var raw = Preferences.Default.Get(EdenRootKey, "");
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+        return [.. raw.Split(Sep, StringSplitOptions.RemoveEmptyEntries)];
+    }
+
+    public void AddEdenRoot(string uri)
+    {
+        var roots = GetEdenRoots();
+        if (roots.Contains(uri)) return;
+        roots.Add(uri);
+        Preferences.Default.Set(EdenRootKey, string.Join(Sep, roots));
+    }
+
+    public void RemoveEdenRoot(string uri)
+    {
+        var roots = GetEdenRoots();
+        roots.Remove(uri);
+        Preferences.Default.Set(EdenRootKey, string.Join(Sep, roots));
+    }
+
     public async Task<List<SaveEntry>> ScanAllAsync()
     {
         var result = new List<SaveEntry>();
@@ -87,7 +110,27 @@ public class SaveDirectoryService
             var entry = await ScanFileAsync(file);
             if (entry != null) result.Add(entry);
         }
+        foreach (var root in GetEdenRoots())
+            result.AddRange(await ScanEdenRootAsync(root));
+
+        // Deduplicate by FileUri — Eden roots and old pinned files can overlap
+        var seen = new HashSet<string>();
+        result.RemoveAll(e => !seen.Add(e.FileUri));
         return result;
+    }
+
+    public async Task<List<SaveEntry>> ScanEdenRootAsync(string rootUri)
+    {
+        var entries = new List<SaveEntry>();
+#if ANDROID
+        var found = await EmulatorSaveFinderService.ScanEdenAsync(rootUri);
+        foreach (var (fileUri, _) in found)
+        {
+            var entry = await ScanFileAsync(fileUri);
+            if (entry != null) entries.Add(entry);
+        }
+#endif
+        return entries;
     }
 
     public async Task<SaveEntry?> ScanFileAsync(string fileUri)

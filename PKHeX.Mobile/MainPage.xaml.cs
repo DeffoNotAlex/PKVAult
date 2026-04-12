@@ -557,6 +557,8 @@ public partial class MainPage : ContentPage
             case Android.Views.Keycode.ButtonSelect:
             case Android.Views.Keycode.ButtonStart:
                 _ = Shell.Current.GoToAsync(nameof(SettingsPage)); break;
+            case Android.Views.Keycode.ButtonR3:
+                _ = RefreshSavesAsync(); break;
         }
     }
 #endif
