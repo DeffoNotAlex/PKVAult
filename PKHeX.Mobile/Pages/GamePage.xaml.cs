@@ -813,7 +813,7 @@ public partial class GamePage : ContentPage
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{src}}"
-             style="width:100%;height:100%;object-fit:contain;transform:scale(0.75);image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
+             style="width:75vw;height:75vh;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
         </body></html>
         """;
 
