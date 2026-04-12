@@ -787,15 +787,18 @@ public partial class GamePage : ContentPage
             return;
         }
 
+        // Use PreviewCanvas dimensions as the authoritative size — it's in the same
+        // grid cell and renders HOME sprites at the correct size. CSS vw/vh inside
+        // the WebView resolve to the full device screen, not the element bounds.
+        int spriteW = (int)Math.Max(PreviewCanvas.Width,  40);
+        int spriteH = (int)Math.Max(PreviewCanvas.Height, 40);
+
         if (!_spriteWebViewReady)
         {
-            // Make WebView visible BEFORE loading HTML so the layout system
-            // gives it its proper bounds first. Without this, 100vw/100vh in
-            // the HTML resolve to 0 (WebView has no size while IsVisible=false).
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;
-            await Task.Delay(50); // one layout pass so WebView knows its dimensions
-            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri) };
+            await Task.Delay(50);
+            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri, spriteW, spriteH) };
             _spriteWebViewReady     = true;
         }
         else
@@ -813,14 +816,14 @@ public partial class GamePage : ContentPage
     private static string ToShowdownFormSuffix(string formName)
         => Services.SpriteCacheService.ToShowdownFormSuffix(formName);
 
-    private static string BuildSpriteShell(string src) => $$"""
+    private static string BuildSpriteShell(string src, int w, int h) => $$"""
         <!DOCTYPE html>
         <html><head>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{src}}"
-             style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
+             style="width:{{w}}px;height:{{h}}px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
         </body></html>
         """;
 
