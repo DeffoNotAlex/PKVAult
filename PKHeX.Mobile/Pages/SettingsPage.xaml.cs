@@ -489,11 +489,10 @@ public partial class SettingsPage : ContentPage
             return;
         }
 
-        foreach (var (fileUri, _) in found)
-            _dirService.AddFile(fileUri);
+        _dirService.AddEdenRoot(uri);
 
         var names = string.Join(", ", found.Select(f => f.GameName));
-        EdenStatusLabel.Text = $"Added {found.Count} save{(found.Count == 1 ? "" : "s")}: {names}";
+        EdenStatusLabel.Text = $"Found {found.Count} save{(found.Count == 1 ? "" : "s")}: {names}. New games will be picked up automatically.";
     }
 
     private async Task FindMelonDSSavesAsync()
