@@ -746,6 +746,13 @@ public partial class GamePage : ContentPage
 
     private async void LoadAnimatedSprite(PKM pk)
     {
+        if (!Preferences.Default.Get(SettingsPage.KeyAnimated3D, true))
+        {
+            // 3D sprites disabled — show static HOME sprite only
+            PreviewCanvas.IsVisible = true;
+            PreviewCanvas.InvalidateSurface();
+            return;
+        }
         var name = pk.Species < _strings.specieslist.Length
             ? _strings.specieslist[pk.Species]
             : pk.Species.ToString();
@@ -1311,7 +1318,7 @@ public partial class GamePage : ContentPage
             _previewSpecies = key;
             LoadAnimatedSprite(pk);
         }
-        else if (_spriteWebViewReady)
+        else if (_spriteWebViewReady && Preferences.Default.Get(SettingsPage.KeyAnimated3D, true))
         {
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;

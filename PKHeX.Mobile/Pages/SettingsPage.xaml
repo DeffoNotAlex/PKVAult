@@ -130,6 +130,25 @@
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
 
+            <!-- Animated 3D sprites -->
+            <Border x:Name="Row_Animated3D" StyleId="Toggle"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Animated 3D Sprites"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label Text="Show animated Pokémon Showdown sprites. Disable to use HOME-style sprites instead."
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="Animated3DSwitch"
+                            Toggled="OnAnimated3DSwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
             <!-- HOME sprite cache download -->
             <Border x:Name="Row_Sprites"
                     BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
