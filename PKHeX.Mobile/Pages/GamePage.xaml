@@ -141,8 +141,10 @@
                 <Grid Grid.Column="1" RowDefinitions="*" Margin="6">
                     <!-- Sprite — declared first so it renders behind badges/name -->
                     <skia:SKCanvasView x:Name="PreviewCanvas"
+                                       Margin="20"
                                        PaintSurface="OnPreviewPaint" />
                     <WebView x:Name="SpriteWebView"
+                             Margin="20"
                              BackgroundColor="Transparent"
                              IsVisible="False" />
                     <HorizontalStackLayout x:Name="TypeBadgeRow"
