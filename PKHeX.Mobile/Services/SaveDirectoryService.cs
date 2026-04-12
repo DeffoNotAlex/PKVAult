@@ -15,6 +15,20 @@ public record SaveEntry(
 
 public class SaveDirectoryService
 {
+    /// <summary>
+    /// SAV4HGSS.Version always returns HGSS. Probe party then box 1 for a
+    /// Pokémon with a native HG or SS origin to resolve the actual game.
+    /// </summary>
+    private static PKHeX.Core.GameVersion ResolveVersion(PKHeX.Core.SaveFile sav)
+    {
+        if (sav.Version != PKHeX.Core.GameVersion.HGSS) return sav.Version;
+        var probe = sav.PartyData.FirstOrDefault(p => p.Species > 0 &&
+                        (p.Version == PKHeX.Core.GameVersion.HG || p.Version == PKHeX.Core.GameVersion.SS))
+                 ?? sav.GetBoxData(0).FirstOrDefault(p => p.Species > 0 &&
+                        (p.Version == PKHeX.Core.GameVersion.HG || p.Version == PKHeX.Core.GameVersion.SS));
+        return probe?.Version ?? PKHeX.Core.GameVersion.HGSS;
+    }
+
     private const string PrefKey     = "watched_dirs";
     private const string FilePrefKey = "watched_files";
     private const char   Sep         = '|';
@@ -110,7 +124,7 @@ public class SaveDirectoryService
                     FileUri: fileUri,
                     FileName: name,
                     DirectoryUri: fileUri,
-                    Version: sav.Version,
+                    Version: ResolveVersion(sav),
                     Generation: sav.Generation,
                     TrainerName: sav.OT,
                     TrainerID: $"{sav.TID16}/{sav.SID16}",
@@ -133,7 +147,7 @@ public class SaveDirectoryService
                     FileUri: fileUri,
                     FileName: Path.GetFileName(fileUri),
                     DirectoryUri: fileUri,
-                    Version: sav.Version,
+                    Version: ResolveVersion(sav),
                     Generation: sav.Generation,
                     TrainerName: sav.OT,
                     TrainerID: $"{sav.TID16}/{sav.SID16}",
@@ -204,7 +218,7 @@ public class SaveDirectoryService
                         FileUri: fileUri.ToString()!,
                         FileName: name,
                         DirectoryUri: dirUri,
-                        Version: sav.Version,
+                        Version: ResolveVersion(sav),
                         Generation: sav.Generation,
                         TrainerName: sav.OT,
                         TrainerID: $"{sav.TID16}/{sav.SID16}",
@@ -233,7 +247,7 @@ public class SaveDirectoryService
                         FileUri: filePath,
                         FileName: Path.GetFileName(filePath),
                         DirectoryUri: dirUri,
-                        Version: sav.Version,
+                        Version: ResolveVersion(sav),
                         Generation: sav.Generation,
                         TrainerName: sav.OT,
                         TrainerID: $"{sav.TID16}/{sav.SID16}",
