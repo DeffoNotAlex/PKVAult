@@ -807,8 +807,9 @@ public partial class MainPage : ContentPage
             GameVersion.FR  => "fire_red.png",
             GameVersion.LG  => "leaf_green.png",
             GameVersion.Pt  => "platinum.png",
-            GameVersion.HG  => "heartgold.png",
-            GameVersion.SS  => "soulsilver.png",
+            GameVersion.HG   => "heartgold.png",
+            GameVersion.SS   => "soulsilver.png",
+            GameVersion.HGSS => "heartgold.png", // fallback: save has no Pokémon to probe
             GameVersion.B   => "black.png",
             GameVersion.W   => "white.png",
             GameVersion.B2  => "black2.png",
