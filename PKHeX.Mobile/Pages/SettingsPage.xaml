@@ -149,32 +149,6 @@
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
 
-            <!-- 3D sprite size -->
-            <Border x:Name="Row_SpriteScale"
-                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
-                    StrokeShape="RoundRectangle 6" Padding="12,10">
-                <VerticalStackLayout Spacing="6">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <VerticalStackLayout Grid.Column="0" Spacing="4">
-                            <Label Text="3D Sprite Size"
-                                   FontAttributes="Bold" FontSize="15"
-                                   TextColor="{DynamicResource ThTextPrimary}" />
-                            <Label Text="Adjust the size of animated Showdown sprites."
-                                   FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
-                        </VerticalStackLayout>
-                        <Label x:Name="SpriteScaleLabel" Grid.Column="1"
-                               FontAttributes="Bold" FontSize="15"
-                               TextColor="{DynamicResource ThTextPrimary}"
-                               VerticalOptions="Center" Margin="12,0,0,0" />
-                    </Grid>
-                    <Slider x:Name="SpriteScaleSlider"
-                            Minimum="0.3" Maximum="1.2"
-                            ValueChanged="OnSpriteScaleChanged" />
-                </VerticalStackLayout>
-            </Border>
-
-            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
-
             <!-- HOME sprite cache download -->
             <Border x:Name="Row_Sprites"
                     BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
