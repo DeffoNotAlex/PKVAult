@@ -15,7 +15,7 @@ public static class EmulatorSaveFinderService
             { "0100ABF008968000", "Sword"             },
             { "01008DB008C2C000", "Shield"            },
             { "0100000011D90000", "Brilliant Diamond" },
-            { "010018F003A18000", "Shining Pearl"     },
+            { "010018E011D92000", "Shining Pearl"     },
             { "01001F5010B28000", "Legends: Arceus"   },
             { "0100A3D008C5C000", "Scarlet"           },
             { "01008F6008C5E000", "Violet"            },
@@ -44,9 +44,20 @@ public static class EmulatorSaveFinderService
                 var rootDocId = global::Android.Provider.DocumentsContract.GetTreeDocumentId(treeUri);
                 if (rootDocId == null) return results;
 
-                // Navigate to nand/user/save/ — this prefix is stable across all Yuzu-based layouts.
-                // From there we do a recursive depth-limited search for files named "main".
-                var saveDocId = NavigatePath(resolver, treeUri, rootDocId, ["nand", "user", "save"]);
+                // Navigate to the save directory. Try several path variants because the
+                // user may have picked the 'files/' root, the 'nand/' folder, or 'user/'.
+                string[][] candidates =
+                [
+                    ["nand", "user", "save"],   // root = eden files/
+                    ["user", "save"],            // root = eden files/nand/
+                    ["save"],                    // root = eden files/nand/user/
+                ];
+                string? saveDocId = null;
+                foreach (var path in candidates)
+                {
+                    saveDocId = NavigatePath(resolver, treeUri, rootDocId, path);
+                    if (saveDocId != null) break;
+                }
                 if (saveDocId == null) return results;
 
                 // Collect every "main" or "*.bin" file found up to 8 directories deep.
