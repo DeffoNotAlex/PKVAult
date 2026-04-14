@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Maui.Controls.Shapes;
 using PKHeX.Core;
 using PKHeX.Mobile.Services;
 using SkiaSharp;
@@ -529,15 +530,15 @@ public partial class SecondScreenPage : ContentPage
             dots[i].Fill = new SolidColorBrush(i == slideIndex ? accent : dimColor);
 
         // Staggered fade-in
-        ReelHeadlineLabel.FadeTo(1.0, 300);
+        _ = ReelHeadlineLabel.FadeToAsync(1.0, 300);
         Task.Delay(150).ContinueWith(_ =>
-            MainThread.BeginInvokeOnMainThread(() => ReelSubtextLabel.FadeTo(1.0, 300)));
+            MainThread.BeginInvokeOnMainThread(() => _ = ReelSubtextLabel.FadeToAsync(1.0, 300)));
     }
 
     public void ShowReelTransition()
     {
-        ReelHeadlineLabel.FadeTo(0, 200);
-        ReelSubtextLabel.FadeTo(0, 200);
+        _ = ReelHeadlineLabel.FadeToAsync(0, 200);
+        _ = ReelSubtextLabel.FadeToAsync(0, 200);
     }
 
     public void HideReel()

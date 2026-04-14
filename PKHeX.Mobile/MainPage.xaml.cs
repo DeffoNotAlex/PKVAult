@@ -490,12 +490,8 @@ public partial class MainPage : ContentPage
         }
         var charBase = new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
 
-        using var paint = new SKPaint
-        {
-            Typeface    = MoireTypeface,
-            TextSize    = CW,
-            IsAntialias = true,
-        };
+        using var font  = new SKFont(MoireTypeface, CW);
+        using var paint = new SKPaint { IsAntialias = true };
 
         for (int row = 0; row < rows; row++)
         {
@@ -538,7 +534,7 @@ public partial class MainPage : ContentPage
                     color = charBase;
                 }
                 paint.Color = color.WithAlpha((byte)(alpha * 255));
-                canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
+                canvas.DrawText(MoireCharStrings[ci], col * CW, fy, font, paint);
             }
         }
     }

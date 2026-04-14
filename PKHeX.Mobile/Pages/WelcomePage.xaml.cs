@@ -151,7 +151,7 @@ public partial class WelcomePage : ContentPage
         // Show the reel overlay on the primary (top) screen
         ReelOverlay.IsVisible = true;
         ReelOverlay.Opacity   = 0;
-        await ReelOverlay.FadeTo(1.0, 400);
+        await ReelOverlay.FadeToAsync(1.0, 400);
 
         // Begin loading sprites in the background — don't block the reel
         _ = PreloadReelSpritesAsync();
@@ -278,7 +278,7 @@ public partial class WelcomePage : ContentPage
         StopReel();
 
         // Fade out the reel overlay on primary screen
-        await ReelOverlay.FadeTo(0, 300);
+        await ReelOverlay.FadeToAsync(0, 300);
         ReelOverlay.IsVisible = false;
 
         if (_isDualScreen)
@@ -519,8 +519,8 @@ public partial class WelcomePage : ContentPage
         };
 
         // Animate out
-        var outTask1 = currentPreview.FadeTo(0, 200);
-        var outTask2 = currentPreview.TranslateTo(-80, 0, 200, Easing.CubicIn);
+        var outTask1 = currentPreview.FadeToAsync(0, 200);
+        var outTask2 = currentPreview.TranslateToAsync(-80, 0, 200, Easing.CubicIn);
         await Task.WhenAll(outTask1, outTask2);
 
         _step = newStep;
@@ -539,8 +539,8 @@ public partial class WelcomePage : ContentPage
         ApplyStep(newStep, animate: false);
 
         // Animate in
-        var inTask1 = nextPreview.FadeTo(1, 250);
-        var inTask2 = nextPreview.TranslateTo(0, 0, 250, Easing.CubicOut);
+        var inTask1 = nextPreview.FadeToAsync(1, 250);
+        var inTask2 = nextPreview.TranslateToAsync(0, 0, 250, Easing.CubicOut);
         await Task.WhenAll(inTask1, inTask2);
     }
 
@@ -688,17 +688,13 @@ public partial class WelcomePage : ContentPage
 
         // Label
         var labelColor = darkCard ? new SKColor(200, 210, 230) : new SKColor(60, 70, 90);
-        using var labelPaint = new SKPaint
-        {
-            Color   = labelColor, IsAntialias = true,
-            TextSize = rect.Width * 0.13f,
-        };
-        using var tf = SKTypeface.FromFamilyName("sans-serif", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-        labelPaint.Typeface = tf;
+        using var labelPaint = new SKPaint { Color = labelColor, IsAntialias = true };
+        using var tf   = SKTypeface.FromFamilyName("sans-serif", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+        using var font = new SKFont(tf, rect.Width * 0.13f);
 
         string label = darkCard ? "Dark" : "Light";
-        float textW  = labelPaint.MeasureText(label);
-        canvas.DrawText(label, rect.MidX - textW / 2f, rect.Bottom - rect.Height * 0.06f, labelPaint);
+        float textW  = font.MeasureText(label);
+        canvas.DrawText(label, rect.MidX - textW / 2f, rect.Bottom - rect.Height * 0.06f, font, labelPaint);
     }
 
     private void OnSuccessPreviewPaint(object sender, SKPaintSurfaceEventArgs e)
