@@ -11,7 +11,8 @@ public record SaveEntry(
     string PlayTime,
     int BoxCount,
     int SlotCount,
-    byte[] RawData);
+    byte[] RawData,
+    DateTimeOffset LastModified);
 
 public class SaveDirectoryService
 {
@@ -156,12 +157,20 @@ public class SaveDirectoryService
                 var rawData = data.ToArray();
                 if (!PKHeX.Core.SaveUtil.TryGetSaveFile(data, out var sav)) return null;
 
-                // Query display name
-                string[] proj = [global::Android.Provider.IOpenableColumns.DisplayName];
+                // Query display name and last-modified timestamp
+                string[] proj = [
+                    global::Android.Provider.IOpenableColumns.DisplayName,
+                    global::Android.Provider.DocumentsContract.Document.ColumnLastModified,
+                ];
                 var name = "";
+                var lastMod = DateTimeOffset.UtcNow;
                 using var cursor = context.ContentResolver?.Query(uri, proj, null, null, null);
                 if (cursor != null && cursor.MoveToFirst())
+                {
                     name = cursor.GetString(0) ?? "";
+                    var ms = cursor.GetLong(1);
+                    if (ms > 0) lastMod = DateTimeOffset.FromUnixTimeMilliseconds(ms);
+                }
 
                 return new SaveEntry(
                     FileUri: fileUri,
@@ -174,7 +183,8 @@ public class SaveDirectoryService
                     PlayTime: sav.PlayTimeString,
                     BoxCount: sav.BoxCount,
                     SlotCount: sav.SlotCount,
-                    RawData: rawData);
+                    RawData: rawData,
+                    LastModified: lastMod);
             }
             catch { return null; }
         });
@@ -197,7 +207,8 @@ public class SaveDirectoryService
                     PlayTime: sav.PlayTimeString,
                     BoxCount: sav.BoxCount,
                     SlotCount: sav.SlotCount,
-                    RawData: rawData);
+                    RawData: rawData,
+                    LastModified: new DateTimeOffset(File.GetLastWriteTimeUtc(fileUri), TimeSpan.Zero));
             }
             catch { return null; }
         });
@@ -225,6 +236,7 @@ public class SaveDirectoryService
                 global::Android.Provider.DocumentsContract.Document.ColumnDocumentId,
                 global::Android.Provider.DocumentsContract.Document.ColumnDisplayName,
                 global::Android.Provider.DocumentsContract.Document.ColumnMimeType,
+                global::Android.Provider.DocumentsContract.Document.ColumnLastModified,
             ];
 
             using var cursor = context.ContentResolver?.Query(childrenUri, projection, null, null, null);
@@ -235,6 +247,8 @@ public class SaveDirectoryService
                 var childDocId = cursor.GetString(0);
                 var name      = cursor.GetString(1) ?? "";
                 var mimeType  = cursor.GetString(2) ?? "";
+                var lastModMs = cursor.GetLong(3);
+                var lastMod   = lastModMs > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(lastModMs) : DateTimeOffset.UtcNow;
 
                 if (mimeType == global::Android.Provider.DocumentsContract.Document.MimeTypeDir) continue;
                 if (childDocId == null) continue;
@@ -268,7 +282,8 @@ public class SaveDirectoryService
                         PlayTime: sav.PlayTimeString,
                         BoxCount: sav.BoxCount,
                         SlotCount: sav.SlotCount,
-                        RawData: rawData));
+                        RawData: rawData,
+                        LastModified: lastMod));
                 }
                 catch { /* skip unreadable files */ }
             }
@@ -297,7 +312,8 @@ public class SaveDirectoryService
                         PlayTime: sav.PlayTimeString,
                         BoxCount: sav.BoxCount,
                         SlotCount: sav.SlotCount,
-                        RawData: rawData));
+                        RawData: rawData,
+                        LastModified: new DateTimeOffset(File.GetLastWriteTimeUtc(filePath), TimeSpan.Zero)));
                 }
                 catch { }
             }

@@ -275,11 +275,18 @@
                                                TextColor="{Binding TextDim}" />
                                     </VerticalStackLayout>
 
-                                    <!-- Active indicator -->
-                                    <Ellipse Grid.Column="3" Fill="#34D990"
-                                             WidthRequest="9" HeightRequest="9"
-                                             VerticalOptions="Center"
-                                             IsVisible="{Binding IsLoaded}" />
+                                    <!-- Last modified + active indicator -->
+                                    <VerticalStackLayout Grid.Column="3" Spacing="4"
+                                                         VerticalOptions="Center" HorizontalOptions="End">
+                                        <Label Text="{Binding LastModifiedLabel}"
+                                               FontFamily="Nunito" FontSize="9"
+                                               TextColor="{Binding TextDim}"
+                                               HorizontalTextAlignment="End" />
+                                        <Ellipse Fill="#34D990"
+                                                 WidthRequest="9" HeightRequest="9"
+                                                 HorizontalOptions="End"
+                                                 IsVisible="{Binding IsLoaded}" />
+                                    </VerticalStackLayout>
                                 </Grid>
                             </Border>
                         </Grid>
