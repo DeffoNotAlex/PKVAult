@@ -567,7 +567,7 @@ public partial class PkmEditorPage : ContentPage
         canvas.Clear(SKColors.Transparent);
         if (_pk is null) return;
         var sprite = _sprites.GetSprite(_pk);
-        canvas.DrawBitmap(sprite, SKRect.Create(0, 0, e.Info.Width, e.Info.Height));
+        canvas.DrawBitmap(sprite, SKRect.Create(0, 0, e.Info.Width, e.Info.Height), new SKSamplingOptions(SKCubicResampler.Mitchell));
     }
 
     private async void OnQRClicked(object sender, EventArgs e)

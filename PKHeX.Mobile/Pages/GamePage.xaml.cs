@@ -472,7 +472,7 @@ public partial class GamePage : ContentPage
         float sx = slotRect.MidX - drawW / 2f;
         float sy = slotRect.MidY - drawH / 2f;
         using var paint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), paint);
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKCubicResampler.Mitchell), paint);
     }
 
     private static void DrawBlueCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
@@ -601,7 +601,7 @@ public partial class GamePage : ContentPage
         else                 { drawH = h; drawW = h * aspect; }
         float sx = (w - drawW) / 2f;
         float sy = (h - drawH) / 2f;
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH));
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKCubicResampler.Mitchell));
     }
 
     // ──────────────────────────────────────────────
@@ -881,7 +881,7 @@ public partial class GamePage : ContentPage
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{src}}"
-             style="width:{{w}}px;height:{{h}}px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
+             style="width:{{w}}px;height:{{h}}px;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
         </body></html>
         """;
 

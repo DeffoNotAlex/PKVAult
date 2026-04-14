@@ -181,7 +181,7 @@ public partial class BankPage : ContentPage
                 float sy = rect.MidY - drawH / 2f;
                 byte alpha = isSource ? (byte)70 : (byte)255;
                 using var spritePaint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
-                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), spritePaint);
+                canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKCubicResampler.Mitchell), spritePaint);
             }
 
             // Ghost of pending deposit at cursor
@@ -195,7 +195,7 @@ public partial class BankPage : ContentPage
                 else              { drawH = inner; drawW = inner * aspect; }
                 float sx = rect.MidX - drawW / 2f, sy = rect.MidY - drawH / 2f;
                 using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
-                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
+                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKCubicResampler.Mitchell), ghostPaint);
             }
 
             // Ghost of grabbed Pokémon in withdraw move mode
@@ -209,7 +209,7 @@ public partial class BankPage : ContentPage
                 else              { drawH = inner; drawW = inner * aspect; }
                 float sx = rect.MidX - drawW / 2f, sy = rect.MidY - drawH / 2f;
                 using var ghostPaint = new SKPaint { Color = SKColors.White.WithAlpha(110) };
-                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), ghostPaint);
+                canvas.DrawBitmap(ghost, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKCubicResampler.Mitchell), ghostPaint);
             }
 
             // Cursor outline
