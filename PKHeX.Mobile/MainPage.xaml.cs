@@ -1015,6 +1015,7 @@ public partial class MainPage : ContentPage
             GameVersion.PLA => "legends_arceus.jpg",
             GameVersion.SL  => "scarlet.jpg",
             GameVersion.VL  => "violet.jpg",
+            GameVersion.ZA  => "legends_za.png",
             _               => null,
         };
 
