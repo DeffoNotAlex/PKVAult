@@ -168,8 +168,8 @@ public class SaveDirectoryService
                 if (cursor != null && cursor.MoveToFirst())
                 {
                     name = cursor.GetString(0) ?? "";
-                    var ms = cursor.GetLong(1);
-                    if (ms > 0) lastMod = DateTimeOffset.FromUnixTimeMilliseconds(ms);
+                    var modMs = cursor.GetLong(1);
+                    if (modMs > 0) lastMod = DateTimeOffset.FromUnixTimeMilliseconds(modMs);
                 }
 
                 return new SaveEntry(
