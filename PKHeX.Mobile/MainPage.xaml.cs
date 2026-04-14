@@ -37,11 +37,68 @@ public partial class MainPage : ContentPage
     private Color _heroColorLight = Colors.Transparent;
     private Color _heroColorDark  = Colors.Transparent;
 
-    // Moiré renderer — cached to avoid per-frame allocations
-    private static readonly string   MoireChars       = " .,-~:;=!*#";
-    private static readonly string[] MoireCharStrings = MoireChars.Select(c => c.ToString()).ToArray();
-    private static readonly SKTypeface MoireTypeface  =
-        SKTypeface.FromFamilyName("monospace") ?? SKTypeface.Default;
+    // Moiré GPU shader — compiled once, reused every frame
+    private static readonly SKRuntimeEffect? MoireEffect = BuildMoireEffect();
+
+    private static SKRuntimeEffect? BuildMoireEffect()
+    {
+        const string sksl = """
+            uniform float2 iResolution;
+            uniform float  iTime;
+            uniform float3 iColor;
+            uniform float  iDark;
+
+            half4 main(float2 fragCoord) {
+                const float CW   = 14.0;
+                const float CH   = 23.0;
+                const float freq = 0.3;
+                const float thr  = 0.15;
+                const float orb  = 0.3;
+
+                float cols = iResolution.x / CW;
+                float rows = iResolution.y / CH;
+                float col  = fragCoord.x / CW;
+                float row  = fragCoord.y / CH;
+                float fx   = col * 0.55;
+
+                float nx = cols*0.5 + cos(iTime*0.30      ) * cols * orb;
+                float ny = rows*0.5 + sin(iTime*0.40      ) * rows * orb;
+                float ix = cols*0.5 + cos(iTime*0.37 + 2.0) * cols * (orb*0.83);
+                float iy = rows*0.5 + sin(iTime*0.29 + 2.0) * rows * (orb*1.17);
+                float sx = cols*0.5 + sin(iTime*0.23 + 4.0) * cols * (orb*1.17);
+                float sy = rows*0.5 + cos(iTime*0.31 + 4.0) * rows * (orb*0.83);
+
+                float f1 = freq;
+                float f2 = freq * 1.033;
+                float f3 = freq * 0.967;
+
+                float pb = fx - nx*0.55;  float hb = row - ny;
+                float gb = fx - ix*0.55;  float qb = row - iy;
+                float vb = fx - sx*0.55;  float yb = row - sy;
+
+                float d1 = sqrt(pb*pb + hb*hb);
+                float d2 = sqrt(gb*gb + qb*qb);
+                float d3 = sqrt(vb*vb + yb*yb);
+
+                float C = sin(d1*f1 + iTime)
+                        + sin(d2*f2 - iTime*0.7)
+                        + sin(d3*f3 + iTime*0.5);
+                C = (C + 3.0) / 6.0;
+
+                float band = step(thr, C) * (1.0 - step(1.0 - thr, C));
+                float w    = (1.0 - abs(C - 0.5) * 2.0) * band;
+
+                float baseAlpha = (iDark > 0.5) ? (0.30 + w*0.70) : (0.45 + w*0.55);
+                float a = baseAlpha * band;
+
+                return half4(iColor.r*a, iColor.g*a, iColor.b*a, a);
+            }
+            """;
+        var effect = SKRuntimeEffect.CreateShader(sksl, out string? errors);
+        if (errors is { Length: > 0 })
+            System.Diagnostics.Debug.WriteLine($"Moiré SKSL: {errors}");
+        return effect;
+    }
 
     // Hero cross-fade cancellation
     private CancellationTokenSource? _heroAnimCts;
@@ -358,111 +415,51 @@ public partial class MainPage : ContentPage
         HeroGridCanvas.InvalidateSurface();
     }
 
-    // ── Moiré ASCII background ───────────────────────────────────────────────
+    // ── Moiré GPU shader ─────────────────────────────────────────────────────
 
     private void OnHeroGridPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        if (_heroColorLight == Colors.Transparent) return;
+        if (_heroColorLight == Colors.Transparent || MoireEffect is null) return;
 
         float pw = e.Info.Width;
         float ph = e.Info.Height;
+        float t  = (float)(DateTime.UtcNow - _floatStart).TotalSeconds;
 
-        // Character cell size in canvas pixels
-        const float CW   = 14f;
-        const float CH   = 23f;
-        const float freq = 0.3f;
-        const float thr  = 0.15f;
-        const float orb  = 0.3f;
-
-        float t = (float)(DateTime.UtcNow - _floatStart).TotalSeconds;
-
-        int cols = (int)(pw / CW) + 2;
-        int rows = (int)(ph / CH) + 2;
-
-        // Three orbiting wave centers (ported from MoireCode.html)
-        float nx = cols * 0.5f + MathF.Cos(t * 0.30f)       * cols * orb;
-        float ny = rows * 0.5f + MathF.Sin(t * 0.40f)       * rows * orb;
-        float ix = cols * 0.5f + MathF.Cos(t * 0.37f + 2f)  * cols * (orb * 0.83f);
-        float iy = rows * 0.5f + MathF.Sin(t * 0.29f + 2f)  * rows * (orb * 1.17f);
-        float sx = cols * 0.5f + MathF.Sin(t * 0.23f + 4f)  * cols * (orb * 1.17f);
-        float sy = rows * 0.5f + MathF.Cos(t * 0.31f + 4f)  * rows * (orb * 0.83f);
-
-        float f1 = freq;
-        float f2 = freq * 1.033f;
-        float f3 = freq * 0.967f;
-
-        // Resolve game color for this theme
         bool isDark = ThemeService.Current == PkTheme.Dark;
         var mc = isDark ? _heroColorLight : _heroColorDark;
-        byte cr = (byte)(mc.Red   * 255);
-        byte cg = (byte)(mc.Green * 255);
-        byte cb = (byte)(mc.Blue  * 255);
+        float cr = mc.Red, cg = mc.Green, cb = mc.Blue;
 
         // Luminance-based visibility clamp
-        float lum = 0.2126f * cr / 255f + 0.7152f * cg / 255f + 0.0722f * cb / 255f;
-        SKColor charBase;
+        float lum = 0.2126f * cr + 0.7152f * cg + 0.0722f * cb;
         if (isDark && lum < 0.12f)
         {
             float boost = (0.12f - lum) / 0.12f;
-            charBase = new SKColor(
-                (byte)(cr + (255 - cr) * boost),
-                (byte)(cg + (255 - cg) * boost),
-                (byte)(cb + (255 - cb) * boost));
+            cr += (1f - cr) * boost;
+            cg += (1f - cg) * boost;
+            cb += (1f - cb) * boost;
         }
         else if (!isDark && lum > 0.85f)
         {
             float darken = (lum - 0.85f) / 0.15f;
-            charBase = new SKColor(
-                (byte)(cr * (1f - darken)),
-                (byte)(cg * (1f - darken)),
-                (byte)(cb * (1f - darken)));
-        }
-        else
-        {
-            charBase = new SKColor(cr, cg, cb);
+            cr *= 1f - darken;
+            cg *= 1f - darken;
+            cb *= 1f - darken;
         }
 
-        using var paint = new SKPaint
+        var uniforms = new SKRuntimeEffectUniforms(MoireEffect)
         {
-            Typeface    = MoireTypeface,
-            TextSize    = CW,
-            IsAntialias = true,
+            ["iResolution"] = new[] { pw, ph },
+            ["iTime"]       = new[] { t },
+            ["iColor"]      = new[] { cr, cg, cb },
+            ["iDark"]       = new[] { isDark ? 1f : 0f },
         };
 
-        for (int row = 0; row < rows; row++)
-        {
-            float fy = row * CH + CW; // baseline offset
-            for (int col = 0; col < cols; col++)
-            {
-                float fx = col * 0.55f;
-
-                float pb = fx - nx * 0.55f, hb = row - ny;
-                float gb = fx - ix * 0.55f, qb = row - iy;
-                float vb = fx - sx * 0.55f, yb = row - sy;
-
-                float d1 = MathF.Sqrt(pb * pb + hb * hb);
-                float d2 = MathF.Sqrt(gb * gb + qb * qb);
-                float d3 = MathF.Sqrt(vb * vb + yb * yb);
-
-                float C = MathF.Sin(d1 * f1 + t)
-                        + MathF.Sin(d2 * f2 - t * 0.7f)
-                        + MathF.Sin(d3 * f3 + t * 0.5f);
-                C = (C + 3f) / 6f;
-
-                if (C < thr || C > 1f - thr) continue;
-
-                float w = 1f - MathF.Abs(C - 0.5f) * 2f;
-                int ci = Math.Min(MoireCharStrings.Length - 1, (int)(w * MoireCharStrings.Length));
-                if (MoireChars[ci] == ' ') continue;
-
-                float alpha = isDark ? 0.30f + w * 0.70f : 0.45f + w * 0.55f;
-                paint.Color = charBase.WithAlpha((byte)(alpha * 255));
-                canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
-            }
-        }
+        using var shader = MoireEffect.ToShader(uniforms);
+        using var paint  = new SKPaint { Shader = shader };
+        canvas.DrawRect(0, 0, pw, ph, paint);
     }
 
     // ── Save loading ─────────────────────────────────────────────────────────
