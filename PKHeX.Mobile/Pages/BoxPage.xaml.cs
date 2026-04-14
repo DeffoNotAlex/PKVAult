@@ -98,7 +98,7 @@ public partial class BoxPage : ContentPage
             // Draw sprite scaled into slot (do NOT dispose — bitmap is owned by renderer cache)
             var sprite = _sprites.GetSprite(pk);
             var dest = SKRect.Create(x + pad, y + pad, slotW - pad * 2, slotH - pad * 2);
-            canvas.DrawBitmap(sprite, dest, new SKSamplingOptions(SKCubicResampler.Mitchell));
+            canvas.DrawBitmap(sprite, dest);
         }
     }
 
