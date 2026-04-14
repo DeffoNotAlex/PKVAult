@@ -52,4 +52,21 @@ public interface ISecondaryDisplay
 
     /// <summary>Dismiss the welcome panel and restore the bottom screen to idle/main-menu state.</summary>
     void HideWelcome();
+
+    // ── Intro reel (shown before wizard step 0) ───────────────────────────────
+
+    /// <summary>
+    /// Show a reel slide on the bottom screen: headline, subtext, progress dots, and a Skip button.
+    /// <paramref name="slideIndex"/> is 0–5. <paramref name="onSkip"/> fires when Skip is tapped.
+    /// </summary>
+    void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip);
+
+    /// <summary>
+    /// Brief transition overlay shown between reel slides (or between reel and wizard step 0).
+    /// The bottom screen dims / shows a transition indicator.
+    /// </summary>
+    void ShowReelTransition();
+
+    /// <summary>Dismiss the reel panel (called when the reel ends and the wizard begins).</summary>
+    void HideReel();
 }

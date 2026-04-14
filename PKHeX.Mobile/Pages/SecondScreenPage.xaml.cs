@@ -498,6 +498,58 @@ public partial class SecondScreenPage : ContentPage
     }
 
     // ──────────────────────────────────────────────
+    //  Intro reel (Mode E — pre-wizard)
+    // ──────────────────────────────────────────────
+
+    private Action? _reelSkipAction;
+
+    public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip)
+    {
+        _reelSkipAction = onSkip;
+
+        BoxGridPanel.IsVisible  = false;
+        BankGridPanel.IsVisible = false;
+        MainMenuPanel.IsVisible = false;
+        WelcomePanel.IsVisible  = false;
+        ReelPanel.IsVisible     = true;
+        _mainMenuVisible        = false;
+
+        ReelHeadlineLabel.Opacity = 0;
+        ReelSubtextLabel.Opacity  = 0;
+        ReelHeadlineLabel.Text    = headline;
+        ReelSubtextLabel.Text     = subtext;
+
+        // Update progress dots — use ThAccent equivalent and ThTextDim equivalent
+        var accent   = Color.FromArgb("#3B8BFF");
+        var dimColor = Color.FromArgb(
+            ThemeService.Current == PkTheme.Light ? "#9CA3AF" : "#6B7280");
+
+        Ellipse[] dots = [ReelDot0, ReelDot1, ReelDot2, ReelDot3, ReelDot4, ReelDot5];
+        for (int i = 0; i < dots.Length; i++)
+            dots[i].Fill = new SolidColorBrush(i == slideIndex ? accent : dimColor);
+
+        // Staggered fade-in
+        ReelHeadlineLabel.FadeTo(1.0, 300);
+        Task.Delay(150).ContinueWith(_ =>
+            MainThread.BeginInvokeOnMainThread(() => ReelSubtextLabel.FadeTo(1.0, 300)));
+    }
+
+    public void ShowReelTransition()
+    {
+        ReelHeadlineLabel.FadeTo(0, 200);
+        ReelSubtextLabel.FadeTo(0, 200);
+    }
+
+    public void HideReel()
+    {
+        ReelPanel.IsVisible = false;
+        _reelSkipAction     = null;
+    }
+
+    private void OnReelSkipTapped(object? sender, EventArgs e)
+        => _reelSkipAction?.Invoke();
+
+    // ──────────────────────────────────────────────
     //  Welcome wizard (Mode D)
     // ──────────────────────────────────────────────
 

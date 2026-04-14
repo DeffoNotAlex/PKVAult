@@ -8,6 +8,26 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
+        <!-- ── Intro reel overlay (shown before wizard, hidden during wizard) ── -->
+        <Grid x:Name="ReelOverlay" Grid.RowSpan="3"
+              ZIndex="10" IsVisible="False"
+              BackgroundColor="{DynamicResource ThSettingsBg}">
+            <!-- Tap anywhere to skip -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnReelTapSkip" />
+            </Grid.GestureRecognizers>
+            <!-- Sprite canvas fills the screen with the floating sprite -->
+            <skia:SKCanvasView x:Name="ReelSpriteCanvas"
+                               PaintSurface="OnReelSpritePaint"
+                               HorizontalOptions="Fill" VerticalOptions="Fill" />
+            <!-- Placeholder shown when sprite not yet loaded -->
+            <Ellipse x:Name="ReelPlaceholderCircle"
+                     WidthRequest="140" HeightRequest="140"
+                     Fill="{DynamicResource ThSettingsRow}"
+                     HorizontalOptions="Center" VerticalOptions="Center"
+                     Opacity="0.4" />
+        </Grid>
+
         <!-- ── Row 0: Logo / step header ── -->
         <VerticalStackLayout Grid.Row="0" Padding="24,32,24,16" Spacing="4">
             <Label Text="PKVault"

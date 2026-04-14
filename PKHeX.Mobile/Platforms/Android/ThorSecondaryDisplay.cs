@@ -122,6 +122,15 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     public void HideWelcome()
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.HideWelcome());
 
+    public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelSlide(slideIndex, headline, subtext, onSkip));
+
+    public void ShowReelTransition()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelTransition());
+
+    public void HideReel()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.HideReel());
+
     public void Dispose()
     {
         _secondPage.Cleanup();

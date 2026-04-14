@@ -22,4 +22,7 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
     public void ShowWelcomeStep(int step, Action<string> onEvent) { }
     public void NotifyWelcomeSaveFound(string gameName) { }
     public void HideWelcome() { }
+    public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip) { }
+    public void ShowReelTransition() { }
+    public void HideReel() { }
 }

@@ -5,6 +5,7 @@ using SkiaSharp.Views.Maui;
 using static PKHeX.Mobile.Services.ThemeService;
 
 #if ANDROID
+using Android.Media;
 using PKHeX.Mobile.Platforms.Android;
 #endif
 
@@ -14,6 +15,8 @@ namespace PKHeX.Mobile.Pages;
 /// First-run welcome wizard.
 /// On dual-screen: top screen shows preview, bottom screen shows interactive controls.
 /// On single-screen: both preview and controls are shown stacked.
+///
+/// State machine: Reel (slides 0–5) → Wizard step 0 (theme) → step 1 (emulators) → step 2 (done).
 /// </summary>
 public partial class WelcomePage : ContentPage
 {
@@ -33,6 +36,52 @@ public partial class WelcomePage : ContentPage
     private readonly IDirectoryPicker _dirPicker = new AndroidDirectoryPicker();
 #else
     private readonly IDirectoryPicker _dirPicker = new NullDirectoryPicker();
+#endif
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Intro reel state
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private bool _reelActive;
+    private int  _reelSlideIndex;
+    private CancellationTokenSource? _reelCts;
+
+    // Sprites indexed by slide (025=Pikachu, 150=Mewtwo, 493=Arceus, 644=Zekrom, 888=Zacian, 643=Reshiram)
+    private static readonly (ushort Species, byte Form)[] ReelSpecies =
+    [
+        (025, 0),  // Slide 0 — Pikachu
+        (150, 0),  // Slide 1 — Mewtwo
+        (493, 0),  // Slide 2 — Arceus
+        (644, 0),  // Slide 3 — Zekrom
+        (888, 0),  // Slide 4 — Zacian (HOME sprite)
+        (643, 0),  // Slide 5 — Reshiram
+    ];
+
+    private static readonly (string Headline, string Subtext)[] ReelSlides =
+    [
+        ("Every save. Every game.",         "Gen 1 through Legends: Z-A"),
+        ("Edit any Pokémon",                "Stats, moves, ribbons, and more"),
+        ("Full legality checking",          "Know exactly what's legal before you trade"),
+        ("Works with your emulator",        "Eden, Azahar, MelonDS, RetroArch"),
+        ("Dual screen support",             "Built for the AYN Thor"),
+        ("Let's get started",               ""),
+    ];
+
+    // Pre-loaded bitmaps for each slide (null = not yet loaded / show placeholder)
+    private readonly SKBitmap?[] _reelBitmaps = new SKBitmap?[6];
+
+    // Current sprite float offset (for bob animation) driven by _reelFloatTimer
+    private float _reelFloatY;
+    private float _reelFloatPhase;
+    private IDispatcherTimer? _reelFloatTimer;
+
+    // Current rendered sprite scale (animated in on slide entrance)
+    private float _reelSpriteScale = 1.0f;
+    private float _reelSpriteOpacity = 1.0f;
+
+#if ANDROID
+    // Audio — place pokemon_theme.ogg in PKHeX.Mobile/Resources/Raw/ to enable music
+    private MediaPlayer? _mediaPlayer;
 #endif
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -70,19 +119,326 @@ public partial class WelcomePage : ContentPage
         SingleScreenControls.IsVisible = !_isDualScreen;
 
         if (_isDualScreen)
-        {
             _secondary.Show();
-            _secondary.ShowWelcomeStep(0, OnWelcomeEvent);
-        }
 
-        ApplyStep(0, animate: false);
+        // Start the reel before wizard step 0
+        _ = StartReelAsync();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        StopReel();
         if (_isDualScreen)
+        {
+            _secondary.HideReel();
             _secondary.HideWelcome();
+        }
+        StopAudio();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Intro reel
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async Task StartReelAsync()
+    {
+        _reelActive     = true;
+        _reelSlideIndex = 0;
+        _reelCts        = new CancellationTokenSource();
+        var ct          = _reelCts.Token;
+
+        // Show the reel overlay on the primary (top) screen
+        ReelOverlay.IsVisible = true;
+        ReelOverlay.Opacity   = 0;
+        await ReelOverlay.FadeTo(1.0, 400);
+
+        // Begin loading sprites in the background — don't block the reel
+        _ = PreloadReelSpritesAsync();
+
+        // Start background audio if the OGG file is present
+        // Place PKHeX.Mobile/Resources/Raw/pokemon_theme.ogg in the project to enable music.
+        StartAudio();
+
+        // Start the float bob timer
+        StartFloatTimer();
+
+        // Run each slide
+        for (int i = 0; i < ReelSlides.Length && !ct.IsCancellationRequested; i++)
+        {
+            _reelSlideIndex = i;
+            await ShowReelSlideAsync(i, ct);
+            if (ct.IsCancellationRequested) break;
+        }
+
+        if (!ct.IsCancellationRequested)
+            await EndReelAsync();
+    }
+
+    private async Task ShowReelSlideAsync(int slideIndex, CancellationToken ct)
+    {
+        var (headline, subtext) = ReelSlides[slideIndex];
+        var bitmap = _reelBitmaps[slideIndex]; // may be null — shows placeholder
+
+        // Update bottom screen slide text
+        if (_isDualScreen)
+            _secondary.ShowReelSlide(slideIndex, headline, subtext, SkipReel);
+
+        // Entrance: sprite pops in from scale 0.6
+        _reelSpriteScale   = 0.6f;
+        _reelSpriteOpacity = 0.0f;
+        ReelSpriteCanvas.InvalidateSurface();
+
+        bool hasSprite = bitmap is not null;
+        ReelPlaceholderCircle.IsVisible = !hasSprite;
+        ReelPlaceholderCircle.Opacity   = hasSprite ? 0 : 0.4;
+
+        // Animate sprite entrance (~400ms spring-out simulation via interpolation)
+        var entranceStart = DateTime.UtcNow;
+        const int entranceDuration = 400;
+        while (!ct.IsCancellationRequested)
+        {
+            double elapsed = (DateTime.UtcNow - entranceStart).TotalMilliseconds;
+            if (elapsed >= entranceDuration) break;
+            double t = elapsed / entranceDuration;
+            // SpringOut approximation: overshoot and settle
+            double spring = 1.0 - Math.Pow(1.0 - t, 3) * (1.0 + 2.0 * t);
+            _reelSpriteScale   = (float)(0.6 + 0.4 * spring);
+            _reelSpriteOpacity = (float)Math.Min(1.0, t * 3.0);
+
+            // Also refresh bitmap in case it loaded during entrance
+            if (_reelBitmaps[slideIndex] is { } loaded && loaded != _reelSpriteCurrentBitmap)
+            {
+                _reelSpriteCurrentBitmap = loaded;
+                ReelPlaceholderCircle.IsVisible = false;
+            }
+
+            ReelSpriteCanvas.InvalidateSurface();
+            await Task.Delay(16, ct).ConfigureAwait(false);
+            if (ct.IsCancellationRequested) return;
+        }
+
+        _reelSpriteScale        = 1.0f;
+        _reelSpriteOpacity      = 1.0f;
+        _reelSpriteCurrentBitmap = _reelBitmaps[slideIndex];
+        ReelSpriteCanvas.InvalidateSurface();
+
+        // Hold for 4 seconds (minus entrance time), polling for sprite updates
+        var holdStart = DateTime.UtcNow;
+        const int holdMs = 4000;
+        while (!ct.IsCancellationRequested)
+        {
+            double elapsed = (DateTime.UtcNow - holdStart).TotalMilliseconds;
+            if (elapsed >= holdMs) break;
+
+            // Pick up a newly loaded sprite during hold
+            if (_reelBitmaps[slideIndex] is { } late && late != _reelSpriteCurrentBitmap)
+            {
+                _reelSpriteCurrentBitmap = late;
+                ReelPlaceholderCircle.IsVisible = false;
+                ReelSpriteCanvas.InvalidateSurface();
+            }
+
+            await Task.Delay(100, ct).ConfigureAwait(false);
+        }
+
+        if (ct.IsCancellationRequested) return;
+
+        // Exit: fade everything out before next slide
+        if (_isDualScreen)
+            _secondary.ShowReelTransition();
+
+        var exitStart = DateTime.UtcNow;
+        const int exitDuration = 300;
+        while (!ct.IsCancellationRequested)
+        {
+            double elapsed = (DateTime.UtcNow - exitStart).TotalMilliseconds;
+            if (elapsed >= exitDuration) break;
+            double t = elapsed / exitDuration;
+            _reelSpriteOpacity = (float)(1.0 - t);
+            ReelSpriteCanvas.InvalidateSurface();
+            await Task.Delay(16, ct).ConfigureAwait(false);
+        }
+
+        _reelSpriteCurrentBitmap = null;
+        _reelSpriteOpacity       = 0;
+        ReelSpriteCanvas.InvalidateSurface();
+    }
+
+    // Current bitmap being drawn (updated per slide)
+    private SKBitmap? _reelSpriteCurrentBitmap;
+
+    private bool _reelEnding; // guard against double-call from race between auto-advance and skip
+
+    private async Task EndReelAsync()
+    {
+        if (_reelEnding) return;
+        _reelEnding = true;
+
+        StopReel();
+
+        // Fade out the reel overlay on primary screen
+        await ReelOverlay.FadeTo(0, 300);
+        ReelOverlay.IsVisible = false;
+
+        if (_isDualScreen)
+            _secondary.HideReel();
+
+        // Now start the wizard normally
+        ApplyStep(0, animate: false);
+
+        if (_isDualScreen)
+            _secondary.ShowWelcomeStep(0, OnWelcomeEvent);
+
+        // Fade audio out over the reel-to-wizard handoff (fire-and-forget)
+        _ = FadeOutAudioAsync();
+    }
+
+    private void SkipReel()
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            _reelCts?.Cancel();
+            await EndReelAsync();
+        });
+    }
+
+    private void StopReel()
+    {
+        _reelActive = false;
+        _reelFloatTimer?.Stop();
+        _reelFloatTimer = null;
+        _reelCts?.Cancel();
+        _reelCts = null;
+        _reelSpriteCurrentBitmap = null;
+    }
+
+    private void StartFloatTimer()
+    {
+        _reelFloatPhase = 0;
+        _reelFloatTimer = Dispatcher.CreateTimer();
+        _reelFloatTimer.Interval = TimeSpan.FromMilliseconds(16);
+        _reelFloatTimer.Tick += (_, _) =>
+        {
+            _reelFloatPhase += 0.04f; // ~2.4 rad/s = gentle bob
+            _reelFloatY      = 5f * MathF.Sin(_reelFloatPhase);
+            if (_reelActive)
+                ReelSpriteCanvas.InvalidateSurface();
+        };
+        _reelFloatTimer.Start();
+    }
+
+    private async Task PreloadReelSpritesAsync()
+    {
+        for (int i = 0; i < ReelSpecies.Length; i++)
+        {
+            var (species, form) = ReelSpecies[i];
+            var bmp = await HomeSpriteCacheService.GetOrDownloadAsync(species, form, shiny: false)
+                                                  .ConfigureAwait(false);
+            _reelBitmaps[i] = bmp;
+        }
+    }
+
+    // ── Reel canvas painter ──────────────────────────────────────────────────
+
+    private void OnReelSpritePaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        var bmp = _reelSpriteCurrentBitmap;
+        if (bmp is null || _reelSpriteOpacity <= 0) return;
+
+        float w  = e.Info.Width;
+        float h  = e.Info.Height;
+        float cx = w / 2f;
+        float cy = h / 2f + _reelFloatY;
+
+        // Size sprite to fill ~70% of the shorter dimension
+        float maxSize = Math.Min(w, h) * 0.70f * _reelSpriteScale;
+        float ratio   = (float)bmp.Width / bmp.Height;
+        float sw, sh;
+        if (ratio >= 1f) { sw = maxSize; sh = maxSize / ratio; }
+        else             { sh = maxSize; sw = maxSize * ratio; }
+
+        var dest = new SKRect(cx - sw / 2f, cy - sh / 2f, cx + sw / 2f, cy + sh / 2f);
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Color = SKColors.White.WithAlpha((byte)(_reelSpriteOpacity * 255)),
+        };
+
+        canvas.DrawBitmap(bmp, dest, paint);
+    }
+
+    // ── Tap-to-skip on primary screen ───────────────────────────────────────
+
+    private void OnReelTapSkip(object? sender, EventArgs e) => SkipReel();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Audio
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Place the file at: PKHeX.Mobile/Resources/Raw/pokemon_theme.ogg
+    // It will be bundled into the APK as a raw asset.
+    // If the file is absent the audio block is skipped silently.
+
+    private void StartAudio()
+    {
+#if ANDROID
+        try
+        {
+            // Attempt to open the theme file from the app's raw asset bundle.
+            // If it doesn't exist, AssetFileDescriptor will throw.
+            var context = global::Android.App.Application.Context;
+            var afd = context.Assets?.OpenFd("pokemon_theme.ogg");
+            if (afd is null) return;
+
+            _mediaPlayer = new MediaPlayer();
+            _mediaPlayer.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+            afd.Close();
+
+            _mediaPlayer.Looping = true;
+            _mediaPlayer.Prepare();
+            _mediaPlayer.Start();
+        }
+        catch
+        {
+            // File not present or MediaPlayer error — skip audio silently.
+            _mediaPlayer?.Release();
+            _mediaPlayer = null;
+        }
+#endif
+    }
+
+    private void StopAudio()
+    {
+#if ANDROID
+        try { _mediaPlayer?.Stop(); _mediaPlayer?.Release(); }
+        catch { }
+        _mediaPlayer = null;
+#endif
+    }
+
+    private async Task FadeOutAudioAsync()
+    {
+#if ANDROID
+        var player = _mediaPlayer;
+        if (player is null) return;
+
+        const int steps    = 20;
+        const int stepMs   = 100; // 2 seconds total
+        for (int i = steps; i >= 0; i--)
+        {
+            try { player.SetVolume(i / (float)steps, i / (float)steps); }
+            catch { break; }
+            await Task.Delay(stepMs).ConfigureAwait(false);
+        }
+        StopAudio();
+#else
+        await Task.CompletedTask;
+#endif
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -175,6 +175,60 @@
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE E — Intro reel (pre-wizard)                   -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="ReelPanel" IsVisible="False"
+              RowDefinitions="*,Auto,Auto"
+              BackgroundColor="{DynamicResource ThSettingsBg}">
+
+            <!-- Headline + subtext -->
+            <VerticalStackLayout Grid.Row="0" VerticalOptions="Center"
+                                 HorizontalOptions="Center" Padding="28,0" Spacing="14">
+                <Label x:Name="ReelHeadlineLabel"
+                       Text=""
+                       FontFamily="NunitoBold" FontSize="26"
+                       TextColor="{DynamicResource ThTextPrimary}"
+                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                <Label x:Name="ReelSubtextLabel"
+                       Text=""
+                       FontSize="15" TextColor="{DynamicResource ThTextSecondary}"
+                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- Progress dots (6 slides) -->
+            <HorizontalStackLayout Grid.Row="1" Spacing="10"
+                                   HorizontalOptions="Center" Margin="0,0,0,14">
+                <Ellipse x:Name="ReelDot0" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThAccent}" />
+                <Ellipse x:Name="ReelDot1" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThTextDim}" />
+                <Ellipse x:Name="ReelDot2" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThTextDim}" />
+                <Ellipse x:Name="ReelDot3" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThTextDim}" />
+                <Ellipse x:Name="ReelDot4" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThTextDim}" />
+                <Ellipse x:Name="ReelDot5" WidthRequest="8" HeightRequest="8"
+                         Fill="{DynamicResource ThTextDim}" />
+            </HorizontalStackLayout>
+
+            <!-- Skip button -->
+            <Border Grid.Row="2"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource ThSettingsRow}"
+                    Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                    Margin="24,0,24,24" Padding="0" HeightRequest="44">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnReelSkipTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="Skip →" FontFamily="NunitoBold" FontSize="15"
+                       TextColor="{DynamicResource ThTextSecondary}"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE D — Welcome wizard                             -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="WelcomePanel" IsVisible="False"
