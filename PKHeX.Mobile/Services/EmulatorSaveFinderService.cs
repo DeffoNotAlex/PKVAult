@@ -49,9 +49,12 @@ public static class EmulatorSaveFinderService
                 var saveDocId = NavigatePath(resolver, treeUri, rootDocId, ["nand", "user", "save"]);
                 if (saveDocId == null) return results;
 
-                // Collect every "main" file found up to 8 directories deep
+                // Collect every "main" or "*.bin" file found up to 8 directories deep.
+                // BDSP/BD saves may appear as .bin rather than the standard extensionless "main".
                 var mainDocIds = new List<string>();
-                FindNamedFiles(resolver, treeUri, saveDocId, "main", 8, mainDocIds);
+                FindMatchingFiles(resolver, treeUri, saveDocId,
+                    name => name == "main" || name.EndsWith(".bin", StringComparison.OrdinalIgnoreCase),
+                    8, mainDocIds);
 
                 // Try SaveUtil on each candidate
                 foreach (var mainDocId in mainDocIds)
@@ -171,14 +174,14 @@ public static class EmulatorSaveFinderService
 
 #if ANDROID
     /// <summary>
-    /// Recursively finds all files with the given display name under a document tree node,
+    /// Recursively finds all files matching <paramref name="match"/> under a document tree node,
     /// up to <paramref name="maxDepth"/> directory levels deep.
     /// </summary>
-    private static void FindNamedFiles(
+    private static void FindMatchingFiles(
         global::Android.Content.ContentResolver resolver,
         global::Android.Net.Uri treeUri,
         string parentDocId,
-        string targetName,
+        Func<string, bool> match,
         int maxDepth,
         List<string> results)
     {
@@ -207,10 +210,10 @@ public static class EmulatorSaveFinderService
 
             bool isDir = mimeType == global::Android.Provider.DocumentsContract.Document.MimeTypeDir;
 
-            if (!isDir && name == targetName)
+            if (!isDir && match(name))
                 results.Add(docId);
             else if (isDir)
-                FindNamedFiles(resolver, treeUri, docId, targetName, maxDepth - 1, results);
+                FindMatchingFiles(resolver, treeUri, docId, match, maxDepth - 1, results);
         }
     }
 
