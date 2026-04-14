@@ -401,24 +401,18 @@ public partial class MainPage : ContentPage
         byte cg = (byte)(mc.Green * 255);
         byte cb = (byte)(mc.Blue  * 255);
 
-        // Luminance-based visibility clamp
+        // Dark theme: boost colors that are too dark to see against a dark background
         float r = cr / 255f, g = cg / 255f, b = cb / 255f;
-        float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-        if (isDark && lum < 0.12f)
+        if (isDark)
         {
-            // Too dark for dark theme — lerp toward white
-            float boost = (0.12f - lum) / 0.12f;
-            r += (1f - r) * boost;
-            g += (1f - g) * boost;
-            b += (1f - b) * boost;
-        }
-        else if (!isDark && lum > 0.30f)
-        {
-            // Light theme: scale down to max luminance 0.30 so grays stay readable on white
-            float scale = 0.30f / lum;
-            r *= scale;
-            g *= scale;
-            b *= scale;
+            float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+            if (lum < 0.12f)
+            {
+                float boost = (0.12f - lum) / 0.12f;
+                r += (1f - r) * boost;
+                g += (1f - g) * boost;
+                b += (1f - b) * boost;
+            }
         }
         var charBase = new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
 
@@ -455,7 +449,7 @@ public partial class MainPage : ContentPage
                 int ci = Math.Min(MoireCharStrings.Length - 1, (int)(w * MoireCharStrings.Length));
                 if (MoireChars[ci] == ' ') continue;
 
-                float alpha = isDark ? 0.30f + w * 0.70f : 0.60f + w * 0.40f;
+                float alpha = isDark ? 0.30f + w * 0.70f : 0.75f + w * 0.25f;
                 paint.Color = charBase.WithAlpha((byte)(alpha * 255));
                 canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
             }
