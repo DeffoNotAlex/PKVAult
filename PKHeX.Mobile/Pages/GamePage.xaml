@@ -319,7 +319,7 @@
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  BOTTOM SCREEN — box grid                             -->
         <!-- ══════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto"
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto"
               BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Box navigation header -->
@@ -364,8 +364,28 @@
                 </Border>
             </Grid>
 
+            <!-- Search bar -->
+            <Border Grid.Row="1"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource ThCardBg}"
+                    Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                    Margin="12,0,12,6" Padding="0">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Label Text="{x:Static theme:Ph.MagnifyingGlass}" FontFamily="Phosphor" FontSize="16"
+                           TextColor="{DynamicResource ThTextDim}"
+                           VerticalOptions="Center" Margin="10,0,0,0" />
+                    <Entry x:Name="SearchEntry" Grid.Column="1"
+                           Placeholder="Search species…" FontFamily="Nunito" FontSize="13"
+                           TextColor="{DynamicResource ThTextPrimary}"
+                           PlaceholderColor="{DynamicResource ThTextHint}"
+                           BackgroundColor="Transparent" Margin="4,0,8,0"
+                           ReturnType="Search"
+                           TextChanged="OnSearchTextChanged" />
+                </Grid>
+            </Border>
+
             <!-- Box canvas -->
-            <skia:SKCanvasView Grid.Row="1"
+            <skia:SKCanvasView Grid.Row="2"
                                x:Name="BoxCanvas"
                                PaintSurface="OnBoxPaintSurface"
                                EnableTouchEvents="False">
@@ -375,7 +395,7 @@
             </skia:SKCanvasView>
 
             <!-- Info bar -->
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
+            <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
                 <!-- Slot info -->
                 <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                     <Label x:Name="InfoSpeciesNum"
