@@ -31,6 +31,9 @@ public partial class App : Application
     /// <summary>Direction of the last bank swap: -1 = L1 (bank enters from left), +1 = R1 (bank enters from right).</summary>
     public static int  BankSlideDir                 { get; set; } = -1;
 
+    /// <summary>Set to true by SettingsPage when watched directories change so MainPage re-scans on next appearance.</summary>
+    public static bool RescanNeeded                 { get; set; } = true;
+
     public App()
     {
         InitializeComponent();
