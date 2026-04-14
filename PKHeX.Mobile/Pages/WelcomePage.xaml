@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="PKHeX.Mobile.Pages.WelcomePage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{DynamicResource ThSettingsBg}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ── Row 0: Logo / step header ── -->
+        <VerticalStackLayout Grid.Row="0" Padding="24,32,24,16" Spacing="4">
+            <Label Text="PKVault"
+                   FontFamily="NunitoBold" FontSize="34"
+                   TextColor="{DynamicResource ThTextPrimary}" />
+            <Label x:Name="StepSubtitleLabel"
+                   Text="Step 1 of 3 — Theme"
+                   FontSize="14" TextColor="{DynamicResource ThTextSecondary}" />
+        </VerticalStackLayout>
+
+        <!-- ── Row 1: Preview area ── -->
+        <Grid Grid.Row="1" x:Name="PreviewHost">
+
+            <!-- Step 0 preview: theme mockup canvas -->
+            <Grid x:Name="Preview0" RowDefinitions="*" Padding="16,0">
+                <skia:SKCanvasView x:Name="ThemePreviewCanvas"
+                                   PaintSurface="OnThemePreviewPaint"
+                                   Margin="0,8" />
+            </Grid>
+
+            <!-- Step 1 preview: found saves list -->
+            <Grid x:Name="Preview1" IsVisible="False" RowDefinitions="Auto,*" Padding="16,0">
+                <Label Grid.Row="0" x:Name="SaveScanHeaderLabel"
+                       Text="Tap an emulator on the bottom screen to scan"
+                       FontSize="13" TextColor="{DynamicResource ThTextSecondary}"
+                       Margin="0,8,0,12" HorizontalTextAlignment="Center"
+                       HorizontalOptions="Center" />
+                <CollectionView Grid.Row="1" x:Name="FoundSavesList"
+                                SelectionMode="None"
+                                BackgroundColor="Transparent">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center"
+                                             Spacing="12" Margin="0,40">
+                            <Label Text="&#xE3B4;" FontFamily="Phosphor" FontSize="48"
+                                   TextColor="{DynamicResource ThTextDim}"
+                                   HorizontalOptions="Center" />
+                            <Label Text="No saves found yet"
+                                   FontFamily="NunitoBold" FontSize="16"
+                                   TextColor="{DynamicResource ThTextSecondary}"
+                                   HorizontalOptions="Center" />
+                            <Label Text="Use the bottom screen to connect your emulator saves."
+                                   FontSize="13" TextColor="{DynamicResource ThTextDim}"
+                                   HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 8"
+                                    BackgroundColor="{DynamicResource ThSettingsRow}"
+                                    Stroke="Transparent" Padding="12,10" Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                    <Label Grid.Column="0" Text="&#xE33A;" FontFamily="PhosphorFill"
+                                           FontSize="24" TextColor="#34D990"
+                                           VerticalOptions="Center" />
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding GameName}" FontFamily="NunitoBold" FontSize="14"
+                                               TextColor="{DynamicResource ThTextPrimary}" />
+                                        <Label Text="{Binding FilePath}" FontSize="11"
+                                               TextColor="{DynamicResource ThTextSecondary}"
+                                               LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <!-- Step 2 preview: success visual -->
+            <Grid x:Name="Preview2" IsVisible="False" Padding="24,0">
+                <VerticalStackLayout Spacing="20" VerticalOptions="Center" HorizontalOptions="Center">
+                    <skia:SKCanvasView x:Name="SuccessCanvas"
+                                       PaintSurface="OnSuccessPreviewPaint"
+                                       HeightRequest="180" />
+                    <Label x:Name="FinalFoundLabel"
+                           Text="Ready to edit your Pokémon!"
+                           FontFamily="NunitoBold" FontSize="18"
+                           TextColor="{DynamicResource ThTextPrimary}"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Grid>
+
+        </Grid>
+
+        <!-- ── Row 2: Bottom bar ── -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto" Padding="24,12,24,28" RowSpacing="16">
+
+            <!-- Step dots -->
+            <HorizontalStackLayout Grid.Row="0" Spacing="10" HorizontalOptions="Center">
+                <Ellipse x:Name="Dot0" Fill="{DynamicResource ThAccent}"
+                         WidthRequest="10" HeightRequest="10" />
+                <Ellipse x:Name="Dot1" Fill="{DynamicResource ThTextDim}"
+                         WidthRequest="10" HeightRequest="10" />
+                <Ellipse x:Name="Dot2" Fill="{DynamicResource ThTextDim}"
+                         WidthRequest="10" HeightRequest="10" />
+            </HorizontalStackLayout>
+
+            <!-- Single-screen controls (hidden on dual-screen devices) -->
+            <Grid Grid.Row="1" x:Name="SingleScreenControls" IsVisible="False">
+
+                <!-- Step 0 controls: theme buttons + Next -->
+                <VerticalStackLayout x:Name="SingleStep0Controls" Spacing="10">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Grid.Column="0"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="2"
+                                Padding="0" HeightRequest="52">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleDarkTapped" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="&#xE45B;" FontFamily="Phosphor" FontSize="22"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                                <Label Text="Dark" FontFamily="NunitoBold" FontSize="15"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                            </HorizontalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" StrokeThickness="2"
+                                Padding="0" HeightRequest="52">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleLightTapped" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="&#xE4B7;" FontFamily="Phosphor" FontSize="22"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                                <Label Text="Light" FontFamily="NunitoBold" FontSize="15"
+                                       TextColor="{DynamicResource ThTextPrimary}" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                    <Border StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0" HeightRequest="48">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#3B8BFF" Offset="0" />
+                                <GradientStop Color="#1A5AFF" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSingleNextTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="Next →" FontFamily="NunitoBold" FontSize="15"
+                               TextColor="White"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Step 1 controls (single-screen simplified) -->
+                <VerticalStackLayout x:Name="SingleStep1Controls" IsVisible="False" Spacing="10">
+                    <Label Text="Use Settings > Emulator Saves to connect your saves, or skip to continue."
+                           FontSize="13" TextColor="{DynamicResource ThTextSecondary}"
+                           HorizontalTextAlignment="Center" HorizontalOptions="Center" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Grid.Column="0"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                                Padding="0" HeightRequest="48">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleSkipTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="Skip" FontFamily="NunitoBold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextSecondary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Border Grid.Column="1"
+                                StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
+                                HeightRequest="48">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#3B8BFF" Offset="0" />
+                                    <GradientStop Color="#1A5AFF" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleNextTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="Next →" FontFamily="NunitoBold" FontSize="15"
+                                   TextColor="White"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Step 2 controls (single-screen) -->
+                <Border x:Name="SingleStep2Controls" IsVisible="False"
+                        StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
+                        HeightRequest="52">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#34D990" Offset="0" />
+                            <GradientStop Color="#1AB873" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSingleGetStartedTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="Get Started" FontFamily="NunitoBold" FontSize="16"
+                           TextColor="White"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+
+            </Grid>
+        </Grid>
+
+    </Grid>
+</ContentPage>

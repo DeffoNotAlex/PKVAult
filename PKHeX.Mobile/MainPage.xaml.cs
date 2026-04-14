@@ -58,9 +58,16 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+        if (WelcomePage.ShouldShowWelcome())
+        {
+            await Shell.Current.GoToAsync(nameof(WelcomePage), false);
+            return;
+        }
+
 #if ANDROID
         GamepadRouter.KeyReceived -= OnGamepadKey;
         GamepadRouter.KeyReceived += OnGamepadKey;

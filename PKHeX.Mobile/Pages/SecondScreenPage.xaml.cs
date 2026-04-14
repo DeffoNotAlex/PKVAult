@@ -497,6 +497,293 @@ public partial class SecondScreenPage : ContentPage
         canvas.DrawRoundRect(glowRect, 11, 11, glowPaint);
     }
 
+    // ──────────────────────────────────────────────
+    //  Welcome wizard (Mode D)
+    // ──────────────────────────────────────────────
+
+    private Action<string>? _welcomeEvent;
+    private int  _welcomeStep;
+    private int  _welcomeSavesFound;
+    private bool _step1NextEnabled;
+
+    // Gamepad focus within the welcome panel
+    // Step 0: 0=dark card, 1=light card
+    // Step 1: 0=Eden, 1=Azahar, 2=MelonDS, 3=RetroArch, 4=Manual
+    // Step 2: 0=GetStarted
+    private int _welcomeFocus;
+
+    public void ShowWelcomeStep(int step, Action<string> onEvent)
+    {
+        _welcomeEvent = onEvent;
+        _welcomeStep  = step;
+        _welcomeSavesFound = 0;
+        _step1NextEnabled  = false;
+
+        BoxGridPanel.IsVisible  = false;
+        BankGridPanel.IsVisible = false;
+        MainMenuPanel.IsVisible = false;
+        WelcomePanel.IsVisible  = true;
+        _mainMenuVisible        = false;
+
+        ApplyWelcomeStep(step);
+
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnWelcomeGamepadKey;
+        GamepadRouter.KeyReceived += OnWelcomeGamepadKey;
+#endif
+    }
+
+    private void ApplyWelcomeStep(int step)
+    {
+        _welcomeFocus = 0;
+
+        WelcomeStep0Panel.IsVisible = step == 0;
+        WelcomeStep1Panel.IsVisible = step == 1;
+        WelcomeStep2Panel.IsVisible = step == 2;
+
+        WelcomeBtn_NextStep0.IsVisible  = step == 0;
+        WelcomeBtns_Step1.IsVisible     = step == 1;
+        WelcomeBtn_GetStarted.IsVisible = step == 2;
+
+        switch (step)
+        {
+            case 0:
+                WelcomeStepHeader.Text   = "Choose your look";
+                WelcomeStepSubtitle.Text = "Step 1 of 3";
+                break;
+            case 1:
+                WelcomeStepHeader.Text   = "Connect your saves";
+                WelcomeStepSubtitle.Text = "Step 2 of 3";
+                ResetEmulatorStatuses();
+                break;
+            case 2:
+                WelcomeStepHeader.Text   = "All done!";
+                WelcomeStepSubtitle.Text = "Step 3 of 3";
+                UpdateFoundSummary();
+                break;
+        }
+    }
+
+    private void ResetEmulatorStatuses()
+    {
+        WelcomeEdenStatus.Text      = "○";
+        WelcomeEdenStatus.TextColor     = Color.FromArgb(ThemeService.Current == PkTheme.Light ? "#9CA3AF" : "#6B7280");
+        WelcomeAzaharStatus.Text    = "○";
+        WelcomeAzaharStatus.TextColor   = WelcomeEdenStatus.TextColor;
+        WelcomeMelonDSStatus.Text   = "○";
+        WelcomeMelonDSStatus.TextColor  = WelcomeEdenStatus.TextColor;
+        WelcomeRetroArchStatus.Text = "○";
+        WelcomeRetroArchStatus.TextColor = WelcomeEdenStatus.TextColor;
+    }
+
+    private void UpdateFoundSummary()
+    {
+        WelcomeFoundSummary.Text = _welcomeSavesFound > 0
+            ? $"Found {_welcomeSavesFound} save{(_welcomeSavesFound == 1 ? "" : "s")} ready to edit."
+            : "Ready to edit your Pokémon.";
+    }
+
+    public void NotifyWelcomeSaveFound(string gameName)
+    {
+        _welcomeSavesFound++;
+        _step1NextEnabled = true;
+        WelcomeBtn_NextStep1.Opacity = 1.0;
+
+        // Mark the appropriate emulator row as found
+        // gameName is used for display; we just increment the counter here
+        UpdateFoundSummary();
+    }
+
+    public void HideWelcome()
+    {
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnWelcomeGamepadKey;
+#endif
+        WelcomePanel.IsVisible  = false;
+        _welcomeEvent           = null;
+    }
+
+    // ── Tap handlers (Step 0) ──────────────────────────────────────────────────
+
+    private void OnDarkThemeTapped(object? sender, EventArgs e)
+    {
+        ThemeCardDark.Stroke  = Color.FromArgb("#4F80FF");
+        ThemeCardLight.Stroke = Colors.Transparent;
+        _welcomeEvent?.Invoke("theme:dark");
+    }
+
+    private void OnLightThemeTapped(object? sender, EventArgs e)
+    {
+        ThemeCardLight.Stroke = Color.FromArgb("#4F80FF");
+        ThemeCardDark.Stroke  = Colors.Transparent;
+        _welcomeEvent?.Invoke("theme:light");
+    }
+
+    private void OnWelcomeNextStep0Tapped(object? sender, EventArgs e)
+        => _welcomeEvent?.Invoke("next");
+
+    // ── Tap handlers (Step 1) ──────────────────────────────────────────────────
+
+    private void OnWelcomeEdenTapped(object? sender, EventArgs e)
+    {
+        SetEmulatorStatus(WelcomeEdenStatus, "scanning");
+        _welcomeEvent?.Invoke("eden");
+    }
+
+    private void OnWelcomeAzaharTapped(object? sender, EventArgs e)
+    {
+        SetEmulatorStatus(WelcomeAzaharStatus, "scanning");
+        _welcomeEvent?.Invoke("azahar");
+    }
+
+    private void OnWelcomeMelonDSTapped(object? sender, EventArgs e)
+    {
+        SetEmulatorStatus(WelcomeMelonDSStatus, "scanning");
+        _welcomeEvent?.Invoke("melonds");
+    }
+
+    private void OnWelcomeRetroArchTapped(object? sender, EventArgs e)
+    {
+        SetEmulatorStatus(WelcomeRetroArchStatus, "scanning");
+        _welcomeEvent?.Invoke("retroarch");
+    }
+
+    private void OnWelcomeManualTapped(object? sender, EventArgs e)
+        => _welcomeEvent?.Invoke("manual");
+
+    private void OnWelcomeSkipTapped(object? sender, EventArgs e)
+        => _welcomeEvent?.Invoke("skip");
+
+    private void OnWelcomeNextStep1Tapped(object? sender, EventArgs e)
+    {
+        if (_step1NextEnabled)
+            _welcomeEvent?.Invoke("next");
+        else
+            _welcomeEvent?.Invoke("skip");
+    }
+
+    // ── Tap handler (Step 2) ──────────────────────────────────────────────────
+
+    private void OnWelcomeGetStartedTapped(object? sender, EventArgs e)
+        => _welcomeEvent?.Invoke("finish");
+
+    // ── Emulator status helper ────────────────────────────────────────────────
+
+    private static void SetEmulatorStatus(Label statusLabel, string state)
+    {
+        switch (state)
+        {
+            case "scanning":
+                statusLabel.Text      = "…";
+                statusLabel.TextColor = Color.FromArgb("#F0C040");
+                break;
+            case "found":
+                statusLabel.Text      = "✓";
+                statusLabel.TextColor = Color.FromArgb("#34D990");
+                break;
+            case "none":
+                statusLabel.Text      = "✗";
+                statusLabel.TextColor = Color.FromArgb("#FF6B9D");
+                break;
+        }
+    }
+
+    // ── Gamepad for welcome panel ─────────────────────────────────────────────
+
+#if ANDROID
+    private void OnWelcomeGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        MainThread.BeginInvokeOnMainThread(() => HandleWelcomeGamepadKey(keyCode));
+    }
+
+    private void HandleWelcomeGamepadKey(Android.Views.Keycode keyCode)
+    {
+        switch (keyCode)
+        {
+            case Android.Views.Keycode.DpadUp:
+                MoveWelcomeFocus(-1);
+                break;
+            case Android.Views.Keycode.DpadDown:
+                MoveWelcomeFocus(+1);
+                break;
+            case Android.Views.Keycode.DpadLeft when _welcomeStep == 0:
+                MoveWelcomeFocus(-1);
+                break;
+            case Android.Views.Keycode.DpadRight when _welcomeStep == 0:
+                MoveWelcomeFocus(+1);
+                break;
+            case Android.Views.Keycode.ButtonA:
+                ActivateWelcomeFocus();
+                break;
+            case Android.Views.Keycode.ButtonB:
+                // Allow backing out of the welcome wizard
+                _welcomeEvent?.Invoke("skip");
+                break;
+        }
+    }
+
+    private void MoveWelcomeFocus(int delta)
+    {
+        int maxFocus = _welcomeStep switch
+        {
+            0 => 1, // 0=dark, 1=light
+            1 => 5, // 0=Eden, 1=Azahar, 2=MelonDS, 3=RetroArch, 4=Manual (5 items but index 0–4)
+            _ => 0,
+        };
+        _welcomeFocus = Math.Clamp(_welcomeFocus + delta, 0, maxFocus);
+        ApplyWelcomeFocusHighlight();
+    }
+
+    private void ApplyWelcomeFocusHighlight()
+    {
+        bool light       = ThemeService.Current == PkTheme.Light;
+        var focusBg      = Color.FromArgb(light ? "#EEF2FF" : "#182845");
+        var focusStroke  = Color.FromArgb("#4F80FF");
+        var normalBg     = Color.FromArgb(light ? "#FFFFFF" : "#111827");
+
+        if (_welcomeStep == 0)
+        {
+            ThemeCardDark.BackgroundColor  = _welcomeFocus == 0 ? focusBg : normalBg;
+            ThemeCardLight.BackgroundColor = _welcomeFocus == 1 ? focusBg : normalBg;
+        }
+        else if (_welcomeStep == 1)
+        {
+            Border[] rows = [WelcomeRow_Eden, WelcomeRow_Azahar, WelcomeRow_MelonDS, WelcomeRow_RetroArch, WelcomeRow_Manual];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                bool focused = i == _welcomeFocus;
+                rows[i].BackgroundColor = focused ? focusBg : normalBg;
+                rows[i].Stroke          = focused ? focusStroke : Colors.Transparent;
+            }
+        }
+    }
+
+    private void ActivateWelcomeFocus()
+    {
+        if (_welcomeStep == 0)
+        {
+            if (_welcomeFocus == 0) OnDarkThemeTapped(null, EventArgs.Empty);
+            else                    OnLightThemeTapped(null, EventArgs.Empty);
+        }
+        else if (_welcomeStep == 1)
+        {
+            switch (_welcomeFocus)
+            {
+                case 0: OnWelcomeEdenTapped(null, EventArgs.Empty);      break;
+                case 1: OnWelcomeAzaharTapped(null, EventArgs.Empty);    break;
+                case 2: OnWelcomeMelonDSTapped(null, EventArgs.Empty);   break;
+                case 3: OnWelcomeRetroArchTapped(null, EventArgs.Empty); break;
+                case 4: OnWelcomeManualTapped(null, EventArgs.Empty);    break;
+            }
+        }
+        else if (_welcomeStep == 2)
+        {
+            OnWelcomeGetStartedTapped(null, EventArgs.Empty);
+        }
+    }
+#endif
+
     private static void DrawGreenCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
     {
         using var fillPaint = new SKPaint { Color = new SKColor(60, 220, 110, 26), IsAntialias = true };

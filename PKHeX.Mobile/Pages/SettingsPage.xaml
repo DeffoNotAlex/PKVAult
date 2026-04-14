@@ -252,6 +252,25 @@
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
 
+            <!-- Always show welcome wizard -->
+            <Border x:Name="Row_Welcome" StyleId="Toggle"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Always show setup wizard"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label Text="Show the first-run setup screen every time the app opens. For testing."
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="WelcomeSwitch"
+                            Toggled="OnWelcomeSwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
             <!-- Section header -->
             <Label Text="EMULATOR SAVES"
                    FontSize="10" FontAttributes="Bold"

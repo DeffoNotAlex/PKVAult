@@ -113,6 +113,15 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     public void InvalidateBankCanvas()
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBankCanvas());
 
+    public void ShowWelcomeStep(int step, Action<string> onEvent)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowWelcomeStep(step, onEvent));
+
+    public void NotifyWelcomeSaveFound(string gameName)
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.NotifyWelcomeSaveFound(gameName));
+
+    public void HideWelcome()
+        => MainThread.BeginInvokeOnMainThread(() => _secondPage.HideWelcome());
+
     public void Dispose()
     {
         _secondPage.Cleanup();

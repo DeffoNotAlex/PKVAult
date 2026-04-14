@@ -175,6 +175,296 @@
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE D — Welcome wizard                             -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="WelcomePanel" IsVisible="False"
+              RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThSettingsBg}">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Padding="20,18,20,10" Spacing="2">
+                <Label x:Name="WelcomeStepHeader"
+                       Text="Choose your look"
+                       FontFamily="NunitoBold" FontSize="22"
+                       TextColor="{DynamicResource ThTextPrimary}" />
+                <Label x:Name="WelcomeStepSubtitle"
+                       Text="Step 1 of 3"
+                       FontSize="13" TextColor="{DynamicResource ThTextSecondary}" />
+            </VerticalStackLayout>
+
+            <!-- Step panels (overlapping, toggled per step) -->
+            <Grid Grid.Row="1">
+
+                <!-- ─── Step 0: Theme selection ─── -->
+                <Grid x:Name="WelcomeStep0Panel" RowDefinitions="*,Auto" Padding="16,0">
+                    <!-- Two large theme cards side-by-side -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" VerticalOptions="Center">
+
+                        <!-- Dark card -->
+                        <Border x:Name="ThemeCardDark" Grid.Column="0"
+                                StrokeShape="RoundRectangle 14"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThAccent}" StrokeThickness="2"
+                                Padding="0" HeightRequest="140">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDarkThemeTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
+                                <Label Text="&#xE45B;" FontFamily="Phosphor" FontSize="42"
+                                       TextColor="{DynamicResource ThAccent}"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Dark" FontFamily="NunitoBold" FontSize="16"
+                                       TextColor="{DynamicResource ThTextPrimary}"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Light card -->
+                        <Border x:Name="ThemeCardLight" Grid.Column="1"
+                                StrokeShape="RoundRectangle 14"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" StrokeThickness="2"
+                                Padding="0" HeightRequest="140">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLightThemeTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
+                                <Label Text="&#xE4B7;" FontFamily="Phosphor" FontSize="42"
+                                       TextColor="{DynamicResource ThTextSecondary}"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Light" FontFamily="NunitoBold" FontSize="16"
+                                       TextColor="{DynamicResource ThTextPrimary}"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ─── Step 1: Emulator setup ─── -->
+                <Grid x:Name="WelcomeStep1Panel" IsVisible="False"
+                      RowDefinitions="*,Auto" Padding="16,0">
+                    <VerticalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center">
+
+                        <!-- Eden row -->
+                        <Border x:Name="WelcomeRow_Eden"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnWelcomeEdenTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="&#xE59E;" FontFamily="Phosphor"
+                                       FontSize="22" TextColor="{DynamicResource ThAccent}"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Eden  (Switch)" FontFamily="NunitoBold" FontSize="14"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label Text="Gen 8 / Gen 9 saves" FontSize="11"
+                                           TextColor="{DynamicResource ThTextSecondary}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="WelcomeEdenStatus" Grid.Column="2"
+                                       Text="○" FontSize="18"
+                                       TextColor="{DynamicResource ThTextDim}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Azahar row -->
+                        <Border x:Name="WelcomeRow_Azahar"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnWelcomeAzaharTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="&#xE59E;" FontFamily="Phosphor"
+                                       FontSize="22" TextColor="#A78BFA"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Azahar  (3DS)" FontFamily="NunitoBold" FontSize="14"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label Text="Gen 6 / Gen 7 saves" FontSize="11"
+                                           TextColor="{DynamicResource ThTextSecondary}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="WelcomeAzaharStatus" Grid.Column="2"
+                                       Text="○" FontSize="18"
+                                       TextColor="{DynamicResource ThTextDim}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- MelonDS row -->
+                        <Border x:Name="WelcomeRow_MelonDS"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnWelcomeMelonDSTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="&#xE59E;" FontFamily="Phosphor"
+                                       FontSize="22" TextColor="#34D990"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="MelonDS  (DS)" FontFamily="NunitoBold" FontSize="14"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label Text="Gen 4 / Gen 5 saves" FontSize="11"
+                                           TextColor="{DynamicResource ThTextSecondary}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="WelcomeMelonDSStatus" Grid.Column="2"
+                                       Text="○" FontSize="18"
+                                       TextColor="{DynamicResource ThTextDim}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- RetroArch row -->
+                        <Border x:Name="WelcomeRow_RetroArch"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnWelcomeRetroArchTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="&#xE59E;" FontFamily="Phosphor"
+                                       FontSize="22" TextColor="#FF9F43"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="RetroArch  (GBA/GBC)" FontFamily="NunitoBold" FontSize="14"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label Text="Gen 1 / Gen 2 / Gen 3 saves (.srm)" FontSize="11"
+                                           TextColor="{DynamicResource ThTextSecondary}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="WelcomeRetroArchStatus" Grid.Column="2"
+                                       Text="○" FontSize="18"
+                                       TextColor="{DynamicResource ThTextDim}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Manual folder row -->
+                        <Border x:Name="WelcomeRow_Manual"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="Transparent" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnWelcomeManualTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="&#xE3B4;" FontFamily="Phosphor"
+                                       FontSize="22" TextColor="{DynamicResource ThTextSecondary}"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Browse Folder" FontFamily="NunitoBold" FontSize="14"
+                                           TextColor="{DynamicResource ThTextPrimary}" />
+                                    <Label Text="Pick any folder with save files" FontSize="11"
+                                           TextColor="{DynamicResource ThTextSecondary}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="›" FontSize="20"
+                                       TextColor="{DynamicResource ThAccent}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- ─── Step 2: Done ─── -->
+                <Grid x:Name="WelcomeStep2Panel" IsVisible="False" Padding="16,0">
+                    <VerticalStackLayout Spacing="16" VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="&#xE33A;" FontFamily="PhosphorFill" FontSize="72"
+                               TextColor="#34D990" HorizontalOptions="Center" />
+                        <Label Text="You're all set!" FontFamily="NunitoBold" FontSize="26"
+                               TextColor="{DynamicResource ThTextPrimary}"
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                        <Label x:Name="WelcomeFoundSummary"
+                               Text="Ready to edit your Pokémon."
+                               FontSize="14" TextColor="{DynamicResource ThTextSecondary}"
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Grid>
+
+            </Grid>
+
+            <!-- Bottom button bar -->
+            <Grid Grid.Row="2" Padding="16,10,16,20">
+
+                <!-- Step 0 buttons -->
+                <Border x:Name="WelcomeBtn_NextStep0"
+                        StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
+                        HeightRequest="48">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#3B8BFF" Offset="0" />
+                            <GradientStop Color="#1A5AFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWelcomeNextStep0Tapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="Next →" FontFamily="NunitoBold" FontSize="16"
+                           TextColor="White"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+
+                <!-- Step 1 buttons -->
+                <Grid x:Name="WelcomeBtns_Step1" IsVisible="False"
+                      ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Border Grid.Column="0"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{DynamicResource ThSettingsRow}"
+                            Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                            Padding="0" HeightRequest="48">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnWelcomeSkipTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="Skip" FontFamily="NunitoBold" FontSize="16"
+                               TextColor="{DynamicResource ThTextSecondary}"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Border x:Name="WelcomeBtn_NextStep1" Grid.Column="1"
+                            StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
+                            HeightRequest="48" Opacity="0.5">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#3B8BFF" Offset="0" />
+                                <GradientStop Color="#1A5AFF" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer x:Name="NextStep1Recognizer" Tapped="OnWelcomeNextStep1Tapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="Next →" FontFamily="NunitoBold" FontSize="16"
+                               TextColor="White"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
+                <!-- Step 2 button -->
+                <Border x:Name="WelcomeBtn_GetStarted" IsVisible="False"
+                        StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
+                        HeightRequest="48">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#34D990" Offset="0" />
+                            <GradientStop Color="#1AB873" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWelcomeGetStartedTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="Get Started" FontFamily="NunitoBold" FontSize="16"
+                           TextColor="White"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+
+            </Grid>
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE B — Main menu: save list + action bar           -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="MainMenuPanel" IsVisible="False"

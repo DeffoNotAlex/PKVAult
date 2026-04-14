@@ -13,12 +13,13 @@ namespace PKHeX.Mobile.Pages;
 
 public partial class SettingsPage : ContentPage
 {
-    public const string KeyLanguage      = "language";
+    public const string KeyLanguage        = "language";
     public const string KeyShinySprites    = "shiny_sprites";
     public const string KeyAnimated3D      = "animated_3d";
     public const string KeyRadarAdaptive   = "radar_adaptive";
     public const string KeyLegalityBadge   = "legality_badge";
     public const string KeyMoireBg         = "hero_bg_moire";
+    public const string KeyAlwaysShowWelcome = "always_welcome";
 
     private static readonly string[] LanguageCodes = ["ja", "en", "fr", "it", "de", "es", "es-419", "ko", "zh-Hans", "zh-Hant"];
     private static readonly string[] LanguageNames = ["日本語", "English", "Français", "Italiano", "Deutsch", "Español", "Español (LATAM)", "한국어", "中文 (简)", "中文 (繁)"];
@@ -71,6 +72,7 @@ public partial class SettingsPage : ContentPage
         LegalitySwitch.IsToggled      = Preferences.Default.Get(KeyLegalityBadge, false);
         ThemeSwitch.IsToggled         = ThemeService.Current == PkTheme.Light;
         MoireSwitch.IsToggled         = Preferences.Default.Get(KeyMoireBg, true);
+        WelcomeSwitch.IsToggled       = Preferences.Default.Get(KeyAlwaysShowWelcome, false);
 
         _loading = false;
 
@@ -95,6 +97,7 @@ public partial class SettingsPage : ContentPage
     private void BuildRows()
     {
         _rows = [Row_Language, Row_Shiny, Row_Radar, Row_Folders, Row_Legality, Row_Theme, Row_HeroBg, Row_Animated3D, Row_Sprites, Row_AnimSprites,
+                 Row_Welcome,
                  Row_EdenScan, Row_MelonDSScan, Row_AzaharScan, Row_RetroArchScan];
     }
 
@@ -168,12 +171,13 @@ public partial class SettingsPage : ContentPage
                 LanguagePicker.SelectedIndex = Math.Clamp(LanguagePicker.SelectedIndex + delta, 0, count - 1);
                 break;
 
-            case 1: SetToggle(ShinySwitch,         delta); break;
-            case 2: SetToggle(RadarAdaptiveSwitch, delta); break;
-            case 4: SetToggle(LegalitySwitch,      delta); break;
-            case 5: SetToggle(ThemeSwitch,         delta); break;
-            case 6: SetToggle(MoireSwitch,         delta); break;
-            case 7: SetToggle(Animated3DSwitch,    delta); break;
+            case 1:  SetToggle(ShinySwitch,         delta); break;
+            case 2:  SetToggle(RadarAdaptiveSwitch, delta); break;
+            case 4:  SetToggle(LegalitySwitch,      delta); break;
+            case 5:  SetToggle(ThemeSwitch,         delta); break;
+            case 6:  SetToggle(MoireSwitch,         delta); break;
+            case 7:  SetToggle(Animated3DSwitch,    delta); break;
+            case 10: SetToggle(WelcomeSwitch,       delta); break;
         }
 
         static void SetToggle(Switch sw, int delta)
@@ -221,15 +225,18 @@ public partial class SettingsPage : ContentPage
                 StartAnimBulkDownload();
                 break;
             case 10:
-                _ = FindEdenSavesAsync();
+                WelcomeSwitch.IsToggled = !WelcomeSwitch.IsToggled;
                 break;
             case 11:
-                _ = FindMelonDSSavesAsync();
+                _ = FindEdenSavesAsync();
                 break;
             case 12:
-                _ = FindAzaharSavesAsync();
+                _ = FindMelonDSSavesAsync();
                 break;
             case 13:
+                _ = FindAzaharSavesAsync();
+                break;
+            case 14:
                 _ = FindRetroArchSavesAsync();
                 break;
         }
@@ -272,6 +279,12 @@ public partial class SettingsPage : ContentPage
     {
         if (_loading) return;
         Preferences.Default.Set(KeyMoireBg, e.Value);
+    }
+
+    private void OnWelcomeSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        if (_loading) return;
+        Preferences.Default.Set(KeyAlwaysShowWelcome, e.Value);
     }
 
     private async void OnThemeSwitchToggled(object sender, ToggledEventArgs e)

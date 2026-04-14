@@ -19,4 +19,7 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
     public void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount) { }
     public void UpdateBankCursor(int cursorSlot) { }
     public void InvalidateBankCanvas() { }
+    public void ShowWelcomeStep(int step, Action<string> onEvent) { }
+    public void NotifyWelcomeSaveFound(string gameName) { }
+    public void HideWelcome() { }
 }

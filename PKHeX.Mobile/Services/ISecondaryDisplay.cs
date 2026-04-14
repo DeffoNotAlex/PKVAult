@@ -40,4 +40,16 @@ public interface ISecondaryDisplay
 
     /// <summary>Trigger a repaint of the bank grid canvas.</summary>
     void InvalidateBankCanvas();
+
+    /// <summary>Switch the bottom screen to welcome-wizard mode and show the given step.</summary>
+    /// <param name="step">0 = theme, 1 = emulator, 2 = done.</param>
+    /// <param name="onEvent">Callback fired with event strings: "next", "skip", "finish",
+    /// "theme:dark", "theme:light", "eden", "azahar", "melonds", "retroarch", "manual".</param>
+    void ShowWelcomeStep(int step, Action<string> onEvent);
+
+    /// <summary>Called when a save was found during step 1 scanning so the bottom screen can update its counter.</summary>
+    void NotifyWelcomeSaveFound(string gameName);
+
+    /// <summary>Dismiss the welcome panel and restore the bottom screen to idle/main-menu state.</summary>
+    void HideWelcome();
 }
