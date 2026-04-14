@@ -33,11 +33,15 @@ public partial class MainPage : ContentPage
     private IDispatcherTimer? _floatTimer;
     private DateTime          _floatStart = DateTime.UtcNow;
 
-    // Hero gradient animation
-    private Color         _heroColorLight = Colors.Transparent;
-    private Color         _heroColorDark  = Colors.Transparent;
-    private GradientStop? _heroTopStop;
-    private GradientStop? _heroMidStop;
+    // Hero game colors (used by Moiré canvas + glow/stroke accents)
+    private Color _heroColorLight = Colors.Transparent;
+    private Color _heroColorDark  = Colors.Transparent;
+
+    // Moiré renderer — cached to avoid per-frame allocations
+    private static readonly string   MoireChars       = " .,-~:;=!*#";
+    private static readonly string[] MoireCharStrings = MoireChars.Select(c => c.ToString()).ToArray();
+    private static readonly SKTypeface MoireTypeface  =
+        SKTypeface.FromFamilyName("monospace") ?? SKTypeface.Default;
 
     // Hero cross-fade cancellation
     private CancellationTokenSource? _heroAnimCts;
@@ -256,24 +260,9 @@ public partial class MainPage : ContentPage
             HeroBgGrad1.Color    = card.GameColorLight;
         }
 
-        // Game-colored panel background gradient (reuse brush; timer animates the stops)
+        // Store game colors for the Moiré canvas and accent elements
         _heroColorLight = card.GameColorLight;
         _heroColorDark  = card.GameColorDark;
-        if (_heroTopStop is null)
-        {
-            _heroTopStop = new GradientStop(card.GameColorLight.WithAlpha(55), 0f);
-            _heroMidStop = new GradientStop(card.GameColorDark.WithAlpha(20), 0.6f);
-            HeroPanel.Background = new LinearGradientBrush
-            {
-                StartPoint = new Point(0.5, 0), EndPoint = new Point(0.5, 1),
-                GradientStops = [_heroTopStop, _heroMidStop, new GradientStop(Colors.Transparent, 1f)],
-            };
-        }
-        else
-        {
-            _heroTopStop.Color = card.GameColorLight.WithAlpha(55);
-            _heroMidStop!.Color = card.GameColorDark.WithAlpha(20);
-        }
 
         // Accent glow + card stroke from game color
         HeroGlow0.Color = card.GameColorLight.WithAlpha(64);
@@ -366,63 +355,114 @@ public partial class MainPage : ContentPage
         HeroCard.RotationX    = 3.5  * Math.Sin(phaseA);
         HeroCard.RotationY    = 2.5  * Math.Sin(phaseB);
 
-        // Breathe the hero panel gradient
-        if (_heroTopStop is not null && _heroColorLight != Colors.Transparent)
-        {
-            double breath   = 0.5 + 0.5 * Math.Sin(t * Math.PI * 2 / 4.0); // 4s cycle
-            byte topAlpha = (byte)(22 + breath * 90); // 22 → 112
-            byte midAlpha = (byte)(8  + breath * 28); // 8  → 36
-            _heroTopStop.Color  = _heroColorLight.WithAlpha(topAlpha);
-            _heroMidStop!.Color = _heroColorDark.WithAlpha(midAlpha);
-        }
-
         HeroGridCanvas.InvalidateSurface();
     }
 
-    // ── Animated dot grid ────────────────────────────────────────────────────
+    // ── Moiré ASCII background ───────────────────────────────────────────────
 
     private void OnHeroGridPaint(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        float w = e.Info.Width;
-        float h = e.Info.Height;
+        if (_heroColorLight == Colors.Transparent) return;
 
-        const float spacing = 28f;
-        const float dotR    = 2.2f;
-        const float speed   = 8f; // px per second
+        float pw = e.Info.Width;
+        float ph = e.Info.Height;
 
-        double t = (DateTime.UtcNow - _floatStart).TotalSeconds;
-        float ox = (float)(t * speed % spacing);
-        float oy = (float)(t * speed * 0.6 % spacing);
+        // Character cell size in canvas pixels
+        const float CW   = 14f;
+        const float CH   = 23f;
+        const float freq = 0.3f;
+        const float thr  = 0.15f;
+        const float orb  = 0.3f;
 
+        float t = (float)(DateTime.UtcNow - _floatStart).TotalSeconds;
+
+        int cols = (int)(pw / CW) + 2;
+        int rows = (int)(ph / CH) + 2;
+
+        // Three orbiting wave centers (ported from MoireCode.html)
+        float nx = cols * 0.5f + MathF.Cos(t * 0.30f)       * cols * orb;
+        float ny = rows * 0.5f + MathF.Sin(t * 0.40f)       * rows * orb;
+        float ix = cols * 0.5f + MathF.Cos(t * 0.37f + 2f)  * cols * (orb * 0.83f);
+        float iy = rows * 0.5f + MathF.Sin(t * 0.29f + 2f)  * rows * (orb * 1.17f);
+        float sx = cols * 0.5f + MathF.Sin(t * 0.23f + 4f)  * cols * (orb * 1.17f);
+        float sy = rows * 0.5f + MathF.Cos(t * 0.31f + 4f)  * rows * (orb * 0.83f);
+
+        float f1 = freq;
+        float f2 = freq * 1.033f;
+        float f3 = freq * 0.967f;
+
+        // Resolve game color for this theme
         bool isDark = ThemeService.Current == PkTheme.Dark;
-        var dotColor = isDark
-            ? new SKColor(255, 255, 255, 22)   // subtle white on dark
-            : new SKColor(0,   0,   0,   28);  // subtle black on light
+        var mc = isDark ? _heroColorLight : _heroColorDark;
+        byte cr = (byte)(mc.Red   * 255);
+        byte cg = (byte)(mc.Green * 255);
+        byte cb = (byte)(mc.Blue  * 255);
 
-        // Diagonal shimmer sweep — a bright stripe crosses the panel every 6 seconds
-        float stripeW = w * 0.5f;
-        float sweep   = (float)(t % 6.0) / 6.0f; // 0 → 1 over 6s
-        float cx      = -stripeW + sweep * (w + stripeW * 2f);
-        using (var shimmerPaint = new SKPaint { IsAntialias = true })
-        using (var shader = SKShader.CreateLinearGradient(
-            new SKPoint(cx - stripeW, 0f),
-            new SKPoint(cx + stripeW, h),
-            [SKColors.Transparent, new SKColor(255, 255, 255, 45), SKColors.Transparent],
-            [0f, 0.5f, 1f],
-            SKShaderTileMode.Clamp))
+        // Luminance-based visibility clamp
+        float lum = 0.2126f * cr / 255f + 0.7152f * cg / 255f + 0.0722f * cb / 255f;
+        SKColor charBase;
+        if (isDark && lum < 0.12f)
         {
-            shimmerPaint.Shader = shader;
-            canvas.DrawRect(0, 0, w, h, shimmerPaint);
+            float boost = (0.12f - lum) / 0.12f;
+            charBase = new SKColor(
+                (byte)(cr + (255 - cr) * boost),
+                (byte)(cg + (255 - cg) * boost),
+                (byte)(cb + (255 - cb) * boost));
+        }
+        else if (!isDark && lum > 0.85f)
+        {
+            float darken = (lum - 0.85f) / 0.15f;
+            charBase = new SKColor(
+                (byte)(cr * (1f - darken)),
+                (byte)(cg * (1f - darken)),
+                (byte)(cb * (1f - darken)));
+        }
+        else
+        {
+            charBase = new SKColor(cr, cg, cb);
         }
 
-        using var paint = new SKPaint { Color = dotColor, IsAntialias = true };
+        using var paint = new SKPaint
+        {
+            Typeface    = MoireTypeface,
+            TextSize    = CW,
+            IsAntialias = true,
+        };
 
-        for (float x = -spacing + ox; x < w + spacing; x += spacing)
-        for (float y = -spacing + oy; y < h + spacing; y += spacing)
-            canvas.DrawCircle(x, y, dotR, paint);
+        for (int row = 0; row < rows; row++)
+        {
+            float fy = row * CH + CW; // baseline offset
+            for (int col = 0; col < cols; col++)
+            {
+                float fx = col * 0.55f;
+
+                float pb = fx - nx * 0.55f, hb = row - ny;
+                float gb = fx - ix * 0.55f, qb = row - iy;
+                float vb = fx - sx * 0.55f, yb = row - sy;
+
+                float d1 = MathF.Sqrt(pb * pb + hb * hb);
+                float d2 = MathF.Sqrt(gb * gb + qb * qb);
+                float d3 = MathF.Sqrt(vb * vb + yb * yb);
+
+                float C = MathF.Sin(d1 * f1 + t)
+                        + MathF.Sin(d2 * f2 - t * 0.7f)
+                        + MathF.Sin(d3 * f3 + t * 0.5f);
+                C = (C + 3f) / 6f;
+
+                if (C < thr || C > 1f - thr) continue;
+
+                float w = 1f - MathF.Abs(C - 0.5f) * 2f;
+                int ci = Math.Min(MoireCharStrings.Length - 1, (int)(w * MoireCharStrings.Length));
+                if (MoireChars[ci] == ' ') continue;
+
+                float alpha = isDark ? 0.30f + w * 0.70f : 0.45f + w * 0.55f;
+                paint.Color = charBase.WithAlpha((byte)(alpha * 255));
+                canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
+            }
+        }
     }
 
     // ── Save loading ─────────────────────────────────────────────────────────
