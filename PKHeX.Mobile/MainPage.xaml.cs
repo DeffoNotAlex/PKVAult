@@ -163,6 +163,8 @@ public partial class MainPage : ContentPage
     {
         if (_saveCards.Count == 0) return;
 
+        StartFloatAnimation();
+
         // Clear any stale IsLoaded flags from the previous session
         foreach (var c in _saveCards) c.IsLoaded = false;
 
