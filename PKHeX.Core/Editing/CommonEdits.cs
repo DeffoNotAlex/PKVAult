@@ -30,8 +30,15 @@ public static class CommonEdits
                 pk.ClearNickname();
                 return;
             }
+<<<<<<< HEAD
             pk.IsNicknamed = true;
             pk.Nickname = nick;
+=======
+
+            pk.PrepareNickname();
+            pk.Nickname = nick;
+            pk.IsNicknamed = true;
+>>>>>>> upstream/master
         }
 
         /// <summary>
@@ -137,7 +144,11 @@ public static class CommonEdits
         /// <param name="nature">Desired <see cref="PKM.Nature"/> value to set.</param>
         public void SetNature(Nature nature)
         {
+<<<<<<< HEAD
             if (!nature.IsFixed())
+=======
+            if (!nature.IsFixed)
+>>>>>>> upstream/master
                 nature = 0; // default valid
 
             var format = pk.Format;
@@ -193,7 +204,16 @@ public static class CommonEdits
             }
             else
             {
+<<<<<<< HEAD
                 pk.SetEVs(evs);
+=======
+                // Champions revises EV behavior to be /8.
+                // If the user is requesting a Champions-like set import, apply EVs that way.
+                if (set.IsChampions)
+                    pk.SetEVsChampions(evs);
+                else
+                    pk.SetEVs(evs);
+>>>>>>> upstream/master
             }
 
             // IVs have no side effects such as hidden power type in gen 8
@@ -264,6 +284,16 @@ public static class CommonEdits
             pk.RefreshChecksum();
         }
 
+<<<<<<< HEAD
+=======
+        private void SetEVsChampions(ReadOnlySpan<int> evs)
+        {
+            Span<int> final = stackalloc int[6];
+            EffortValues.ConvertFromChampions(evs, final);
+            pk.SetEVs(final);
+        }
+
+>>>>>>> upstream/master
         /// <summary>
         /// Sets the <see cref="PKM.HeldItem"/> value depending on the current format and the provided item index &amp; format.
         /// </summary>

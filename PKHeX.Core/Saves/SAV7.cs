@@ -62,8 +62,8 @@ public abstract class SAV7 : SAV_BEEF, ITrainerStatRecord, ISaveBlock7Main, IReg
     #endregion
 
     // Configuration
-    protected override int SIZE_STORED => PokeCrypto.SIZE_6STORED;
-    protected override int SIZE_PARTY => PokeCrypto.SIZE_6PARTY;
+    public override int SIZE_STORED => PokeCrypto.SIZE_6STORED;
+    public override int SIZE_PARTY => PokeCrypto.SIZE_6PARTY;
     public override PK7 BlankPKM => new();
     public override Type PKMType => typeof(PK7);
 
@@ -76,8 +76,8 @@ public abstract class SAV7 : SAV_BEEF, ITrainerStatRecord, ISaveBlock7Main, IReg
 
     public override int MaxBallID => Legal.MaxBallID_7; // 26
     public override GameVersion MaxGameID => Legal.MaxGameID_7;
-    protected override PK7 GetPKM(byte[] data) => new(data);
-    protected override byte[] DecryptPKM(byte[] data) => PokeCrypto.DecryptArray6(data);
+    protected override PK7 GetPKM(Memory<byte> data) => new(data);
+    protected override void DecryptPKM(Span<byte> data) => PokeCrypto.Decrypt67(data);
 
     // Feature Overrides
 
@@ -157,10 +157,6 @@ public abstract class SAV7 : SAV_BEEF, ITrainerStatRecord, ISaveBlock7Main, IReg
         PK7 pk7 = (PK7)pk;
         // Apply to this Save File
         pk7.UpdateHandler(this);
-
-        pk7.FormArgumentElapsed = pk7.FormArgumentMaximum = 0;
-        pk7.FormArgumentRemain = (byte)GetFormArgument(pk);
-
         pk.RefreshChecksum();
     }
 
@@ -176,20 +172,6 @@ public abstract class SAV7 : SAV_BEEF, ITrainerStatRecord, ISaveBlock7Main, IReg
             Records.AddRecord(004); // wild encounters
             Records.AddRecord(042); // balls used
         }
-    }
-
-    private static uint GetFormArgument(PKM pk)
-    {
-        if (pk.Form == 0)
-            return 0;
-        // Gen7 allows forms to be stored in the box with the current duration & form
-        // Just cap out the form duration anyway
-        return pk.Species switch
-        {
-            (int)Species.Furfrou => 5u, // Furfrou
-            (int)Species.Hoopa => 3u, // Hoopa
-            _ => 0u,
-        };
     }
 
     protected override void SetDex(PKM pk) => Zukan.SetDex(pk);

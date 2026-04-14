@@ -373,6 +373,7 @@ public partial class Main : Form
         }
         SpriteBuilder.LoadSettings(settings.Sprite);
         WinFormsUtil.AddSaveFileExtensions(settings.Backup.OtherSaveFileExtensions);
+        WinFormsUtil.Quiet = !settings.Sounds.PlaySoundOther;
     }
 
     private void MainMenuBoxLoad(object sender, EventArgs e)
@@ -503,7 +504,7 @@ public partial class Main : Form
     {
         if (!CanFocus)
         {
-            SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
             return;
         }
         OpenFromPath(path);
@@ -1075,12 +1076,12 @@ public partial class Main : Form
     private void ClickLegality(object? sender, EventArgs e)
     {
         if (!PKME_Tabs.EditsComplete)
-        { SystemSounds.Hand.Play(); return; }
+        { WinFormsUtil.Hand();return; }
 
         var pk = PreparePKM();
 
         if (pk.Species == 0 || !pk.ChecksumValid)
-        { SystemSounds.Hand.Play(); return; }
+        { WinFormsUtil.Hand(); return; }
 
         var la = new LegalityAnalysis(pk, C_SAV.SAV.Personal);
         PKME_Tabs.UpdateLegality(la);
@@ -1132,7 +1133,7 @@ public partial class Main : Form
                 var enc = la.EncounterOriginal.GetTextLines(Settings.Display.ExportLegalityVerboseProperties);
                 var msg = verboseReport + Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, enc);
                 WinFormsUtil.SetClipboardText(msg);
-                SystemSounds.Asterisk.Play();
+                WinFormsUtil.Asterisk();
             };
             page.Buttons.Add(clipboard);
         }
@@ -1209,6 +1210,8 @@ public partial class Main : Form
         e.Effect = DragDropEffects.Copy;
     }
 
+    private bool mainDragOutActive;
+
     // ReSharper disable once AsyncVoidMethod
     private async void Dragout_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1230,7 +1233,11 @@ public partial class Main : Form
             var pk = PreparePKM();
             var preModify = pk.Clone();
             var encrypt = ModifierKeys == Keys.Control;
-            var data = encrypt ? pk.EncryptedPartyData : pk.DecryptedPartyData;
+            var data = new byte[pk.SIZE_PARTY];
+            if (!encrypt)
+                pk.WriteDecryptedDataParty(data);
+            else
+                pk.WriteEncryptedDataParty(data);
 
             // Create Temp File to Drag
             var newfile = FileUtil.GetPKMTempFileName(pk, encrypt);
@@ -1238,6 +1245,7 @@ public partial class Main : Form
             {
                 await File.WriteAllBytesAsync(newfile, data).ConfigureAwait(true);
 
+                mainDragOutActive = true;
                 var pb = (PictureBox)sender;
                 if (pb.Image is Bitmap img)
                     C_SAV.M.Drag.SetOwnedCursor(pb, img);
@@ -1249,6 +1257,7 @@ public partial class Main : Form
             { WinFormsUtil.Error("Drag && Drop Error", x); }
             finally
             {
+                mainDragOutActive = false;
                 C_SAV.M.Drag.ResetCursor(this);
                 await DeleteAsync(newfile, 20_000).ConfigureAwait(false);
             }
@@ -1275,13 +1284,14 @@ public partial class Main : Form
     private void DragoutEnter(object sender, EventArgs e)
     {
         dragout.BackgroundImage = PKME_Tabs.Entity.Species > 0 ? SpriteUtil.Spriter.Set : SpriteUtil.Spriter.Delete;
-        Cursor = Cursors.Hand;
+        if (!mainDragOutActive)
+            Cursor = Cursors.Hand;
     }
 
     private void DragoutLeave(object sender, EventArgs e)
     {
         dragout.BackgroundImage = SpriteUtil.Spriter.Transparent;
-        if (Cursor == Cursors.Hand)
+        if (!mainDragOutActive && Cursor == Cursors.Hand)
             Cursor = Cursors.Default;
     }
 

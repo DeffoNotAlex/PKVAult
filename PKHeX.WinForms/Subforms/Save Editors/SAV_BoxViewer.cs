@@ -44,7 +44,7 @@ public sealed partial class SAV_BoxViewer : Form
         DragDrop += (_, _) =>
         {
             Cursor = DefaultCursor;
-            System.Media.SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
         };
         Owner = p.ParentForm;
         Load += (_, _) => PositionRelativeToParent();
@@ -54,6 +54,7 @@ public sealed partial class SAV_BoxViewer : Form
             if (parent.menu.mnuVSD.Visible)
                 return;
             Box.CurrentBox = e.Delta > 1 ? Box.Editor.MoveLeft() : Box.Editor.MoveRight();
+            m.MouseRestart();
         };
 
         var mnu = parent.SlotPictureBoxes[0].ContextMenuStrip;

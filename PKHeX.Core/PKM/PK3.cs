@@ -16,10 +16,12 @@ public sealed class PK3 : G3PKM, ISanityChecksum
 
     public PK3() : base(PokeCrypto.SIZE_3PARTY) { }
     public PK3(Memory<byte> data) : base(DecryptParty(data)) { }
+    protected override void EncryptStored(Span<byte> stored) => PokeCrypto.Encrypt3(stored);
+    protected override void EncryptParty(Span<byte> party) { }
 
     private static Memory<byte> DecryptParty(Memory<byte> data)
     {
-        PokeCrypto.DecryptIfEncrypted3(ref data);
+        PokeCrypto.DecryptIfEncrypted3(data.Span);
         if (data.Length >= PokeCrypto.SIZE_3PARTY)
             return data;
 
@@ -198,12 +200,6 @@ public sealed class PK3 : G3PKM, ISanityChecksum
     public override int Stat_SPA { get => ReadUInt16LittleEndian(Data[0x60..]); set => WriteUInt16LittleEndian(Data[0x60..], (ushort)value); }
     public override int Stat_SPD { get => ReadUInt16LittleEndian(Data[0x62..]); set => WriteUInt16LittleEndian(Data[0x62..], (ushort)value); }
     #endregion
-
-    protected override byte[] Encrypt()
-    {
-        RefreshChecksum();
-        return PokeCrypto.EncryptArray3(Data);
-    }
 
     private ushort CalculateChecksum() => Checksums.Add16(Data[0x20..PokeCrypto.SIZE_3STORED]);
 
@@ -398,4 +394,15 @@ public sealed class PK3 : G3PKM, ISanityChecksum
     public override int GetStringLength(ReadOnlySpan<byte> data)
         => TrashBytes8.GetStringLength(data);
     public override int GetBytesPerChar() => 1;
+
+    public override void PrepareNickname() => GetNicknamePrefillRegion().Fill(StringConverter3.TerminatorByte);
+
+    public Span<byte> GetNicknamePrefillRegion()
+    {
+        // Japanese only fills the first 5+1 bytes; everything else is trash.
+        // International games are 10 chars (full buffer) max; implicit terminator if full.
+        if (Japanese)
+            return NicknameTrash[..6];
+        return NicknameTrash;
+    }
 }

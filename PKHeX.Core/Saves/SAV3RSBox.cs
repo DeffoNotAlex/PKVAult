@@ -125,15 +125,15 @@ public sealed class SAV3RSBox : SaveFile, IGCSaveFile, IBoxDetailName, IBoxDetai
         s.BoxBuffer.CopyTo(BoxBuffer);
     }
 
-    protected override int SIZE_STORED => PokeCrypto.SIZE_3STORED + 4;
-    protected override int SIZE_PARTY => PokeCrypto.SIZE_3PARTY; // unused
+    public override int SIZE_STORED => PokeCrypto.SIZE_3STORED + 4; // tid-sid of depositor
+    public override int SIZE_PARTY => PokeCrypto.SIZE_3PARTY; // unused
     public override PK3 BlankPKM => new();
     public override Type PKMType => typeof(PK3);
 
     public override ushort MaxMoveID => Legal.MaxMoveID_3;
     public override ushort MaxSpeciesID => Legal.MaxSpeciesID_3;
     public override int MaxAbilityID => Legal.MaxAbilityID_3;
-    public override int MaxItemID => Legal.MaxItemID_3;
+    public override int MaxItemID => Legal.MaxItemID_3_RS;
     public override int MaxBallID => Legal.MaxBallID_3;
     public override GameVersion MaxGameID => Legal.MaxGameID_3;
 
@@ -233,27 +233,14 @@ public sealed class SAV3RSBox : SaveFile, IGCSaveFile, IBoxDetailName, IBoxDetai
         SetString(span, value, 8, StringConverterOption.ClearZero);
     }
 
-    protected override PK3 GetPKM(byte[] data)
-    {
-        if (data.Length != PokeCrypto.SIZE_3STORED)
-            Array.Resize(ref data, PokeCrypto.SIZE_3STORED);
-        return new(data);
-    }
+    protected override PK3 GetPKM(Memory<byte> data) => new(data);
 
-    protected override byte[] DecryptPKM(byte[] data)
-    {
-        if (data.Length != PokeCrypto.SIZE_3STORED)
-            Array.Resize(ref data, PokeCrypto.SIZE_3STORED);
-        return PokeCrypto.DecryptArray3(data);
-    }
+    protected override void DecryptPKM(Span<byte> data) => PokeCrypto.Decrypt3(data);
 
-    protected override void SetDex(PKM pk) { /* No Pokédex for this game, do nothing */ }
-
-    public override void WriteBoxSlot(PKM pk, Span<byte> data)
+    protected override void WriteSlotBox(PKM pk, Span<byte> data)
     {
-        base.WriteBoxSlot(pk, data);
-        WriteUInt16LittleEndian(data[(PokeCrypto.SIZE_3STORED)..], pk.TID16);
-        WriteUInt16LittleEndian(data[(PokeCrypto.SIZE_3STORED + 2)..], pk.SID16);
+        base.WriteSlotBox(pk, data);
+        WriteUInt32LittleEndian(data[PokeCrypto.SIZE_3STORED..], pk.ID32); // assume from OT
     }
 
     public override string GetString(ReadOnlySpan<byte> data)

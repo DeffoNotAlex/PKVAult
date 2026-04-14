@@ -302,7 +302,7 @@ public sealed class WA9(Memory<byte> raw) : DataMysteryGift(raw), ILangNick, INa
 
     public bool CanHaveLanguage(int language)
     {
-        if (language is < (int)LanguageID.Japanese or > (int)LanguageID.ChineseT)
+        if (language is < (int)LanguageID.Japanese or > (int)LanguageID.SpanishL)
             return false;
 
         if (CanBeAnyLanguage())
@@ -326,7 +326,7 @@ public sealed class WA9(Memory<byte> raw) : DataMysteryGift(raw), ILangNick, INa
     private static int GetLanguageIndex(int language)
     {
         var lang = (LanguageID) language;
-        if (lang is < LanguageID.Japanese or LanguageID.UNUSED_6 or > LanguageID.ChineseT)
+        if (lang is < LanguageID.Japanese or LanguageID.UNUSED_6 or > LanguageID.SpanishL)
             return (int) LanguageID.English; // fallback
         return lang < LanguageID.UNUSED_6 ? language - 1 : language - 2;
     }
@@ -360,7 +360,7 @@ public sealed class WA9(Memory<byte> raw) : DataMysteryGift(raw), ILangNick, INa
         get => GetOT(Language);
         set
         {
-            for (int i = 1; i <= (int)LanguageID.ChineseT; i++)
+            for (int i = 1; i <= (int)LanguageID.SpanishL; i++)
                 SetOT(i, value);
         }
     }
@@ -626,7 +626,7 @@ public sealed class WA9(Memory<byte> raw) : DataMysteryGift(raw), ILangNick, INa
         if (MetLevel != 0 && MetLevel != pk.MetLevel) return false;
         if ((Ball == 0 ? 4 : Ball) != pk.Ball) return false;
         if (OTGender < 2 && OTGender != pk.OriginalTrainerGender) return false;
-        if (Nature != Nature.Random && pk.Nature != Nature) return false;
+        if (Nature.IsFixed && pk.Nature != Nature) return false;
         if (Gender != 3 && Gender != pk.Gender) return false;
 
         if (pk is IScaledSize s)

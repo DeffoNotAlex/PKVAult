@@ -95,7 +95,7 @@ public partial class SAV_MailBox : Form
             case SAV3 sav3:
                 m = new Mail3[6 + 10];
                 for (int i = 0; i < m.Length; i++)
-                    m[i] = sav3.GetMail(i);
+                    m[i] = sav3.LargeBlock.GetMail(i);
 
                 MailItemID = [121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132];
                 PartyBoxCount = 6;
@@ -432,7 +432,7 @@ public partial class SAV_MailBox : Form
         var s = p.Select((pk, i) => ((sbyte)PKMNUDs[i].Value == entry) && ItemIsMail(pk.HeldItem) ? pk : null).ToArray();
         if (s.All(v => v is null))
             return ret;
-        System.Media.SystemSounds.Question.Play();
+        WinFormsUtil.Question();
         var msg = $"{s.Select((v, i) => v is null ? string.Empty : $"{Environment.NewLine}  {PKMLabels[i].Text}: {PKMHeldItems[i].Text} -> {CB_MailType.Items[0]}").Aggregate($"Modify PKM's HeldItem?{Environment.NewLine}", (tmp, v) => $"{tmp}{v}")}{Environment.NewLine}{Environment.NewLine}Yes: Delete Mail & Modify PKM{Environment.NewLine}No: Delete Mail";
         ret = WinFormsUtil.Prompt(MessageBoxButtons.YesNoCancel, msg);
         if (ret != DialogResult.Yes)
@@ -580,7 +580,7 @@ public partial class SAV_MailBox : Form
         var otherIndex = index + (down ? 1 : -1);
         if ((uint)otherIndex >= lb.Items.Count)
         {
-            System.Media.SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
             return;
         }
 

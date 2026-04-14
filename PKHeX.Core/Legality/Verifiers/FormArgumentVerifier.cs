@@ -31,20 +31,8 @@ public sealed class FormArgumentVerifier : Verifier
 
         return (Species)pk.Species switch
         {
-            // Transfer Edge Cases -- Bank wipes the form but keeps old FormArgument value.
-            Furfrou when pk is { Context: EntityContext.Gen7, Form: 0 } &&
-                                 ((enc.Generation == 6 && f.FormArgument <= byte.MaxValue) || IsFormArgumentDayCounterValid(f, 5, true))
-                => GetValid(FormArgumentValid),
-
-            Furfrou when pk.Form != 0 => !IsFormArgumentDayCounterValid(f, 5, true) ? GetInvalid(FormArgumentInvalid) : GetValid(FormArgumentValid),
-            Hoopa when pk.Form == 1 => data.Info.EvoChainsAllGens switch
-            {
-                { HasVisitedZA:   true } when arg == 0 => GetValid(FormArgumentValid), // Value not applied on form change, and reset when reverted.
-                { HasVisitedGen9: true } when arg == 0 => GetValid(FormArgumentValid), // Value not applied on form change, and reset when reverted.
-                { HasVisitedGen6: true } when IsFormArgumentDayCounterValid(f, 3) => GetValid(FormArgumentValid), // 0-3 via OR/AS
-                { HasVisitedGen7: true } when IsFormArgumentDayCounterValid(f, 3) && f.FormArgumentRemain != 0 => GetValid(FormArgumentValid), // 1-3 via Gen7
-                _ => GetInvalid(FormArgumentInvalid),
-            },
+            Furfrou => CheckFurfrou(pk, enc, f),
+            Hoopa when pk.Form == 1 => CheckHoopa(data, f, arg),
             Yamask when pk.Form == 1 => arg switch
             {
                 not 0 when pk.IsEgg => GetInvalid(FormArgumentNotAllowed),
@@ -74,22 +62,8 @@ public sealed class FormArgumentVerifier : Verifier
                 > 9_999 => GetInvalid(FormArgumentLEQ_0, 9999),
                 _ => arg == 0 || HasVisitedSV(data, Bisharp) ? GetValid(FormArgumentValid) : GetInvalid(FormArgumentNotAllowed),
             },
-            Gimmighoul => arg switch
-            {
-                // Z-A evolutions do not set form argument to Gimmighoul.
-                0 when data.Info.EvoChainsAllGens.HasVisitedZA => GetValid(FormArgumentValid),
-
-                // When leveled up, the game copies the save file's current coin count to the arg (clamped to <=999). If >=999, evolution is triggered.
-                // Without being leveled up at least once, it cannot have a form arg value.
-                >= 999 => GetInvalid(FormArgumentLEQ_0, 999),
-                0 => GetValid(FormArgumentValid),
-
-                // S/V sets form argument to match coin count.
-                _ when !data.Info.EvoChainsAllGens.HasVisitedGen9 => GetInvalid(FormArgumentInvalid),
-                _ => pk.CurrentLevel != pk.MetLevel ? GetValid(FormArgumentValid) : GetInvalid(FormArgumentNotAllowed),
-            },
-            Gholdengo when !data.Info.EvoChainsAllGens.HasVisitedGen9 => arg == 0 ? GetValid(FormArgumentValid) : GetInvalid(FormArgumentInvalid),
-            Gholdengo => VerifyFormArgumentRange(enc.Species, Gholdengo, arg, 999, 999),
+            Gimmighoul => CheckGimmighoul(data.Info.EvoChainsAllGens, arg, pk),
+            Gholdengo => CheckGholdengo(data.Info.EvoChainsAllGens, arg, enc, pk),
 
             Runerigus   => VerifyFormArgumentRange(enc.Species, Runerigus,   arg,  49, 9999),
             Alcremie    => VerifyFormArgumentRange(enc.Species, Alcremie,    arg,   0, (ushort)AlcremieDecoration.Ribbon),
@@ -117,6 +91,186 @@ public sealed class FormArgumentVerifier : Verifier
             },
             _ => VerifyFormArgumentNone(pk, f),
         };
+    }
+
+    private CheckResult CheckHoopa(LegalityAnalysis data, IFormArgument f, uint arg)
+    {
+        var history = data.Info.EvoChainsAllGens;
+        if (arg == 0)
+        {
+            if (history.HasVisitedZA) // Value not applied on form change, and reset when reverted.
+                return GetValid(FormArgumentValid);
+            if (history.HasVisitedGen9) // Value not applied on form change, and reset when reverted.
+                return GetValid(FormArgumentValid);
+        }
+        else
+        {
+            if (history.HasVisitedGen7 && IsFormArgumentDayCounterValid(f, 3)) // 1-3 via Gen7
+                return GetValid(FormArgumentValid);
+        }
+
+        var pk = data.Entity;
+        if (pk is PK6 pk6)
+        {
+            // 0-3 via OR/AS
+            if (pk6.FormArgument != 0) // 0x3C not used (elapsed streak)
+                return GetInvalid(FormArgumentNotAllowed);
+            var elapsed = pk6.FormArgumentElapsed;
+            var remain = pk6.FormArgumentRemain;
+            var sum = elapsed + remain;
+            if (sum != 3)
+                return GetInvalid(FormArgumentInvalid);
+            return GetValid(FormArgumentValid);
+        }
+
+        return GetInvalid(FormArgumentInvalid);
+    }
+
+    private CheckResult CheckFurfrou(PKM pk, IEncounterTemplate enc, IFormArgument f)
+    {
+        // Transfer Edge Cases -- Bank wipes the form but keeps old FormArgument value.
+        // Gen6: Reverts when deposited.
+        // Gen7: Reverts form & arg when withdrawn, reverts form (NOT arg) when deposited in Bank.
+        // Gen9a: Doesn't decrease, always 5.
+        if (pk is PK6 pk6)
+            return CheckFurfrou6(pk6);
+        if (pk is PK7 pk7)
+            return CheckFurfrou7(pk7, enc);
+        if (pk is { GO_HOME: true } && f.FormArgument == 0)
+            return GetValid(FormArgumentValid); // GO transfers forget to set Form Argument.
+        if (pk is PA9 pa9)
+            return CheckFurfrou9a(pa9, enc);
+
+        // Only legal pathways are via methods above.
+        return GetInvalid(FormArgumentInvalid);
+    }
+
+    private CheckResult CheckFurfrou9a(PA9 pk, IEncounterTemplate enc)
+    {
+        // Gen6=>Gen7 transfer edge case: Form argument is not cleared when depositing in Bank, but form is.
+        if (enc.Generation == 6 && pk is { Form: 0, FormArgument: <= byte.MaxValue })
+            return GetValid(FormArgumentValid);
+
+        // Z-A trims set to 5.
+        if ((pk.FormArgument == 5) == (pk.Form != 0))
+            return GetValid(FormArgumentValid);
+
+        // Bank=>HOME with form 0 forgets to wipe, but Form is reverted.
+        if (pk.Form == 0 && enc.Generation <= 7 && IsFormArgumentDayCounterValid(pk, 5, true))
+            return GetValid(FormArgumentValid);
+
+        return GetInvalid(FormArgumentInvalid);
+    }
+
+    private CheckResult CheckFurfrou7(PK7 pk, IEncounterTemplate enc)
+    {
+        // Gen6=>Gen7 transfer edge case: Form argument is not cleared when depositing in Bank, but form is.
+        if (enc.Generation == 6 && pk is { Form: 0, FormArgument: <= byte.MaxValue })
+            return GetValid(FormArgumentValid);
+
+        if (pk is { Form: 0, FormArgument: 0 })
+            return GetValid(FormArgumentValid);
+
+        // Depositing into box no longer clears form; they only wipe it when you withdraw.
+        // Storing in Bank will revert the form, so any form is valid as long as the day counter values are valid for any trim.
+        if (!IsFormArgumentDayCounterValid(pk, 5, true))
+            return GetInvalid(FormArgumentInvalid);
+
+        return GetValid(FormArgumentValid);
+    }
+
+    private CheckResult CheckFurfrou6(PK6 pk)
+    {
+        // Can only exist in party.
+        // 0x3C: Current streak
+        // 0xED: Remaining days
+        // 0xEE: Elapsed days (same as current streak)
+        var arg = pk.FormArgument;
+        // Argument can be anything; depositing drops the form and party stats and forgets to clear the arg.
+        if (arg > byte.MaxValue)
+            return GetInvalid(FormArgumentLEQ_0, byte.MaxValue);
+
+        // Form can only exist inside party. Checked elsewhere.
+        var remain = pk.FormArgumentRemain;
+        var elapsed = pk.FormArgumentElapsed;
+        if (pk.Form != 0)
+        {
+            var sum = remain + elapsed;
+            if (sum < 5)
+                return GetInvalid(FormArgumentInvalid);
+            if (elapsed != arg)
+                return GetInvalid(FormArgumentInvalid);
+        }
+        else
+        {
+            // Party stat values must be zero.
+            if (remain != 0 || elapsed != 0)
+                return GetInvalid(FormArgumentNotAllowed);
+        }
+
+        return GetValid(FormArgumentValid);
+    }
+
+    private CheckResult CheckGimmighoul(EvolutionHistory history, uint arg, PKM pk)
+    {
+        if (arg == 0)
+            return GetValid(FormArgumentValid);
+
+        // The only game we can assign a form argument value is in S/V.
+        // Z-A evolutions do not set form argument to Gimmighoul.
+        if (history.HasVisitedGen9)
+        {
+            // When leveled up, the game copies the save file's current coin count to the arg (clamped to <=999). If >=999, evolution is triggered (can cancel).
+            // Without being leveled up at least once, it cannot have a form arg value.
+            if (arg > 999)
+                return GetInvalid(FormArgumentLEQ_0, 999);
+            if (pk.CurrentLevel == pk.MetLevel)
+                return GetInvalid(FormArgumentNotAllowed);
+
+            return GetValid(FormArgumentValid);
+        }
+
+        return GetInvalid(FormArgumentNotAllowed);
+    }
+
+    private CheckResult CheckGholdengo(EvolutionHistory history, uint arg, IEncounterable enc, PKM pk)
+    {
+        if (enc.Species == (ushort)Gholdengo)
+        {
+            if (arg == 0)
+                return GetValid(FormArgumentValid);
+            return GetInvalid(FormArgumentNotAllowed);
+        }
+
+        // Gimmighoul evolved.
+        // The only game we can assign a form argument value is in S/V.
+        // Z-A evolutions do not set form argument to Gimmighoul.
+        var hasVisitedNoArgGame = history.HasVisitedZA;
+        if (hasVisitedNoArgGame && arg == 0)
+            return GetValid(FormArgumentValid);
+
+        if (history.HasVisitedGen9)
+        {
+            // When leveled up, the game copies the save file's current coin count to the arg (clamped to <=999). If >=999, evolution is triggered (can cancel).
+            // Without being leveled up at least once, it cannot have a form arg value.
+            if (arg > 999)
+                return GetInvalid(FormArgumentLEQ_0, 999);
+            if (pk.CurrentLevel == pk.MetLevel)
+                return GetInvalid(FormArgumentNotAllowed);
+
+            if (!hasVisitedNoArgGame && arg != 999) // Evolving without visiting a less-restricted game requires 999.
+                return GetInvalid(FormArgumentGEQ_0, 999);
+            return GetValid(FormArgumentValid);
+        }
+
+        return GetInvalid(FormArgumentNotAllowed);
+    }
+
+    private static bool IsFormArgumentValidFurfrou8HOME(IFormArgument f, IEncounterTemplate enc)
+    {
+        if (f.FormArgument == 0 && enc is { Version: GameVersion.GO })
+            return true; // Does not come with a Form Argument.
+        return IsFormArgumentDayCounterValid(f, 5, enc.Generation < 8);
     }
 
     private CheckResult CheckPrimeape(LegalityAnalysis data, PKM pk, uint arg, IEncounterTemplate enc)

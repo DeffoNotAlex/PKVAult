@@ -1,3 +1,4 @@
+using System;
 using static PKHeX.Core.LegalityCheckResultCode;
 
 namespace PKHeX.Core;
@@ -472,6 +473,8 @@ public sealed class AbilityVerifier : Verifier
         var index = bitNum >> 1;
         var species = pa9.Species;
         var ability = pa9.Ability;
+
+        // In-battle forms allow mismatching for the current form.
         if (FormInfo.HasMegaForm(species) || species is (int)Species.Aegislash)
         {
             var form = pa9.Form;
@@ -492,10 +495,62 @@ public sealed class AbilityVerifier : Verifier
             }
         }
 
+        // If deposited in HOME, it will realign to the deposited species-form ability.
+        // If you transfer back into ZA then evolve it, you can disjoint it again.
+        // If it hasn't evolved, then it must have been realigned by HOME.
+        if (pa9 is IHomeTrack { HasTracker: true })
+        {
+            var form = pa9.Form;
+            var actual = PersonalTable.ZA[species, form];
+            var require = actual.GetAbilityAtIndex(index);
+            if (ability == require)
+                return VALID;
+            if (enc.Species == species || IsAnyMoveSourceNotZA_Head(data.Info.Moves)) // Not evolved after; must match.
+                return GetInvalid(AbilityMismatch);
+        }
+
+        // Otherwise, we expect the form's personal info to match the original encounter's ability.
         var expect = pi.GetAbilityAtIndex(index);
         if (ability != expect)
             return GetInvalid(AbilityMismatch);
 
-        return VALID;
+        return VerifyFinalState(data, enc, index);
+    }
+
+    private CheckResult VerifyFinalState(LegalityAnalysis data, IEncounterTemplate enc, int currentIndex)
+    {
+        if (currentIndex == 2) // Not normally obtainable. Has to visit another game where it can be switched.
+        {
+            if (AbilityChangeRules.IsAbilityPatchPossible(data.Info.EvoChainsAllGens))
+                return GetValid(AbilityPatchUsed);
+            return GetInvalid(AbilityHiddenUnavailable);
+        }
+
+        if (!enc.Ability.IsSingleValue(out var bit) || bit == currentIndex) // Any/Unchanged
+            return VALID;
+
+        var history = data.Info.EvoChainsAllGens;
+        if (bit == 2 && AbilityChangeRules.IsAbilityPatchRevertPossible(history, currentIndex))
+            return GetValid(AbilityPatchRevertUsed);
+        if (bit != 2 && AbilityChangeRules.IsAbilityCapsuleAvailable(history))
+            return GetValid(AbilityCapsuleUsed);
+
+        // Can't change to current state.
+        return GetInvalid(AbilityMismatch);
+    }
+
+    private static bool IsAnyMoveSourceNotZA_Head(ReadOnlySpan<MoveResult> infoMoves)
+    {
+        foreach (var info in infoMoves)
+        {
+            if (info.EvoStage != 0) // pre-evo
+                continue;
+            if (info.Context == EntityContext.Gen9a)
+                continue;
+
+            // move verifier doesn't check for realignment lockout scenario; disable check.
+            // return true;
+        }
+        return false;
     }
 }

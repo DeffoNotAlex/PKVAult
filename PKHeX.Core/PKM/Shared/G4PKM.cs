@@ -11,6 +11,8 @@ public abstract class G4PKM : PKM, IHandlerUpdate,
 {
     protected G4PKM(Memory<byte> data) : base(data) { }
     protected G4PKM([ConstantExpected] int size) : base(size) { }
+    protected override void EncryptStored(Span<byte> stored) => PokeCrypto.Encrypt45(stored);
+    protected override void EncryptParty(Span<byte> party) => PokeCrypto.CryptArray(party, EncryptionConstant);
 
     // Maximums
     public sealed override ushort MaxMoveID => Legal.MaxMoveID_4;
@@ -289,7 +291,7 @@ public abstract class G4PKM : PKM, IHandlerUpdate,
             BallDPPt = Clamp(value, Core.Ball.Cherish);
 
             // Only set the HG/SS value if it originated in HG/SS and was not an event.
-            if (WasCreatedInHGSS)
+            if (WasCreatedInHGSS && this is not BK4)
                 BallHGSS = Clamp(value, Core.Ball.Sport);
             else
                 BallHGSS = 0;

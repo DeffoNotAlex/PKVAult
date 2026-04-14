@@ -6,13 +6,21 @@ namespace PKHeX.Core;
 /// <summary>
 /// Generation 3 <see cref="SaveFile"/> object for Pokémon Colosseum saves.
 /// </summary>
-public sealed class SAV3Colosseum : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStorage, IDaycareExperience, IGCRegion
+public sealed class SAV3Colosseum : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStorage, IDaycareExperience, IGCRegion, ISaveFileRevision
 {
     protected internal override string ShortSummary => $"{OT} ({Version}) - {PlayTimeString}";
     public override string Extension => this.GCExtension();
     public override PersonalTable3 Personal => PersonalTable.RS;
     public override ReadOnlySpan<ushort> HeldItems => Legal.HeldItems_RS;
     public SAV3GCMemoryCard? MemoryCard { get; init; }
+    public int SaveRevision => 0;
+    public string SaveRevisionString => OriginalRegion switch
+    {
+        GCRegion.NTSC_J => "-J",
+        GCRegion.NTSC_U => "-U",
+        GCRegion.PAL => "-PAL",
+        _ => "-?",
+    };
 
     private readonly Memory<byte> Container;
     protected override Span<byte> BoxBuffer => Data;
@@ -113,8 +121,8 @@ public sealed class SAV3Colosseum : SaveFile, IGCSaveFile, IBoxDetailName, IDayc
     // Configuration
     protected override SAV3Colosseum CloneInternal() => new((SaveIndex, SaveCount), Container.ToArray(), false) { MemoryCard = MemoryCard };
 
-    protected override int SIZE_STORED => PokeCrypto.SIZE_3CSTORED;
-    protected override int SIZE_PARTY => PokeCrypto.SIZE_3CSTORED; // unused
+    public override int SIZE_STORED => PokeCrypto.SIZE_3CSTORED;
+    public override int SIZE_PARTY => PokeCrypto.SIZE_3CSTORED; // unused
     public override CK3 BlankPKM => new();
     public override Type PKMType => typeof(CK3);
 
@@ -174,14 +182,22 @@ public sealed class SAV3Colosseum : SaveFile, IGCSaveFile, IBoxDetailName, IDayc
         SetString(GetBoxNameSpan(box), value, 8, StringConverterOption.ClearZero);
     }
 
-    protected override CK3 GetPKM(byte[] data)
+    protected override CK3 GetPKM(Memory<byte> data)
     {
-        if (data.Length != SIZE_STORED)
-            Array.Resize(ref data, SIZE_STORED);
+        data = EnsurePartySize(data);
         return new(data);
     }
 
-    protected override byte[] DecryptPKM(byte[] data) => data;
+    private static Memory<byte> EnsurePartySize(Memory<byte> data)
+    {
+        if (data.Length == PokeCrypto.SIZE_3CSTORED)
+            return data;
+        var result = new byte[PokeCrypto.SIZE_3CSTORED];
+        data.CopyTo(result);
+        return result;
+    }
+
+    protected override void DecryptPKM(Span<byte> data) { }
 
     protected override void SetPKM(PKM pk, bool isParty = false)
     {
@@ -256,7 +272,8 @@ public sealed class SAV3Colosseum : SaveFile, IGCSaveFile, IBoxDetailName, IDayc
     }
 
     // Trainer Info (offset 0x78, length 0xB18, end @ 0xB90)
-    public override string OT { get => GetString(Data.Slice(0x78, 20)); set { SetString(Data.Slice(0x78, 20), value, 10, StringConverterOption.ClearZero); OT2 = value; } }
+    public Span<byte> OriginalTrainerTrash => Data.Slice(0x78, 20);
+    public override string OT { get => GetString(OriginalTrainerTrash); set { SetString(OriginalTrainerTrash, value, 10, StringConverterOption.ClearZero); OT2 = value; } }
     public string OT2 { get => GetString(Data.Slice(0x8C, 20)); set => SetString(Data.Slice(0x8C, 20), value, 10, StringConverterOption.ClearZero); }
 
     public override uint ID32 { get => ReadUInt32BigEndian(Data[0xA4..]); set => WriteUInt32BigEndian(Data[0xA4..], value); }

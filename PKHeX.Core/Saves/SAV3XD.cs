@@ -7,9 +7,18 @@ namespace PKHeX.Core;
 /// <summary>
 /// Generation 3 <see cref="SaveFile"/> object for Pokémon XD saves.
 /// </summary>
-public sealed class SAV3XD : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStorage, IDaycareExperience, IGCRegion
+public sealed class SAV3XD : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStorage, IDaycareExperience, IGCRegion, ISaveFileRevision
 {
     protected internal override string ShortSummary => $"{OT} ({Version}) {PlayTimeString}";
+    public int SaveRevision => 0;
+    public string SaveRevisionString => OriginalRegion switch
+    {
+        GCRegion.NTSC_J => "-J",
+        GCRegion.NTSC_U => "-U",
+        GCRegion.PAL => "-PAL",
+        _ => "-?",
+    };
+
     public override string Extension => this.GCExtension();
     public SAV3GCMemoryCard? MemoryCard { get; init; }
 
@@ -131,8 +140,8 @@ public sealed class SAV3XD : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStor
     // Configuration
     protected override SAV3XD CloneInternal() => new((SaveIndex, SaveCount), Container.ToArray(), false) { MemoryCard = MemoryCard };
 
-    protected override int SIZE_STORED => PokeCrypto.SIZE_3XSTORED;
-    protected override int SIZE_PARTY => PokeCrypto.SIZE_3XSTORED; // unused
+    public override int SIZE_STORED => PokeCrypto.SIZE_3XSTORED;
+    public override int SIZE_PARTY => PokeCrypto.SIZE_3XSTORED; // unused
     public override XK3 BlankPKM => new();
     public override Type PKMType => typeof(XK3);
 
@@ -234,7 +243,8 @@ public sealed class SAV3XD : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStor
 
     // Trainer Info
     public override GameVersion Version { get => GameVersion.XD; set { } }
-    public override string OT { get => GetString(Data.Slice(Trainer1 + 0x00, 20)); set => SetString(Data.Slice(Trainer1 + 0x00, 20), value, 10, StringConverterOption.ClearZero); }
+    public Span<byte> OriginalTrainerTrash => Data.Slice(Trainer1 + 0x00, 20);
+    public override string OT { get => GetString(OriginalTrainerTrash); set => SetString(OriginalTrainerTrash, value, 10, StringConverterOption.ClearZero); }
     public override uint ID32 { get => ReadUInt32BigEndian(Data[(Trainer1 + 0x2C)..]); set => WriteUInt32BigEndian(Data[(Trainer1 + 0x2C)..], value); }
     public override ushort SID16 { get => ReadUInt16BigEndian(Data[(Trainer1 + 0x2C)..]); set => WriteUInt16BigEndian(Data[(Trainer1 + 0x2C)..], value); }
     public override ushort TID16 { get => ReadUInt16BigEndian(Data[(Trainer1 + 0x2E)..]); set => WriteUInt16BigEndian(Data[(Trainer1 + 0x2E)..], value); }
@@ -254,14 +264,8 @@ public sealed class SAV3XD : SaveFile, IGCSaveFile, IBoxDetailName, IDaycareStor
         SetString(Data.Slice(GetBoxInfoOffset(box), 20), value, 8, StringConverterOption.ClearZero);
     }
 
-    protected override XK3 GetPKM(byte[] data)
-    {
-        if (data.Length != SIZE_STORED)
-            Array.Resize(ref data, SIZE_STORED);
-        return new(data);
-    }
-
-    protected override byte[] DecryptPKM(byte[] data) => data;
+    protected override XK3 GetPKM(Memory<byte> data) => new(data);
+    protected override void DecryptPKM(Span<byte> data) { }
     public override XK3 GetPartySlot(ReadOnlySpan<byte> data) => GetStoredSlot(data);
 
     public override XK3 GetStoredSlot(ReadOnlySpan<byte> data)

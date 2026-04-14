@@ -1,6 +1,10 @@
 <Project>
   <PropertyGroup>
+<<<<<<< HEAD
     <Version>26.03.06</Version>
+=======
+    <Version>26.04.11</Version>
+>>>>>>> upstream/master
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <NeutralLanguage>en</NeutralLanguage>

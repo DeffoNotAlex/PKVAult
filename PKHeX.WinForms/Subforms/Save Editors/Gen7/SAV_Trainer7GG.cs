@@ -67,7 +67,7 @@ public partial class SAV_Trainer7GG : Form
     {
         // Get Data
         TB_OTName.Text = SAV.OT;
-        TB_RivalName.Text = SAV.Blocks.Misc.Rival;
+        TB_RivalName.Text = SAV.Blocks.Misc.RivalName;
         CB_Language.SelectedValue = SAV.Language;
         MT_Money.Text = SAV.Blocks.Misc.Money.ToString();
 
@@ -114,8 +114,10 @@ public partial class SAV_Trainer7GG : Form
         SAV.Money = Util.ToUInt32(MT_Money.Text);
         SAV.Language = WinFormsUtil.GetIndex(CB_Language);
 
-        SAV.OT = TB_OTName.Text;
-        SAV.Blocks.Misc.Rival = TB_RivalName.Text;
+        if (SAV.OT != TB_OTName.Text)
+            SAV.OT = TB_OTName.Text;
+        if (SAV.Blocks.Misc.RivalName != TB_RivalName.Text)
+            SAV.Blocks.Misc.RivalName = TB_RivalName.Text;
 
         // Copy Position
         if (GB_Map.Enabled && MapUpdated)
@@ -149,12 +151,11 @@ public partial class SAV_Trainer7GG : Form
         if (ModifierKeys != Keys.Control)
             return;
 
-        TextBox tb = sender as TextBox ?? TB_OTName;
+        if (sender is not TextBox tb)
+            return;
 
-        // Special Character Form
-        var d = new TrashEditor(tb, SAV, SAV.Generation, SAV.Context);
-        d.ShowDialog();
-        tb.Text = d.FinalString;
+        var trash = tb == TB_OTName ? SAV.Status.OriginalTrainerTrash : SAV.Misc.RivalNameTrash;
+        TrashEditor.Show(tb, SAV, trash);
     }
 
     private void B_Cancel_Click(object sender, EventArgs e)
@@ -190,7 +191,7 @@ public partial class SAV_Trainer7GG : Form
             return;
         }
         WinFormsUtil.SetClipboardText(string.Join(Environment.NewLine, summary));
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void B_ExportGoFiles_Click(object sender, EventArgs e)
@@ -295,7 +296,7 @@ public partial class SAV_Trainer7GG : Form
             ctr++;
         }
         UpdateGoSummary((int)NUD_GoIndex.Value);
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void NUD_GoIndex_ValueChanged(object sender, EventArgs e) => UpdateGoSummary((int)NUD_GoIndex.Value);
@@ -320,7 +321,7 @@ public partial class SAV_Trainer7GG : Form
 
         Park.DeleteAll();
         UpdateGoSummary((int)NUD_GoIndex.Value);
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void B_DeleteGo_Click(object sender, EventArgs e)
@@ -330,19 +331,19 @@ public partial class SAV_Trainer7GG : Form
         index = Math.Clamp(index, 0, max);
         Park[index] = new GP1();
         UpdateGoSummary((int)NUD_GoIndex.Value);
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void B_AllTrainerTitles_Click(object sender, EventArgs e)
     {
         SAV.Blocks.EventWork.UnlockAllTitleFlags();
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void B_AllFashionItems_Click(object sender, EventArgs e)
     {
         SAV.Blocks.FashionPlayer.UnlockAllAccessoriesPlayer();
         SAV.Blocks.FashionStarter.UnlockAllAccessoriesStarter();
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 }

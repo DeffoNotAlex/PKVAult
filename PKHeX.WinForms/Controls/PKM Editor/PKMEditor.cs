@@ -249,7 +249,7 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             if (ModifierKeys == (Keys.Control | Keys.Shift | Keys.Alt))
                 return true; // Override
 
-            System.Media.SystemSounds.Exclamation.Play();
+            WinFormsUtil.Exclamation();
             return false;
         }
     }
@@ -305,7 +305,7 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
     private void SetPKMFormatExtraBytes(PKM pk)
     {
         var extraBytes = pk.ExtraBytes;
-        FLP_ExtraBytes.Visible = FLP_ExtraBytes.Enabled = extraBytes.Length != 0;
+        L_ExtraBytes.Visible = FLP_ExtraBytes.Visible = FLP_ExtraBytes.Enabled = extraBytes.Length != 0;
         CB_ExtraBytes.Items.Clear();
         foreach (var b in extraBytes)
             CB_ExtraBytes.Items.Add($"0x{b:X2}");
@@ -756,7 +756,6 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
     {
         Entity.CurrentHandler = handler;
         UpdateHandlingTrainerBackground(Entity.CurrentHandler);
-        ReloadToFriendshipTextBox(Entity);
     }
 
     private void ClickNature(object sender, EventArgs e)
@@ -1034,9 +1033,14 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             return;
         if (Util.ToInt32(tb.Text) > byte.MaxValue)
             tb.Text = "255";
-        if (sender == TB_Friendship && int.TryParse(TB_Friendship.Text, out var value))
+        if (sender == TB_Friendship && byte.TryParse(TB_Friendship.Text, out var value))
         {
-            UpdateFromFriendshipTextBox(Entity, (byte)value);
+            Entity.OriginalTrainerFriendship = value;
+            UpdateStats();
+        }
+        else if (sender == TB_FriendshipHT && byte.TryParse(TB_FriendshipHT.Text, out var level))
+        {
+            Entity.HandlingTrainerFriendship = level;
             UpdateStats();
         }
     }
@@ -1375,7 +1379,8 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             return;
 
         RefreshFontWarningButton();
-        Entity.Nickname = TB_Nickname.Text;
+        var update = TB_Nickname.Text;
+        Entity.Nickname = update;
         if (CHK_NicknamedFlag.Checked)
             return;
 
@@ -1383,11 +1388,30 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
         if (species is 0 || species > Entity.MaxSpeciesID)
             return;
 
-        if (CHK_IsEgg.Checked)
+        if (!IsPossibleNotNicknamed(Entity, update))
+            CHK_NicknamedFlag.Checked = true;
+    }
+
+    private static bool IsPossibleNotNicknamed(PKM pk, ReadOnlySpan<char> current)
+    {
+        var species = pk.Species;
+        if (pk.IsEgg)
             species = 0; // get the egg name.
 
-        if (SpeciesName.IsNicknamedAnyLanguage(species, TB_Nickname.Text, Entity.Context))
-            CHK_NicknamedFlag.Checked = true;
+        var context = pk.Context;
+        if (!SpeciesName.IsNicknamedAnyLanguage(species, current, context))
+            return true;
+
+        // Auto-decapitalization did not happen until Gen6.
+        // If transferred from Gen3/4=>Gen5, it can be either ALL-CAPS or decapitalized.
+        if (pk.IsEgg)
+            return false;
+        if (context != EntityContext.Gen5 || species > 493 || pk.Gen5)
+            return false;
+
+        if (!SpeciesName.IsNicknamedAnyLanguage(species, current, EntityContext.Gen4))
+            return true;
+        return false;
     }
 
     private void UpdateNickname(object sender, EventArgs e)
@@ -1414,6 +1438,10 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             return;
         }
 
+        var current = TB_Nickname.Text;
+        if (IsPossibleNotNicknamed(Entity, current))
+            return;
+
         string nickname;
         int language = WinFormsUtil.GetIndex(CB_Language);
         if (CHK_IsEgg.Checked)
@@ -1424,7 +1452,7 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
         else
         {
             // If name is that of another language, don't replace the nickname
-            if (sender != CB_Language && !SpeciesName.IsNicknamedAnyLanguage(species, TB_Nickname.Text, Entity.Context))
+            if (sender != CB_Language && !SpeciesName.IsNicknamedAnyLanguage(species, current, Entity.Context))
                 return;
             nickname = SpeciesName.GetSpeciesNameGeneration(species, language, Entity.Format);
         }
@@ -1439,10 +1467,11 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
         if (ModifierKeys != Keys.Control)
             return;
 
+        if (sender is not TextBox tb)
+            return;
         // Open Trash/Special Character form
         // Set the string back to the entity in the right spot, so the span fetch has the latest data.
         Span<byte> trash;
-        TextBox tb = sender as TextBox ?? TB_Nickname;
         if (tb == TB_Nickname)
         {
             Entity.Nickname = tb.Text;
@@ -1463,10 +1492,7 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             return;
         }
 
-        using var d = new TrashEditor(tb, trash, Entity, Entity.Format, Entity.Context);
-        d.ShowDialog();
-        tb.Text = d.FinalString;
-        d.FinalBytes.CopyTo(trash);
+        TrashEditor.Show(tb, Entity, trash);
     }
 
     private void UpdateNotOT(object sender, EventArgs e)
@@ -1477,7 +1503,6 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             ClickGT(GB_OT, EventArgs.Empty); // Switch CT over to OT.
             UC_HTGender.Visible = false;
             UC_HTGender.Gender = 0;
-            ReloadToFriendshipTextBox(Entity);
             ToggleHandlerVisibility(false);
         }
         else if (!UC_HTGender.Visible)
@@ -1930,14 +1955,19 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
 
     private void OpenHistory(object sender, EventArgs e)
     {
-        // Write back current values
-        Entity.HandlingTrainerName = TB_HT.Text;
-        Entity.OriginalTrainerName = TB_OT.Text;
-        Entity.IsEgg = CHK_IsEgg.Checked;
-        UpdateFromFriendshipTextBox(Entity, (byte)Util.ToInt32(TB_Friendship.Text));
+        // Write back current values that will be displayed in the popup form
+        var pk = Entity;
+        pk.IsEgg = CHK_IsEgg.Checked;
+        pk.OriginalTrainerName = TB_OT.Text;
+        pk.OriginalTrainerFriendship = (byte)Util.ToInt32(TB_Friendship.Text);
+        pk.HandlingTrainerName = TB_HT.Text;
+        pk.HandlingTrainerFriendship = (byte)Util.ToInt32(TB_FriendshipHT.Text);
+        pk.CurrentHandler = (byte)WinFormsUtil.GetIndex(CB_Handler);
         using var form = new MemoryAmie(Entity);
         form.ShowDialog();
-        ReloadToFriendshipTextBox(Entity);
+
+        TB_Friendship.Text = pk.OriginalTrainerFriendship.ToString();
+        TB_FriendshipHT.Text = pk.HandlingTrainerFriendship.ToString();
     }
 
     private void B_Records_Click(object sender, EventArgs e)
@@ -2011,7 +2041,7 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
     {
         var pb7 = t is PB7;
         var format = t.Format;
-        FLP_Purification.Visible = FLP_ShadowID.Visible = t is IShadowCapture;
+        L_ShadowID.Visible = NUD_ShadowID.Visible = L_HeartGauge.Visible = FLP_Purification.Visible = t is IShadowCapture;
         bool sizeCP = format >= 8 || pb7;
         SizeCP.Visible = SizeCP.TabStop = sizeCP;
         if (sizeCP)
@@ -2021,14 +2051,12 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
         BTN_History.Visible = format >= 6 && !pb7;
         BTN_Ribbons.Visible = format >= 3; // pb7 has ribbons on HOME Meltan lol
         BTN_Medals.Visible = format is 6 or 7 && !pb7;
-        FLP_ReceivedDate.Visible = pb7;
-        FLP_Country.Visible = FLP_SubRegion.Visible = FLP_3DSRegion.Visible = t is IRegionOrigin;
-        FLP_OriginalNature.Visible = format >= 8;
+        L_ArrivedDateTime.Visible = CAL_ReceivedDateTime.Visible = pb7;
+        Label_Country.Visible = CB_Country.Visible = Label_SubRegion.Visible = CB_SubRegion.Visible = Label_3DSRegion.Visible = CB_3DSReg.Visible = t is IRegionOrigin;
         FLP_Spirit7b.Visible = FLP_Mood7b.Visible = pb7;
         B_RelearnFlags.Visible = t is ITechRecord;
         B_MoveShop.Visible = t is IMoveShop8Mastery;
         B_PlusRecord.Visible = t is IPlusRecord;
-        FLP_HTLanguage.Visible = format >= 8;
         L_AlphaMastered.Visible = CB_AlphaMastered.Visible = t is PA8;
         FLP_ObedienceLevel.Visible = t is IObedienceLevel;
         Contest.ToggleInterface(Entity, Entity.Context);
@@ -2042,19 +2070,19 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
 
     private void ToggleSecrets(bool hidden, byte format)
     {
-        FLP_EncryptionConstant.Visible = format >= 6 && !hidden;
+        Label_EncryptionConstant.Visible = FLP_EncryptionConstant.Visible = format >= 6 && !hidden;
         BTN_RerollPID.Visible = Label_PID.Visible = TB_PID.Visible = format >= 3 && !hidden;
-        FLP_HomeTracker.Visible = format >= 8 && !hidden;
+        L_HomeTracker.Visible = TB_HomeTracker.Visible = format >= 8 && !hidden;
     }
 
     private void ToggleInterface(byte format)
     {
         ToggleSecrets(HideSecretValues, format);
-        FLP_HT.Visible = GB_nOT.Visible = FLP_Handler.Visible =
+        Label_PrevOT.Visible = FLP_HT.Visible = GB_nOT.Visible = FLP_Handler.Visible =
         FLP_Relearn4.Visible = FLP_Relearn3.Visible = FLP_Relearn2.Visible = FLP_Relearn1.Visible = GB_RelearnMoves.Visible = format >= 6;
 
         PB_Origin.Visible = format >= 6;
-        FLP_NSparkle.Visible = L_NSparkle.Visible = CHK_NSparkle.Visible = FLP_PokeStarFame.Visible = format == 5;
+        L_NSparkle.Visible = CHK_NSparkle.Visible = FLP_PokeStarFame.Visible = format == 5;
 
         CHK_AsEgg.Visible = GB_EggConditions.Visible = PB_Mark5.Visible = PB_Mark6.Visible = format >= 4;
         ShinyLeaf.Visible = FLP_WalkingMood.Visible = format == 4;
@@ -2065,20 +2093,23 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
             (PB_Mark2.Location, PB_Mark3.Location) = (PB_Mark3.Location, PB_Mark2.Location);
 
         CB_Ability.Visible = CB_Ability.TabStop = !DEV_Ability.Enabled && format >= 3;
-        FLP_Nature.Visible = format >= 3;
-        FLP_Ability.Visible = format >= 3;
+        Label_Nature.Visible = CB_Nature.Visible = format >= 3;
+        L_StatNature.Visible = CB_StatNature.Visible = format >= 8;
+        Label_Ability.Visible = FLP_AbilityRight.Visible = format >= 3;
         FLP_ExtraBytes.Visible = format >= 3;
         GB_Markings.Visible = GB_Markings.TabStop = format >= 3;
         CB_Form.Enabled = format >= 3;
         FA_Form.Visible = FA_Form.TabStop = format >= 6;
 
-        FLP_Friendship.Visible = FLP_Form.Visible = format >= 2;
-        FLP_HeldItem.Visible = format >= 2;
+        Label_Friendship.Visible = TB_Friendship.Visible = format >= 2;
+        L_FriendshipHT.Visible = TB_FriendshipHT.Visible = format >= 6;
+        L_LanguageHT.Visible = CB_HTLanguage.Visible = format >= 8;
+        Label_HeldItem.Visible = CB_HeldItem.Visible = format >= 2;
         CHK_IsEgg.Visible = CHK_IsEgg.TabStop = format >= 2;
-        FLP_PKRS.Visible = FLP_EggPKRSRight.Visible = format >= 2;
+        Label_PKRS.Visible = Label_PKRSdays.Visible = FLP_EggPKRSRight.Visible = format >= 2;
         UC_OTGender.Visible = UC_OTGender.TabStop = format >= 2;
         UC_Gender.Visible = format >= 2 || (format == 1 && Main.Settings.EntityEditor.ShowGenderGen1);
-        FLP_CatchRate.Visible = format == 1;
+        L_CatchRate.Visible = CR_PK1.Visible = format == 1;
 
         // HaX override, needs to be after DEV_Ability enabled assignment.
         TB_AbilityNumber.Visible = format >= 6 && DEV_Ability.Enabled;
@@ -2135,15 +2166,15 @@ public sealed partial class PKMEditor : UserControl, IMainEditor
 
         if (!HaX && sav is SAV7b)
         {
-            FLP_HeldItem.Visible = false;
-            FLP_Country.Visible = false;
-            FLP_SubRegion.Visible = false;
-            FLP_3DSRegion.Visible = false;
+            Label_HeldItem.Visible = CB_HeldItem.Visible = false;
+            Label_Country.Visible = CB_Country.Visible = false;
+            Label_SubRegion.Visible = CB_SubRegion.Visible = false;
+            Label_3DSRegion.Visible = CB_3DSReg.Visible = false;
         }
 
         if (!HaX && sav is SAV8LA)
         {
-            FLP_HeldItem.Visible = false;
+            Label_HeldItem.Visible = CB_HeldItem.Visible = false;
         }
 
         // pk2 save files do not have an Origin Game stored. Prompt the met location list to update.

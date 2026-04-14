@@ -342,12 +342,20 @@ public sealed class ShowdownSet : IBattleTemplate
             return false;
 
         var nature = (Nature)index;
+<<<<<<< HEAD
         if (!nature.IsFixed())
+=======
+        if (!nature.IsFixed)
+>>>>>>> upstream/master
         {
             LogError(NatureUnrecognized, input);
             return false;
         }
+<<<<<<< HEAD
         if (Nature != Nature.Random && Nature != nature)
+=======
+        if (Nature.IsFixed && Nature != nature)
+>>>>>>> upstream/master
         {
             LogError(NatureAlreadySpecified, input);
             return false;
@@ -627,7 +635,11 @@ public sealed class ShowdownSet : IBattleTemplate
             BattleTemplateToken.EVsAppendNature => GetStringStatsNatureAmp(EVs, 0, nameEVs, Nature),
             _ => GetStringStats(EVs, 0, nameEVs),
         };
+<<<<<<< HEAD
         if (token is BattleTemplateToken.EVsAppendNature && Nature.IsFixed())
+=======
+        if (token is BattleTemplateToken.EVsAppendNature && Nature.IsFixed)
+>>>>>>> upstream/master
             line += $" ({settings.Localization.Strings.natures[(int)Nature]})";
         result.Add(cfg.Push(BattleTemplateToken.EVs, line));
     }
@@ -1081,7 +1093,11 @@ public sealed class ShowdownSet : IBattleTemplate
                 return false; // invalid line
             }
 
+<<<<<<< HEAD
             if (Nature != Nature.Random) // specified in a separate Nature line
+=======
+            if (Nature.IsFixed) // specified in a separate Nature line
+>>>>>>> upstream/master
                 LogError(NatureEffortAmpAlreadySpecified, natureName);
             else
                 Nature = (Nature)natureIndex;
@@ -1100,7 +1116,11 @@ public sealed class ShowdownSet : IBattleTemplate
         result.TreatAmpsAsSpeedNotLast();
         var ampNature = AdjustNature(result.Plus, result.Minus);
         success &= ampNature;
+<<<<<<< HEAD
         if (ampNature && currentNature != Nature.Random && currentNature != Nature)
+=======
+        if (ampNature && currentNature.IsFixed && currentNature != Nature)
+>>>>>>> upstream/master
         {
             LogError(NatureEffortAmpConflictNature);
             Nature = currentNature; // revert to original

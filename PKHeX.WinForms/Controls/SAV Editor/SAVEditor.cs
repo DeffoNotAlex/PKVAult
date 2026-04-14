@@ -104,6 +104,8 @@ public partial class SAVEditor : UserControl, ISlotViewer<PictureBox>, ISaveFile
             if (menu.mnuVSD.Visible)
                 return;
             Box.CurrentBox = e.Delta > 1 ? Box.Editor.MoveLeft() : Box.Editor.MoveRight();
+            if (Box.M is { } m)
+                m.MouseRestart(); // should always trigger if properly connected
         };
 
         GB_Daycare.Click += (_, _) => SwitchDaycare();
@@ -473,7 +475,7 @@ public partial class SAVEditor : UserControl, ISlotViewer<PictureBox>, ISaveFile
         if (!string.IsNullOrWhiteSpace(message))
             WinFormsUtil.Alert(message + $" ({count})");
         else
-            SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
     }
 
     private void ClickBoxDouble(object sender, MouseEventArgs e)
@@ -967,7 +969,7 @@ public partial class SAVEditor : UserControl, ISlotViewer<PictureBox>, ISaveFile
         var localization = LegalityLocalizationSet.GetLocalization(Main.CurrentLanguage);
         var msg = bulk.Report(localization);
         WinFormsUtil.SetClipboardText(msg);
-        SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     // File I/O
@@ -1285,7 +1287,7 @@ public partial class SAVEditor : UserControl, ISlotViewer<PictureBox>, ISaveFile
         GB_Daycare.Visible = sav is IDaycareStorage or IDaycareMulti;
         B_ConvertKorean.Visible = sav is SAV4;
         B_OpenPokeblocks.Visible = sav is SAV6AO;
-        B_OpenSecretBase.Visible = sav is SAV6AO or IGen3Hoenn;
+        B_OpenSecretBase.Visible = sav is SAV6AO or SAV3 { LargeBlock: ISaveBlock3LargeHoenn };
         B_OpenPokepuffs.Visible = sav is ISaveBlock6Main;
         B_JPEG.Visible = B_OpenLinkInfo.Visible = B_OpenSuperTraining.Visible = B_OUTPasserby.Visible = sav is ISaveBlock6Main;
         B_OpenBoxLayout.Visible = sav is IBoxDetailName;
@@ -1313,7 +1315,7 @@ public partial class SAVEditor : UserControl, ISlotViewer<PictureBox>, ISaveFile
         B_OpenBattlePass.Visible = B_OpenGear.Visible = sav is SAV4BR;
         B_OpenSealStickers.Visible = B_Poffins.Visible = sav is SAV8BS;
         B_OpenApricorn.Visible = sav is SAV4HGSS;
-        B_OpenRTCEditor.Visible = (sav.Generation == 2 && sav is not SAV2Stadium) || sav is IGen3Hoenn;
+        B_OpenRTCEditor.Visible = (sav.Generation == 2 && sav is not SAV2Stadium) || sav is SAV3 { SmallBlock: ISaveBlock3SmallHoenn };
         B_MailBox.Visible = sav is SAV2 or SAV2Stadium or SAV3 or SAV4 or SAV5;
 
         B_Raids.Visible = sav is SAV8SWSH or SAV9SV;

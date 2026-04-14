@@ -31,10 +31,9 @@ public sealed class LegendsZAVerifier : Verifier
         if (moveCount == 4)
             return;
 
-        // TODO ZA HOME
-        // // Flag move slots that are empty.
-        // if (pa.Tracker != 0 || !ParseSettings.IgnoreTransferIfNoTracker)
-        //     return; // Can delete moves in PA9 moveset via HOME.
+        // Flag move slots that are empty.
+        if (pa is IHomeTrack { HasTracker: true } || !ParseSettings.IgnoreTransferIfNoTracker)
+            return; // Can delete moves in PA9 moveset via HOME.
 
         if (e9a.Species is (int)Rotom && moveCount == 3 && pa.Form == 0)
         {
@@ -216,7 +215,8 @@ public sealed class LegendsZAVerifier : Verifier
             // Trade evolutions forget to set the Plus flags, unlike triggered evolutions.
             // If the move is not present as a previous-evolution learnset move, and the head species is a Trade evo, skip the error.
             // Assume the best case -- evolved at current level, so none would get set.
-            if (IsTradeEvoSkip(la.Info.EvoChainsAllGens.Gen9a, move))
+            var evos = la.Info.EvoChainsAllGens;
+            if (IsTradeEvoSkip(evos.Gen9a, move))
                 continue;
 
             if (WasPossiblyObtainedBeforeDLC(pk, la.EncounterMatch) && IsPermittedUnsetPlusMove((Species)pk.Species, (Move)move))

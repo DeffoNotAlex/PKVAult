@@ -175,7 +175,7 @@ public partial class SAV_Database : Form
         int index = PKXBOXES.IndexOf(pb);
         if (!GetShiftedIndex(ref index))
         {
-            System.Media.SystemSounds.Exclamation.Play();
+            WinFormsUtil.Exclamation();
             return;
         }
 
@@ -207,7 +207,7 @@ public partial class SAV_Database : Form
         int index = PKXBOXES.IndexOf(pb);
         if (!GetShiftedIndex(ref index))
         {
-            System.Media.SystemSounds.Exclamation.Play();
+            WinFormsUtil.Exclamation();
             return;
         }
 
@@ -224,7 +224,7 @@ public partial class SAV_Database : Form
         {
             // Data from Box: Delete from save file
             var exist = b.Read(SAV);
-            if (!exist.DecryptedBoxData.SequenceEqual(pk.DecryptedBoxData)) // data modified already?
+            if (!exist.EqualsStored(pk)) // data modified already?
             {
                 WinFormsUtil.Error(MsgDBDeleteFailModified, MsgDBDeleteFailWarning);
                 return;
@@ -243,7 +243,7 @@ public partial class SAV_Database : Form
         L_Count.Text = string.Format(Counter, Results.Count);
         slotSelected = -1;
         FillPKXBoxes(SCR_Box.Value);
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 
     private void ClickSet(object sender, EventArgs e)
@@ -263,7 +263,9 @@ public partial class SAV_Database : Form
             return;
         }
 
-        File.WriteAllBytes(path, pk.DecryptedBoxData);
+        Span<byte> data = stackalloc byte[pk.SIZE_STORED];
+        pk.WriteDecryptedDataStored(data);
+        File.WriteAllBytes(path, data);
 
         var info = new SlotInfoFileSingle(path);
         var entry = new SlotCache(info, pk);
@@ -294,7 +296,7 @@ public partial class SAV_Database : Form
         RTB_Instructions.Clear();
 
         if (sender != this)
-            System.Media.SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
     }
 
     private void GenerateDBReport(object sender, EventArgs e)
@@ -446,8 +448,14 @@ public partial class SAV_Database : Form
         string path = fbd.SelectedPath;
         Directory.CreateDirectory(path);
 
+        Span<byte> data = stackalloc byte[SAV.SIZE_PARTY];
         foreach (var pk in Results.Select(z => z.Entity))
-            File.WriteAllBytes(Path.Combine(path, PathUtil.CleanFileName(pk.FileName)), pk.DecryptedPartyData);
+        {
+            var fileName = Path.Combine(path, PathUtil.CleanFileName(pk.FileName));
+            pk.ForcePartyData();
+            pk.WriteDecryptedDataParty(data);
+            File.WriteAllBytes(fileName, data);
+        }
     }
 
     private void Menu_Import_Click(object sender, EventArgs e)
@@ -526,7 +534,7 @@ public partial class SAV_Database : Form
                     WinFormsUtil.Alert(MsgDBSearchNone);
             }
             SetResults(results); // updates Count Label as well.
-            System.Media.SystemSounds.Asterisk.Play();
+            WinFormsUtil.Asterisk();
             B_Search.Enabled = true;
         }
         catch

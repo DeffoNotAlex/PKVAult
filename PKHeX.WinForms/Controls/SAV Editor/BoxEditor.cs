@@ -358,7 +358,7 @@ public partial class BoxEditor : UserControl, ISlotViewer<PictureBox>
     public void ApplySearchFilter(Func<PKM, bool>? searchFilter, bool reload = true)
     {
         _searchFilter = searchFilter;
-        _lastSearchResult = null;    
+        _lastSearchResult = null;
         if (!reload)
             return;
         ResetSlots();
@@ -373,13 +373,13 @@ public partial class BoxEditor : UserControl, ISlotViewer<PictureBox>
         if (!SearchUtil.TrySeekNext(SAV, searchFilter, out var result, box, slot, reverse))
         {
             // Not found
-            System.Media.SystemSounds.Exclamation.Play();
+            WinFormsUtil.Exclamation();
             return;
         }
         CurrentBox = result.Box;
         BoxPokeGrid.Entries[result.Slot].Focus();
         _lastSearchResult = result;
 
-        System.Media.SystemSounds.Asterisk.Play();
+        WinFormsUtil.Asterisk();
     }
 }

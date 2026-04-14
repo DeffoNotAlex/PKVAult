@@ -13,13 +13,17 @@ public static class HomeTests
     {
         var folder = TestUtil.GetRepoPath();
         var path = Path.Combine(folder, "TestData");
-        return Directory.EnumerateFiles(path, "*.eh3", SearchOption.TopDirectoryOnly);
+        return Directory.EnumerateFiles(path, "*.eh4", SearchOption.TopDirectoryOnly);
     }
 
     [Fact]
     public static void CheckCrypto1()
     {
         var paths = GetHomeEncrypted();
+
+        const int maxSize = HomeCrypto.SIZE_STORED;
+        var totalSize = PKH.GetPaddedSize(maxSize, out _);
+        Span<byte> write = stackalloc byte[totalSize];
         foreach (var f in paths)
         {
             var data = File.ReadAllBytes(f);
@@ -46,8 +50,8 @@ public static class HomeTests
 
             ph1.Clone().Should().NotBeNull();
 
-            var write = ph1.Rebuild();
-            write.Length.Should().Be(decrypted.Length);
+            var writeLength = ph1.Rebuild(write);
+            writeLength.Should().Be(decrypted.Length);
             for (int i = 0; i < decrypted.Length; i++)
                 write[i].Should().Be(decrypted[i], $"Offset {i:X2}");
 
