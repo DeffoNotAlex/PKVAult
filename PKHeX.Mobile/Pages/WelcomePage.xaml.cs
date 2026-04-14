@@ -39,9 +39,12 @@ public partial class WelcomePage : ContentPage
     //  Static helper
     // ─────────────────────────────────────────────────────────────────────────
 
+    private static bool _shownThisSession;
+
     public static bool ShouldShowWelcome()
-        => !Preferences.Default.Get("onboarding_complete", false)
-        || Preferences.Default.Get(SettingsPage.KeyAlwaysShowWelcome, false);
+        => !_shownThisSession && (
+            !Preferences.Default.Get("onboarding_complete", false)
+            || Preferences.Default.Get(SettingsPage.KeyAlwaysShowWelcome, false));
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Construction
@@ -244,6 +247,7 @@ public partial class WelcomePage : ContentPage
 
     private async Task FinishAsync()
     {
+        _shownThisSession = true;
         Preferences.Default.Set("onboarding_complete", true);
         await Shell.Current.GoToAsync("..", false);
     }
