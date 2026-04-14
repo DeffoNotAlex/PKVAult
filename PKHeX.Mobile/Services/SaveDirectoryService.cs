@@ -115,8 +115,20 @@ public class SaveDirectoryService
             result.AddRange(await ScanEdenRootAsync(root));
 
         // Deduplicate by FileUri — Eden roots and old pinned files can overlap
-        var seen = new HashSet<string>();
-        result.RemoveAll(e => !seen.Add(e.FileUri));
+        var seenUri = new HashSet<string>();
+        result.RemoveAll(e => !seenUri.Add(e.FileUri));
+
+        // Deduplicate by trainer identity — BDSP and some other games write a
+        // primary save + a backup file, both parseable. Keep the newer one.
+        var byTrainer = new Dictionary<(PKHeX.Core.GameVersion, string, string), SaveEntry>();
+        foreach (var e in result)
+        {
+            var key = (e.Version, e.TrainerName, e.TrainerID);
+            if (!byTrainer.TryGetValue(key, out var existing) || e.LastModified > existing.LastModified)
+                byTrainer[key] = e;
+        }
+        result = [.. byTrainer.Values];
+
         return result;
     }
 
