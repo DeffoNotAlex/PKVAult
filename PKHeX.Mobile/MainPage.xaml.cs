@@ -68,6 +68,10 @@ public partial class MainPage : ContentPage
         RootGrid.RowDefinitions[0].Height = dual ? GridLength.Star : GridLength.Auto;
         RootGrid.RowDefinitions[1].Height = dual ? new GridLength(0) : GridLength.Star;
 
+        // If saves are already cached (e.g. returning from GamePage), show them
+        // immediately so the bottom screen is responsive, then re-scan in background.
+        if (App.LoadedSaves.Count > 0)
+            ApplySaveEntries(App.LoadedSaves);
         _ = RefreshSavesAsync();
         UpdateActionHighlight();
     }
@@ -95,6 +99,11 @@ public partial class MainPage : ContentPage
     {
         var entries = await _dirService.ScanAllAsync();
         App.LoadedSaves = entries;
+        ApplySaveEntries(entries);
+    }
+
+    private void ApplySaveEntries(List<SaveEntry> entries)
+    {
         _saveCards = entries.Select(e => new SaveCardViewModel(e)).ToList();
         SaveCardsList.ItemsSource = _saveCards;
         SaveCountLabel.Text = $"{_saveCards.Count} save{(_saveCards.Count != 1 ? "s" : "")}";
