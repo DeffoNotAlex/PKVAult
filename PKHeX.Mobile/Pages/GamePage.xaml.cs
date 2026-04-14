@@ -60,6 +60,14 @@ public partial class GamePage : ContentPage
     private string _lastCrySlug = "";
 #endif
 
+    // Search / filter
+    private bool _searchMode = false;
+    private record struct SearchSlot(int Box, int Slot, PKM Pk);
+    private SearchSlot[] _searchResults = [];
+    private PKM? CursorPk => _searchMode
+        ? (_cursorSlot < _searchResults.Length ? _searchResults[_cursorSlot].Pk : null)
+        : (_cursorSlot < _currentBox.Length    ? _currentBox[_cursorSlot]       : null);
+
     // Pre-computed grid layout (recalculated on canvas size change)
     private SKRect[] _slotRects = [];
     private float _gridSlotSize;
@@ -344,13 +352,30 @@ public partial class GamePage : ContentPage
         float tGreen = (float)(_cursorTimer.Elapsed.TotalMilliseconds % 1400) / 1400f;
         float pulseGreen = 0.5f + 0.5f * MathF.Sin(tGreen * MathF.PI * 2);
 
-        for (int i = 0; i < _currentBox.Length && i < _slotRects.Length; i++)
+        for (int i = 0; i < _slotRects.Length; i++)
         {
             var rect = _slotRects[i];
-            var pk = _currentBox[i];
+            PKM pk;
+            if (_searchMode)
+            {
+                if (i < _searchResults.Length) pk = _searchResults[i].Pk;
+                else
+                {
+                    using var ep = new SKPaint { Color = ThemeService.SlotEmpty, IsAntialias = true };
+                    canvas.DrawRoundRect(rect, radius, radius, ep);
+                    using var eb = new SKPaint { Color = ThemeService.SlotBorder, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true };
+                    canvas.DrawRoundRect(rect, radius, radius, eb);
+                    continue;
+                }
+            }
+            else
+            {
+                if (i >= _currentBox.Length) break;
+                pk = _currentBox[i];
+            }
             bool isCursor = i == _cursorSlot;
-            bool isSelected = i == _selectedSlot && !_moveMode;
-            bool isSource = _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
+            bool isSelected = i == _selectedSlot && !_moveMode && !_searchMode;
+            bool isSource = !_searchMode && _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
             bool filled = pk.Species != 0;
 
             // ── Slot background ──
@@ -402,7 +427,7 @@ public partial class GamePage : ContentPage
                 DrawBlueCursor(canvas, rect, radius, pulseBlue);
 
             // ── Legality badge ──
-            if (_showLegalityBadges && i < _legalityCache.Length && _legalityCache[i] is bool legal)
+            if (!_searchMode && _showLegalityBadges && i < _legalityCache.Length && _legalityCache[i] is bool legal)
             {
                 var dotColor = legal ? new SKColor(60, 220, 110, 230) : new SKColor(255, 82, 82, 230);
                 using var glowPaint = new SKPaint
@@ -415,6 +440,21 @@ public partial class GamePage : ContentPage
                 canvas.DrawCircle(bx, by, 5f, glowPaint);
                 using var dotPaint = new SKPaint { Color = dotColor, IsAntialias = true };
                 canvas.DrawCircle(bx, by, 3f, dotPaint);
+            }
+
+            // ── Held item indicator ──
+            if (filled && pk.HeldItem > 0)
+            {
+                float ix = rect.Left + 8f;
+                float iy = rect.Bottom - 8f;
+                using var itemGlow = new SKPaint
+                {
+                    Color = new SKColor(240, 192, 64, 80), IsAntialias = true,
+                    ImageFilter = SKImageFilter.CreateBlur(3, 3),
+                };
+                canvas.DrawCircle(ix, iy, 4f, itemGlow);
+                using var itemDot = new SKPaint { Color = new SKColor(240, 192, 64, 220), IsAntialias = true };
+                canvas.DrawCircle(ix, iy, 2.5f, itemDot);
             }
         }
     }
@@ -1100,14 +1140,21 @@ public partial class GamePage : ContentPage
 
         // Hit-test against pre-computed slot rects
         int index = -1;
-        for (int i = 0; i < _slotRects.Length && i < _currentBox.Length; i++)
+        int hitMax = _searchMode ? _searchResults.Length : _currentBox.Length;
+        for (int i = 0; i < _slotRects.Length && i < hitMax; i++)
         {
             if (_slotRects[i].Contains(px, py)) { index = i; break; }
         }
 
-        if ((uint)index >= (uint)_currentBox.Length) return;
+        if ((uint)index >= (uint)hitMax) return;
 
         _cursorSlot = index;
+
+        if (_searchMode)
+        {
+            NavigateToSearchResult(index);
+            return;
+        }
 
         if (_moveMode)
         {
@@ -1127,6 +1174,19 @@ public partial class GamePage : ContentPage
         {
             DeselectSlot();
         }
+    }
+
+    private void NavigateToSearchResult(int index)
+    {
+        if ((uint)index >= (uint)_searchResults.Length) return;
+        var result = _searchResults[index];
+        _searchMode = false;
+        _searchResults = [];
+        MainThread.BeginInvokeOnMainThread(() => SearchEntry.Text = "");
+        _boxIndex    = result.Box;
+        _cursorSlot  = result.Slot;
+        _boxSlideDir = 0;
+        LoadBox(result.Box);
     }
 
     // ──────────────────────────────────────────────
@@ -1173,6 +1233,7 @@ public partial class GamePage : ContentPage
 
             case Android.Views.Keycode.ButtonA:
                 if (_moveMode) { ExecuteMove(); break; }
+                if (_searchMode) { NavigateToSearchResult(_cursorSlot); break; }
                 if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
                 {
                     if (_cursorSlot == _selectedSlot) _ = OpenEditor();
@@ -1192,6 +1253,7 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
             case Android.Views.Keycode.ButtonY:
                 if (_moveMode) { CancelMoveMode(); break; }
+                if (_searchMode) break;
                 if (_cursorSlot < _currentBox.Length && _currentBox[_cursorSlot].Species != 0)
                 { EnterMoveMode(); break; }
                 OnGiftsClicked(this, EventArgs.Empty);
@@ -1211,7 +1273,8 @@ public partial class GamePage : ContentPage
         if (delta == +1 && _cursorSlot % Columns == Columns - 1) return;
 
         int next = _cursorSlot + delta;
-        if ((uint)next >= (uint)_currentBox.Length) return;
+        int maxSlots = _searchMode ? _searchResults.Length : _currentBox.Length;
+        if ((uint)next >= (uint)maxSlots) return;
 
         Haptic();
         _cursorSlot    = next;
@@ -1286,27 +1349,29 @@ public partial class GamePage : ContentPage
             return;
         }
 
-        var pk = _cursorSlot < _currentBox.Length ? _currentBox[_cursorSlot] : null;
+        var pk = CursorPk;
         if (pk?.Species > 0)
         {
             var name = pk.Species < _strings.specieslist.Length
                 ? _strings.specieslist[pk.Species] : pk.Species.ToString();
             InfoSpeciesNum.Text = $"#{pk.Species:000}";
-            InfoSpeciesName.Text = _moveMode
-                ? $"Moving {name}..."
-                : $"{name} · Lv.{pk.CurrentLevel}";
+            InfoSpeciesName.Text = _searchMode
+                ? name
+                : _moveMode
+                    ? $"Moving {name}..."
+                    : $"{name} · Lv.{pk.CurrentLevel}";
         }
         else
         {
             InfoSpeciesNum.Text = "";
-            InfoSpeciesName.Text = "Empty slot";
+            InfoSpeciesName.Text = _searchMode ? $"{_searchResults.Length} results" : "Empty slot";
         }
     }
 
     private void UpdateTopPanel()
     {
-        if (_currentBox.Length == 0) return;
-        var pk = _cursorSlot < _currentBox.Length ? _currentBox[_cursorSlot] : null;
+        if (!_searchMode && _currentBox.Length == 0) return;
+        var pk = CursorPk;
         if (pk?.Species > 0)
             ShowPokemonPreview(pk);
         else
@@ -1613,6 +1678,47 @@ public partial class GamePage : ContentPage
         if (_cursorSlot < 0 || _cursorSlot >= _currentBox.Length) return;
         if (_currentBox[_cursorSlot].Species == 0) return;
         await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_cursorSlot}");
+    }
+
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        => _ = UpdateSearchAsync(e.NewTextValue ?? "");
+
+    private async Task UpdateSearchAsync(string query)
+    {
+        if (_sav is null) return;
+        var trimmed = query.Trim();
+        if (trimmed.Length == 0)
+        {
+            _searchMode = false;
+            _searchResults = [];
+            _cursorSlot = 0;
+            BoxCanvas.InvalidateSurface();
+            return;
+        }
+        _searchMode = true;
+        var results = new List<SearchSlot>();
+        var sav = _sav;
+        await Task.Run(() =>
+        {
+            for (int b = 0; b < sav.BoxCount; b++)
+            {
+                var box = sav.GetBoxData(b);
+                for (int s = 0; s < box.Length; s++)
+                {
+                    var pk = box[s];
+                    if (pk.Species == 0 || pk.Species >= _strings.specieslist.Length) continue;
+                    if (_strings.specieslist[pk.Species].Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+                        results.Add(new SearchSlot(b, s, pk));
+                }
+            }
+        });
+        _searchResults = [.. results];
+        if (_cursorSlot >= _searchResults.Length) _cursorSlot = 0;
+        UpdateTopPanel();
+        UpdateInfoBar();
+        BoxCanvas.InvalidateSurface();
+        await _sprites.PreloadBoxAsync(_searchResults.Select(r => r.Pk).ToArray());
+        BoxCanvas.InvalidateSurface();
     }
 
     private void OnActionOverlayTapped(object sender, TappedEventArgs e) => CloseActionMenu();
