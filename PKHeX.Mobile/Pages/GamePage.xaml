@@ -425,6 +425,9 @@
                                TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="3">
+                        <HorizontalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSaveHintTapped" />
+                        </HorizontalStackLayout.GestureRecognizers>
                         <Border StrokeShape="RoundRectangle 5"
                                 BackgroundColor="{DynamicResource ThHintBg}"
                                 Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
@@ -460,6 +463,9 @@
               Grid.Row="0" Grid.RowSpan="2"
               IsVisible="False"
               BackgroundColor="{DynamicResource ThActionMenuOverlay}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnActionOverlayTapped" />
+            </Grid.GestureRecognizers>
             <Border x:Name="ActionMenuPanel"
                     HorizontalOptions="Center" VerticalOptions="Center"
                     BackgroundColor="{DynamicResource ThActionMenuPanel}"
@@ -480,6 +486,9 @@
                             Stroke="{DynamicResource ThDivider}"
                             StrokeShape="RoundRectangle 8" Padding="16,12"
                             Margin="8,0,8,6">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSaveClicked" />
+                        </Border.GestureRecognizers>
                         <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
                             <Label Text="{x:Static theme:Ph.FloppyDisk}" FontFamily="Phosphor"
                                    FontSize="20" TextColor="{DynamicResource ThAccent}"
@@ -496,6 +505,9 @@
                             Stroke="{DynamicResource ThDivider}"
                             StrokeShape="RoundRectangle 8" Padding="16,12"
                             Margin="8,0,8,10">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnExportClicked" />
+                        </Border.GestureRecognizers>
                         <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
                             <Label Text="{x:Static theme:Ph.Export}" FontFamily="Phosphor"
                                    FontSize="20" TextColor="{DynamicResource ThAccent}"

@@ -62,6 +62,9 @@
                         BackgroundColor="{DynamicResource ThCardBg}"
                         Stroke="#334F80FF" StrokeThickness="1.5"
                         Padding="18,14">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHeroCardTapped" />
+                    </Border.GestureRecognizers>
 
                     <Grid ColumnDefinitions="Auto,*">
 

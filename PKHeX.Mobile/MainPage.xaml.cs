@@ -476,6 +476,7 @@ public partial class MainPage : ContentPage
         }
     }
 
+    private void OnHeroCardTapped(object? sender, TappedEventArgs e) => ActivatePrimaryButton();
     private void OnOpenBoxesTapped(object? sender, EventArgs e) => ActivatePrimaryButton();
     private void OnSearchTapped(object? sender, EventArgs e) => ActivateTile(0);
     private void OnGiftsTapped(object? sender, EventArgs e) => ActivateTile(1);
