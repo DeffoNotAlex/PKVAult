@@ -259,6 +259,12 @@ public partial class GamePage : ContentPage
                 _selectedSlot = -1;
 
             _legalityCache = new bool?[_currentBox.Length];
+
+            // Update top panel immediately — don't wait for sprite preload.
+            UpdateTopPanel();
+            UpdateInfoBar();
+            BoxCanvas.InvalidateSurface();
+
             await _sprites.PreloadBoxAsync(_currentBox);
             BoxCanvas.InvalidateSurface();
 
@@ -268,9 +274,6 @@ public partial class GamePage : ContentPage
                 BoxCanvas.TranslationX = slideDir * BoxCanvas.Width;
                 await BoxCanvas.TranslateToAsync(0, 0, 140, Easing.CubicOut);
             }
-
-            UpdateTopPanel();
-            UpdateInfoBar();
             if (_showLegalityBadges) _ = RunLegalityBadgesAsync(_currentBox);
         }
         finally { _loadingBox = false; }
