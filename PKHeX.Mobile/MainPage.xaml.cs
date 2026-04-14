@@ -402,28 +402,25 @@ public partial class MainPage : ContentPage
         byte cb = (byte)(mc.Blue  * 255);
 
         // Luminance-based visibility clamp
-        float lum = 0.2126f * cr / 255f + 0.7152f * cg / 255f + 0.0722f * cb / 255f;
-        SKColor charBase;
+        float r = cr / 255f, g = cg / 255f, b = cb / 255f;
+        float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
         if (isDark && lum < 0.12f)
         {
+            // Too dark for dark theme — lerp toward white
             float boost = (0.12f - lum) / 0.12f;
-            charBase = new SKColor(
-                (byte)(cr + (255 - cr) * boost),
-                (byte)(cg + (255 - cg) * boost),
-                (byte)(cb + (255 - cb) * boost));
+            r += (1f - r) * boost;
+            g += (1f - g) * boost;
+            b += (1f - b) * boost;
         }
-        else if (!isDark && lum > 0.85f)
+        else if (!isDark && lum > 0.30f)
         {
-            float darken = (lum - 0.85f) / 0.15f;
-            charBase = new SKColor(
-                (byte)(cr * (1f - darken)),
-                (byte)(cg * (1f - darken)),
-                (byte)(cb * (1f - darken)));
+            // Light theme: scale down to max luminance 0.30 so grays stay readable on white
+            float scale = 0.30f / lum;
+            r *= scale;
+            g *= scale;
+            b *= scale;
         }
-        else
-        {
-            charBase = new SKColor(cr, cg, cb);
-        }
+        var charBase = new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
 
         using var paint = new SKPaint
         {
@@ -458,7 +455,7 @@ public partial class MainPage : ContentPage
                 int ci = Math.Min(MoireCharStrings.Length - 1, (int)(w * MoireCharStrings.Length));
                 if (MoireChars[ci] == ' ') continue;
 
-                float alpha = isDark ? 0.30f + w * 0.70f : 0.45f + w * 0.55f;
+                float alpha = isDark ? 0.30f + w * 0.70f : 0.60f + w * 0.40f;
                 paint.Color = charBase.WithAlpha((byte)(alpha * 255));
                 canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
             }
