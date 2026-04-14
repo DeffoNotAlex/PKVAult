@@ -53,7 +53,7 @@ public partial class WelcomePage : ContentPage
         (150, 0),  // Slide 1 — Mewtwo
         (493, 0),  // Slide 2 — Arceus
         (644, 0),  // Slide 3 — Zekrom
-        (888, 0),  // Slide 4 — Zacian (HOME sprite)
+        (888, 0),  // Slide 4 — Zacian
         (643, 0),  // Slide 5 — Reshiram
     ];
 
@@ -67,6 +67,28 @@ public partial class WelcomePage : ContentPage
         ("Let's get started",               ""),
     ];
 
+    // Glow color per slide (drawn as radial gradient behind sprite)
+    private static readonly SKColor[] ReelGlowColors =
+    [
+        SKColor.Parse("#FFD700"), // Pikachu  — yellow
+        SKColor.Parse("#9B59B6"), // Mewtwo   — purple
+        SKColor.Parse("#F39C12"), // Arceus   — gold
+        SKColor.Parse("#3498DB"), // Zekrom   — electric blue
+        SKColor.Parse("#00BCD4"), // Zacian   — cyan
+        SKColor.Parse("#FF8F00"), // Reshiram — amber
+    ];
+
+    // Feature category badge label per slide (null = no badge)
+    private static readonly string?[] ReelBadgeLabels =
+    [
+        "Save Editor",
+        "Pokémon Editor",
+        "Legality",
+        "Emulators",
+        "Dual Screen",
+        null,
+    ];
+
     // Pre-loaded bitmaps for each slide (null = not yet loaded / show placeholder)
     private readonly SKBitmap?[] _reelBitmaps = new SKBitmap?[6];
 
@@ -75,9 +97,34 @@ public partial class WelcomePage : ContentPage
     private float _reelFloatPhase;
     private IDispatcherTimer? _reelFloatTimer;
 
-    // Current rendered sprite scale (animated in on slide entrance)
-    private float _reelSpriteScale = 1.0f;
+    // Current rendered sprite scale/opacity (animated in on slide entrance)
+    private float _reelSpriteScale   = 1.0f;
     private float _reelSpriteOpacity = 1.0f;
+
+    // Canvas size — tracked in paint handler so grid finale can use it
+    private SKSize _canvasSize;
+
+    // ── Grid finale state ────────────────────────────────────────────────────
+
+    // 4×3 grid of species for the closing finale animation
+    private static readonly (ushort Species, byte Form)[] GridSpecies =
+    [
+        (025, 0), (006, 0), (094, 0), (133, 0),   // row 0: Pikachu, Charizard, Gengar, Eevee
+        (150, 0), (448, 0), (384, 0), (658, 0),   // row 1: Mewtwo, Lucario, Rayquaza, Greninja
+        (493, 0), (644, 0), (888, 0), (643, 0),   // row 2: Arceus, Zekrom, Zacian, Reshiram
+    ];
+
+    private readonly SKBitmap?[] _gridBitmaps = new SKBitmap?[12];
+
+    private struct GridSlot
+    {
+        public SKPoint Start;
+        public SKPoint Target;
+    }
+    private GridSlot[] _gridSlots = new GridSlot[12];
+    private bool  _gridActive;
+    private float _gridOpacity = 1f;
+    private DateTime _gridStartTime;
 
 #if ANDROID
     // Audio — place pokemon_theme.ogg in PKHeX.Mobile/Resources/Raw/ to enable music
@@ -172,7 +219,10 @@ public partial class WelcomePage : ContentPage
         }
 
         if (!ct.IsCancellationRequested)
+        {
+            await RunGridFinaleAsync();
             await EndReelAsync();
+        }
     }
 
     private async Task ShowReelSlideAsync(int slideIndex, CancellationToken ct)
@@ -180,9 +230,23 @@ public partial class WelcomePage : ContentPage
         var (headline, subtext) = ReelSlides[slideIndex];
         var bitmap = _reelBitmaps[slideIndex]; // may be null — shows placeholder
 
-        // Update bottom screen slide text
+        // Update bottom screen slide text + progress bar
         if (_isDualScreen)
             _secondary.ShowReelSlide(slideIndex, headline, subtext, SkipReel);
+
+        // Show badge on top screen
+        var badgeText = ReelBadgeLabels[slideIndex];
+        if (badgeText is not null)
+        {
+            ReelBadgeLabel.Text    = badgeText;
+            ReelBadge.IsVisible    = true;
+            ReelBadge.Opacity      = 0;
+            _ = ReelBadge.FadeToAsync(1.0, 350);
+        }
+        else
+        {
+            ReelBadge.IsVisible = false;
+        }
 
         // Entrance: sprite pops in from scale 0.6
         _reelSpriteScale   = 0.6f;
@@ -247,6 +311,7 @@ public partial class WelcomePage : ContentPage
         // Exit: fade everything out before next slide
         if (_isDualScreen)
             _secondary.ShowReelTransition();
+        _ = ReelBadge.FadeToAsync(0, 200);
 
         var exitStart = DateTime.UtcNow;
         const int exitDuration = 300;
@@ -305,12 +370,14 @@ public partial class WelcomePage : ContentPage
 
     private void StopReel()
     {
-        _reelActive = false;
+        _reelActive  = false;
+        _gridActive  = false;
         _reelFloatTimer?.Stop();
         _reelFloatTimer = null;
         _reelCts?.Cancel();
         _reelCts = null;
         _reelSpriteCurrentBitmap = null;
+        ReelBadge.IsVisible = false;
     }
 
     private void StartFloatTimer()
@@ -322,7 +389,7 @@ public partial class WelcomePage : ContentPage
         {
             _reelFloatPhase += 0.04f; // ~2.4 rad/s = gentle bob
             _reelFloatY      = 5f * MathF.Sin(_reelFloatPhase);
-            if (_reelActive)
+            if (_reelActive || _gridActive)
                 ReelSpriteCanvas.InvalidateSurface();
         };
         _reelFloatTimer.Start();
@@ -330,12 +397,19 @@ public partial class WelcomePage : ContentPage
 
     private async Task PreloadReelSpritesAsync()
     {
+        // Reel sprites (shown per slide)
         for (int i = 0; i < ReelSpecies.Length; i++)
         {
             var (species, form) = ReelSpecies[i];
-            var bmp = await HomeSpriteCacheService.GetOrDownloadAsync(species, form, shiny: false)
-                                                  .ConfigureAwait(false);
-            _reelBitmaps[i] = bmp;
+            _reelBitmaps[i] = await HomeSpriteCacheService.GetOrDownloadAsync(species, form, shiny: false)
+                                                          .ConfigureAwait(false);
+        }
+        // Grid finale sprites — extra 6 (first 6 share cache entries with reel species)
+        for (int i = 0; i < GridSpecies.Length; i++)
+        {
+            var (species, form) = GridSpecies[i];
+            _gridBitmaps[i] = await HomeSpriteCacheService.GetOrDownloadAsync(species, form, shiny: false)
+                                                          .ConfigureAwait(false);
         }
     }
 
@@ -346,13 +420,39 @@ public partial class WelcomePage : ContentPage
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
+        _canvasSize = new SKSize(e.Info.Width, e.Info.Height);
+
+        // Grid finale takes over the canvas
+        if (_gridActive)
+        {
+            DrawGridFinale(canvas, e.Info);
+            return;
+        }
+
         var bmp = _reelSpriteCurrentBitmap;
-        if (bmp is null || _reelSpriteOpacity <= 0) return;
+        if (_reelSpriteOpacity <= 0) return;
 
         float w  = e.Info.Width;
         float h  = e.Info.Height;
         float cx = w / 2f;
         float cy = h / 2f + _reelFloatY;
+
+        // Pulsing radial glow behind sprite (breathes at ~0.7× the float rate)
+        int safeSlide = Math.Clamp(_reelSlideIndex, 0, ReelGlowColors.Length - 1);
+        float glowAlpha = (0.28f + 0.18f * MathF.Sin(_reelFloatPhase * 0.7f)) * _reelSpriteOpacity;
+        var glowColor = ReelGlowColors[safeSlide];
+        using (var glowShader = SKShader.CreateRadialGradient(
+            new SKPoint(cx, cy),
+            Math.Min(w, h) * 0.48f,
+            [glowColor.WithAlpha((byte)(glowAlpha * 255)), glowColor.WithAlpha(0)],
+            [0f, 1f],
+            SKShaderTileMode.Clamp))
+        using (var glowPaint = new SKPaint { Shader = glowShader, IsAntialias = true })
+        {
+            canvas.DrawCircle(cx, cy, Math.Min(w, h) * 0.48f, glowPaint);
+        }
+
+        if (bmp is null) return;
 
         // Size sprite to fill ~70% of the shorter dimension
         float maxSize = Math.Min(w, h) * 0.70f * _reelSpriteScale;
@@ -370,6 +470,112 @@ public partial class WelcomePage : ContentPage
         };
 
         canvas.DrawBitmap(bmp, dest, paint);
+    }
+
+    // ── Grid finale drawing ──────────────────────────────────────────────────
+
+    private void SetupGridSlots()
+    {
+        const int cols = 4, rows = 3;
+        float w = _canvasSize.Width;
+        float h = _canvasSize.Height;
+        float margin = 20f;
+        float slotW  = (w - margin * (cols + 1)) / cols;
+        float slotH  = (h - margin * (rows + 1)) / rows;
+
+        var rng = new Random(42); // fixed seed for deterministic start positions
+        for (int i = 0; i < 12; i++)
+        {
+            int row = i / cols, col = i % cols;
+            float tx = margin + col * (slotW + margin) + slotW / 2f;
+            float ty = margin + row * (slotH + margin) + slotH / 2f;
+
+            SKPoint start = rng.Next(4) switch
+            {
+                0 => new SKPoint(-130f,  rng.NextSingle() * h),
+                1 => new SKPoint(w + 130f, rng.NextSingle() * h),
+                2 => new SKPoint(rng.NextSingle() * w, -130f),
+                _ => new SKPoint(rng.NextSingle() * w, h + 130f),
+            };
+
+            _gridSlots[i] = new GridSlot { Start = start, Target = new SKPoint(tx, ty) };
+        }
+    }
+
+    private void DrawGridFinale(SKCanvas canvas, SKImageInfo info)
+    {
+        double elapsed  = (DateTime.UtcNow - _gridStartTime).TotalMilliseconds;
+        const int cols  = 4;
+        float w         = info.Width;
+        float h         = info.Height;
+        float margin    = 20f;
+        float slotW     = (w - margin * (cols + 1)) / cols;
+        float slotH     = (h - margin * (3   + 1)) / 3;
+        float spriteSize = Math.Min(slotW, slotH) * 0.80f;
+
+        for (int i = 0; i < 12; i++)
+        {
+            double spriteElapsed = elapsed - i * 80;
+            if (spriteElapsed < 0) continue;
+
+            // Spring-out easing for fly-in
+            float t      = (float)Math.Min(1.0, spriteElapsed / 500.0);
+            float spring = 1f - MathF.Pow(1f - t, 3) * (1f + 2f * t);
+
+            var slot = _gridSlots[i];
+            float x = slot.Start.X + (slot.Target.X - slot.Start.X) * spring;
+            float y = slot.Start.Y + (slot.Target.Y - slot.Start.Y) * spring;
+
+            float alpha = Math.Min(1f, (float)(spriteElapsed / 180.0)) * _gridOpacity;
+            if (alpha <= 0) continue;
+
+            var bmp = _gridBitmaps[i];
+            if (bmp is not null)
+            {
+                float aspect = (float)bmp.Width / bmp.Height;
+                float bw = aspect >= 1f ? spriteSize : spriteSize * aspect;
+                float bh = aspect >= 1f ? spriteSize / aspect : spriteSize;
+                var dest = new SKRect(x - bw / 2f, y - bh / 2f, x + bw / 2f, y + bh / 2f);
+                using var p = new SKPaint { Color = SKColors.White.WithAlpha((byte)(alpha * 255)) };
+                canvas.DrawBitmap(bmp, dest, p);
+            }
+            else
+            {
+                using var p = new SKPaint { Color = SKColors.White.WithAlpha((byte)(alpha * 45)), IsAntialias = true };
+                canvas.DrawCircle(x, y, spriteSize / 2f, p);
+            }
+        }
+    }
+
+    private async Task RunGridFinaleAsync()
+    {
+        // Bottom screen dims during the grid
+        if (_isDualScreen)
+            _secondary.ShowReelTransition();
+
+        SetupGridSlots();
+        _gridActive    = true;
+        _gridOpacity   = 1f;
+        _gridStartTime = DateTime.UtcNow;
+
+        // Wait for last sprite to land (~80×11 + 500 = 1380ms) plus a hold
+        await Task.Delay(1380 + 600).ConfigureAwait(false);
+
+        // Fade out grid
+        var fadeStart = DateTime.UtcNow;
+        const int fadeDuration = 380;
+        while (true)
+        {
+            double elapsedMs = (DateTime.UtcNow - fadeStart).TotalMilliseconds;
+            if (elapsedMs >= fadeDuration) break;
+            _gridOpacity = 1f - (float)(elapsedMs / fadeDuration);
+            MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
+            await Task.Delay(16).ConfigureAwait(false);
+        }
+
+        _gridActive  = false;
+        _gridOpacity = 0f;
+        MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
     }
 
     // ── Tap-to-skip on primary screen ───────────────────────────────────────

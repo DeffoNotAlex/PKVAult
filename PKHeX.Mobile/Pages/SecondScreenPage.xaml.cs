@@ -502,6 +502,23 @@ public partial class SecondScreenPage : ContentPage
     //  Intro reel (Mode E — pre-wizard)
     // ──────────────────────────────────────────────
 
+    // Per-slide bullet text (3 bullets per slide; empty = hidden)
+    private static readonly string[][] SlideBullets =
+    [
+        // Slide 0 — Pikachu / Every save
+        ["Gen 1 through Legends: Z-A", "3DS, Switch & GBA saves", "Import/export individual Pokémon"],
+        // Slide 1 — Mewtwo / Edit any Pokémon
+        ["IVs, EVs, nature, ability", "Moves, ribbons, contest stats", "Met location, OT, language"],
+        // Slide 2 — Arceus / Legality
+        ["Flags illegal moves & encounters", "Checks PID, EC, HOME tracker", "Know before you trade"],
+        // Slide 3 — Zekrom / Emulators
+        ["Eden · Azahar · MelonDS", "RetroArch supported", "Auto-detects save locations"],
+        // Slide 4 — Zacian / Dual screen
+        ["Box grid on bottom display", "Pokémon detail on top", "Full gamepad navigation"],
+        // Slide 5 — Reshiram / Let's get started
+        [],
+    ];
+
     private Action? _reelSkipAction;
 
     public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip)
@@ -515,40 +532,57 @@ public partial class SecondScreenPage : ContentPage
         ReelPanel.IsVisible     = true;
         _mainMenuVisible        = false;
 
+        // Reset text to invisible
         ReelHeadlineLabel.Opacity = 0;
         ReelSubtextLabel.Opacity  = 0;
-        ReelHeadlineLabel.Text    = headline;
-        ReelSubtextLabel.Text     = subtext;
+        ReelBullet0.Opacity       = 0;
+        ReelBullet1.Opacity       = 0;
+        ReelBullet2.Opacity       = 0;
 
-        // Update progress dots — use ThAccent equivalent and ThTextDim equivalent
-        var accent   = Color.FromArgb("#3B8BFF");
-        var dimColor = Color.FromArgb(
-            ThemeService.Current == PkTheme.Light ? "#9CA3AF" : "#6B7280");
+        ReelHeadlineLabel.Text = headline;
+        ReelSubtextLabel.Text  = subtext;
 
-        Ellipse[] dots = [ReelDot0, ReelDot1, ReelDot2, ReelDot3, ReelDot4, ReelDot5];
-        for (int i = 0; i < dots.Length; i++)
-            dots[i].Fill = new SolidColorBrush(i == slideIndex ? accent : dimColor);
+        // Set bullet texts (prefix with bullet char)
+        string[] bullets = slideIndex < SlideBullets.Length ? SlideBullets[slideIndex] : [];
+        ReelBullet0.Text = bullets.Length > 0 ? $"• {bullets[0]}" : "";
+        ReelBullet1.Text = bullets.Length > 1 ? $"• {bullets[1]}" : "";
+        ReelBullet2.Text = bullets.Length > 2 ? $"• {bullets[2]}" : "";
 
-        // Staggered fade-in
+        // Reset + restart progress bar
+        ReelProgressBar.CancelAnimations();
+        ReelProgressBar.Progress = 0;
+        _ = ReelProgressBar.ProgressTo(1.0, 4000, Easing.Linear);
+
+        // Staggered fade-in: headline → subtext → bullets
         _ = ReelHeadlineLabel.FadeToAsync(1.0, 300);
-        Task.Delay(150).ContinueWith(_ =>
-            MainThread.BeginInvokeOnMainThread(() => _ = ReelSubtextLabel.FadeToAsync(1.0, 300)));
+        Delay(150, () => _ = ReelSubtextLabel.FadeToAsync(1.0, 280));
+        if (bullets.Length > 0) Delay(400,  () => _ = ReelBullet0.FadeToAsync(1.0, 250));
+        if (bullets.Length > 1) Delay(620,  () => _ = ReelBullet1.FadeToAsync(1.0, 250));
+        if (bullets.Length > 2) Delay(840,  () => _ = ReelBullet2.FadeToAsync(1.0, 250));
     }
 
     public void ShowReelTransition()
     {
+        ReelProgressBar.CancelAnimations();
         _ = ReelHeadlineLabel.FadeToAsync(0, 200);
         _ = ReelSubtextLabel.FadeToAsync(0, 200);
+        _ = ReelBullet0.FadeToAsync(0, 150);
+        _ = ReelBullet1.FadeToAsync(0, 150);
+        _ = ReelBullet2.FadeToAsync(0, 150);
     }
 
     public void HideReel()
     {
+        ReelProgressBar.CancelAnimations();
         ReelPanel.IsVisible = false;
         _reelSkipAction     = null;
     }
 
     private void OnReelSkipTapped(object? sender, EventArgs e)
         => _reelSkipAction?.Invoke();
+
+    private static void Delay(int ms, Action action)
+        => Task.Delay(ms).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(action));
 
     // ──────────────────────────────────────────────
     //  Welcome wizard (Mode D)

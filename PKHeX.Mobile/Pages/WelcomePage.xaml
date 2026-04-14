@@ -16,7 +16,7 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnReelTapSkip" />
             </Grid.GestureRecognizers>
-            <!-- Sprite canvas fills the screen with the floating sprite -->
+            <!-- Sprite canvas fills the screen with the floating sprite / grid finale -->
             <skia:SKCanvasView x:Name="ReelSpriteCanvas"
                                PaintSurface="OnReelSpritePaint"
                                HorizontalOptions="Fill" VerticalOptions="Fill" />
@@ -26,6 +26,19 @@
                      Fill="{DynamicResource ThSettingsRow}"
                      HorizontalOptions="Center" VerticalOptions="Center"
                      Opacity="0.4" />
+            <!-- Feature category badge (lower-left, fades in per slide) -->
+            <Border x:Name="ReelBadge" IsVisible="False" Opacity="0"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="#28FFFFFF"
+                    Stroke="#40FFFFFF" StrokeThickness="1"
+                    Padding="14,6"
+                    HorizontalOptions="Start" VerticalOptions="End"
+                    Margin="20,0,0,24">
+                <Label x:Name="ReelBadgeLabel"
+                       FontFamily="NunitoBold" FontSize="11"
+                       TextColor="White"
+                       LetterSpacing="0.5" />
+            </Border>
         </Grid>
 
         <!-- ── Row 0: Logo / step header ── -->

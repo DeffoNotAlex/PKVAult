@@ -181,9 +181,9 @@
               RowDefinitions="*,Auto,Auto"
               BackgroundColor="{DynamicResource ThSettingsBg}">
 
-            <!-- Headline + subtext -->
+            <!-- Headline + subtext + staggered bullets -->
             <VerticalStackLayout Grid.Row="0" VerticalOptions="Center"
-                                 HorizontalOptions="Center" Padding="28,0" Spacing="14">
+                                 HorizontalOptions="Fill" Padding="28,0" Spacing="10">
                 <Label x:Name="ReelHeadlineLabel"
                        Text=""
                        FontFamily="NunitoBold" FontSize="26"
@@ -193,24 +193,26 @@
                        Text=""
                        FontSize="15" TextColor="{DynamicResource ThTextSecondary}"
                        HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                <!-- Bullet details — opacity-animated per slide -->
+                <VerticalStackLayout Spacing="5" Margin="0,10,0,0">
+                    <Label x:Name="ReelBullet0" Text="" Opacity="0"
+                           FontSize="13" TextColor="{DynamicResource ThTextDim}"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    <Label x:Name="ReelBullet1" Text="" Opacity="0"
+                           FontSize="13" TextColor="{DynamicResource ThTextDim}"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    <Label x:Name="ReelBullet2" Text="" Opacity="0"
+                           FontSize="13" TextColor="{DynamicResource ThTextDim}"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
 
-            <!-- Progress dots (6 slides) -->
-            <HorizontalStackLayout Grid.Row="1" Spacing="10"
-                                   HorizontalOptions="Center" Margin="0,0,0,14">
-                <Ellipse x:Name="ReelDot0" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThAccent}" />
-                <Ellipse x:Name="ReelDot1" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThTextDim}" />
-                <Ellipse x:Name="ReelDot2" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThTextDim}" />
-                <Ellipse x:Name="ReelDot3" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThTextDim}" />
-                <Ellipse x:Name="ReelDot4" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThTextDim}" />
-                <Ellipse x:Name="ReelDot5" WidthRequest="8" HeightRequest="8"
-                         Fill="{DynamicResource ThTextDim}" />
-            </HorizontalStackLayout>
+            <!-- Progress bar -->
+            <ProgressBar x:Name="ReelProgressBar" Grid.Row="1"
+                         Progress="0"
+                         ProgressColor="{DynamicResource ThAccent}"
+                         HeightRequest="3"
+                         Margin="24,0,24,16" />
 
             <!-- Skip button -->
             <Border Grid.Row="2"
