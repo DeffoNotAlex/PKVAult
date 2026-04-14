@@ -1265,7 +1265,7 @@ public partial class GamePage : ContentPage
     }
 #endif
 
-    private static void Haptic() => HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+    private static void Haptic() { try { HapticFeedback.Default.Perform(HapticFeedbackType.Click); } catch { } }
 
     private void MoveCursor(int delta)
     {

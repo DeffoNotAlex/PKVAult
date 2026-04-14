@@ -590,7 +590,7 @@ public partial class MainPage : ContentPage
         UpdateActionHighlight();
     }
 
-    private static void Haptic() => HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+    private static void Haptic() { try { HapticFeedback.Default.Perform(HapticFeedbackType.Click); } catch { } }
 
     private void MoveUp()
     {
