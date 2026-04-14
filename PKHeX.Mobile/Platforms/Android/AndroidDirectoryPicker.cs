@@ -12,7 +12,7 @@ public class AndroidDirectoryPicker : IDirectoryPicker
         if (activity == null) return null;
 
         var intent = new Intent(Intent.ActionOpenDocumentTree);
-        intent.AddFlags(ActivityFlags.GrantReadUriPermission | ActivityFlags.GrantPersistableUriPermission);
+        intent.AddFlags(ActivityFlags.GrantReadUriPermission | ActivityFlags.GrantWriteUriPermission | ActivityFlags.GrantPersistableUriPermission);
 
         var tcs = new TaskCompletionSource<string?>();
 
@@ -22,7 +22,7 @@ public class AndroidDirectoryPicker : IDirectoryPicker
             {
                 activity.ContentResolver?.TakePersistableUriPermission(
                     uri,
-                    ActivityFlags.GrantReadUriPermission);
+                    ActivityFlags.GrantReadUriPermission | ActivityFlags.GrantWriteUriPermission);
                 tcs.TrySetResult(uri.ToString());
             }
             else

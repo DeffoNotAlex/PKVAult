@@ -1755,7 +1755,11 @@ public partial class GamePage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Save failed", ex.Message, "OK");
+            bool isPermission = ex.Message.Contains("Permission") || ex.Message.Contains("permission");
+            string msg = isPermission
+                ? "Write permission denied. Go to Settings → Find Azahar/MelonDS/RetroArch Saves and re-grant folder access, then try again."
+                : ex.Message;
+            await DisplayAlertAsync("Save failed", msg, "OK");
         }
     }
 
