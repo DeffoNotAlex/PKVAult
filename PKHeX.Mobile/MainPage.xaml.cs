@@ -77,8 +77,8 @@ public partial class MainPage : ContentPage
         }
         else
         {
-            // Returning from GamePage — nothing on disk changed, just rebind.
-            ApplySaveEntries(App.LoadedSaves);
+            // Returning from GamePage — list is identical, just restore highlights.
+            RestoreAfterGamePage();
         }
         UpdateActionHighlight();
     }
@@ -140,6 +140,38 @@ public partial class MainPage : ContentPage
         }
 
         // Show hero preview for the focused card
+        UpdateHeroPreview();
+        UpdateActionHighlight();
+        _secondary.ShowMainMenu(_saveCards.Cast<object>().ToList(), _cardCursor);
+    }
+
+    /// <summary>
+    /// Lightweight return from GamePage: existing save cards stay bound,
+    /// only the active-save highlight and cursor are restored.
+    /// </summary>
+    private void RestoreAfterGamePage()
+    {
+        if (_saveCards.Count == 0) return;
+
+        // Clear any stale IsLoaded flags from the previous session
+        foreach (var c in _saveCards) c.IsLoaded = false;
+
+        if (App.ActiveSaveFileUri is { Length: > 0 } uri)
+        {
+            var active = _saveCards.FirstOrDefault(c => c.Entry.FileUri == uri);
+            if (active != null)
+            {
+                active.IsLoaded = true;
+                _selectedSave   = active.Entry;
+                int idx = _saveCards.IndexOf(active);
+                SetCardCursor(idx);
+                _gpNavigating = true;
+                SaveCardsList.SelectedItem = active;
+                _gpNavigating = false;
+                SaveCardsList.ScrollTo(idx, -1, ScrollToPosition.MakeVisible, false);
+            }
+        }
+
         UpdateHeroPreview();
         UpdateActionHighlight();
         _secondary.ShowMainMenu(_saveCards.Cast<object>().ToList(), _cardCursor);
