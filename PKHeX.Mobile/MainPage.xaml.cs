@@ -589,8 +589,11 @@ public partial class MainPage : ContentPage
         UpdateActionHighlight();
     }
 
+    private static void Haptic() => HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+
     private void MoveUp()
     {
+        Haptic();
         if (_focusSection == 1)
         {
             if (_actionCursor > 0)
@@ -618,6 +621,7 @@ public partial class MainPage : ContentPage
 
     private void MoveDown()
     {
+        Haptic();
         if (_focusSection == 0)
         {
             if (_saveCards.Count > 0 && _cardCursor < _saveCards.Count - 1)
@@ -645,6 +649,7 @@ public partial class MainPage : ContentPage
 
     private void MoveLeft()
     {
+        Haptic();
         if (_focusSection == 1 && _actionCursor > 1)
         {
             _actionCursor--;
@@ -654,6 +659,7 @@ public partial class MainPage : ContentPage
 
     private void MoveRight()
     {
+        Haptic();
         if (_focusSection == 1 && _actionCursor >= 1 && _actionCursor < 4)
         {
             _actionCursor++;
@@ -663,6 +669,7 @@ public partial class MainPage : ContentPage
 
     private async Task OnAPressed()
     {
+        Haptic();
         if (_focusSection == 0)
         {
             if (_cardCursor >= 0 && _cardCursor < _saveCards.Count)
@@ -756,6 +763,7 @@ public partial class MainPage : ContentPage
         public string TrainerName { get; }
         public string VersionLabel { get; }
         public string DetailLine { get; }
+        public string LastModifiedLabel { get; }
         public string GameShortName { get; }
 
         public Color GameColorDark { get; }
@@ -771,6 +779,7 @@ public partial class MainPage : ContentPage
             TrainerName = entry.TrainerName;
             VersionLabel = $"Pokémon {entry.Version}  ·  Gen {entry.Generation}";
             DetailLine = $"TID {entry.TrainerID}  ·  {entry.BoxCount} boxes  ·  {entry.PlayTime}";
+            LastModifiedLabel = FormatRelativeTime(entry.LastModified);
             GameShortName = GetGameShortName(entry.Version);
 
             var (dark, light) = GameColors.Get(entry.Version);
@@ -790,6 +799,16 @@ public partial class MainPage : ContentPage
                 HasIcon = false;
                 HasNoIcon = true;
             }
+        }
+
+        private static string FormatRelativeTime(DateTimeOffset dt)
+        {
+            var diff = DateTimeOffset.UtcNow - dt;
+            if (diff.TotalMinutes < 1)  return "just now";
+            if (diff.TotalHours   < 1)  return $"{(int)diff.TotalMinutes}m ago";
+            if (diff.TotalDays    < 1)  return $"{(int)diff.TotalHours}h ago";
+            if (diff.TotalDays    < 7)  return $"{(int)diff.TotalDays}d ago";
+            return dt.LocalDateTime.ToString("MMM d");
         }
 
         private static string? GetIconFileName(GameVersion v) => v switch

@@ -1203,6 +1203,8 @@ public partial class GamePage : ContentPage
     }
 #endif
 
+    private static void Haptic() => HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+
     private void MoveCursor(int delta)
     {
         if (delta == -1 && _cursorSlot % Columns == 0)           return;
@@ -1211,6 +1213,7 @@ public partial class GamePage : ContentPage
         int next = _cursorSlot + delta;
         if ((uint)next >= (uint)_currentBox.Length) return;
 
+        Haptic();
         _cursorSlot    = next;
         _bounceSlot    = next;
         _bounceStartMs = _cursorTimer.ElapsedMilliseconds;
