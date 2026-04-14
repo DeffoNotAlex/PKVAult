@@ -429,7 +429,7 @@ public partial class GamePage : ContentPage
         float sx = slotRect.MidX - drawW / 2f;
         float sy = slotRect.MidY - drawH / 2f;
         using var paint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKFilterMode.Nearest), paint);
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), paint);
     }
 
     private static void DrawBlueCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
