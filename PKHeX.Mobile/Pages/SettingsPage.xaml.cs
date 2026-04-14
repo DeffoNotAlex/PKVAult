@@ -490,6 +490,7 @@ public partial class SettingsPage : ContentPage
         }
 
         _dirService.AddEdenRoot(uri);
+        App.RescanNeeded = true;
 
         var names = string.Join(", ", found.Select(f => f.GameName));
         EdenStatusLabel.Text = $"Found {found.Count} save{(found.Count == 1 ? "" : "s")}: {names}. New games will be picked up automatically.";
@@ -501,6 +502,7 @@ public partial class SettingsPage : ContentPage
         if (uri is null) return;
 
         _dirService.AddDirectory(uri);
+        App.RescanNeeded = true;
         await DisplayAlertAsync("MelonDS", "Folder added. Your save files will appear on the home screen after a refresh.", "OK");
     }
 
@@ -521,6 +523,7 @@ public partial class SettingsPage : ContentPage
 
         foreach (var (fileUri, _) in found)
             _dirService.AddFile(fileUri);
+        App.RescanNeeded = true;
 
         AzaharStatusLabel.Text = $"Added {found.Count} save{(found.Count == 1 ? "" : "s")}.";
     }
@@ -531,6 +534,7 @@ public partial class SettingsPage : ContentPage
         if (uri is null) return;
 
         _dirService.AddDirectory(uri);
+        App.RescanNeeded = true;
         await DisplayAlertAsync("RetroArch", "Folder added. Pokémon GBA/GBC saves (.srm) will appear on the home screen after a refresh.", "OK");
     }
 

@@ -68,11 +68,18 @@ public partial class MainPage : ContentPage
         RootGrid.RowDefinitions[0].Height = dual ? GridLength.Star : GridLength.Auto;
         RootGrid.RowDefinitions[1].Height = dual ? new GridLength(0) : GridLength.Star;
 
-        // If saves are already cached (e.g. returning from GamePage), show them
-        // immediately so the bottom screen is responsive, then re-scan in background.
-        if (App.LoadedSaves.Count > 0)
+        if (App.RescanNeeded || App.LoadedSaves.Count == 0)
+        {
+            // Show cached list immediately if available, then rescan in background.
+            if (App.LoadedSaves.Count > 0)
+                ApplySaveEntries(App.LoadedSaves);
+            _ = RefreshSavesAsync();
+        }
+        else
+        {
+            // Returning from GamePage — nothing on disk changed, just rebind.
             ApplySaveEntries(App.LoadedSaves);
-        _ = RefreshSavesAsync();
+        }
         UpdateActionHighlight();
     }
 
@@ -99,6 +106,7 @@ public partial class MainPage : ContentPage
     {
         var entries = await _dirService.ScanAllAsync();
         App.LoadedSaves = entries;
+        App.RescanNeeded = false;
         ApplySaveEntries(entries);
     }
 
