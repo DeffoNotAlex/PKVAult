@@ -19,6 +19,7 @@ public static class EmulatorSaveFinderService
             { "01001F5010B28000", "Legends: Arceus"   },
             { "0100A3D008C5C000", "Scarlet"           },
             { "01008F6008C5E000", "Violet"            },
+            { "0100F43008C44000", "Legends: Z-A"      },
         };
 
     /// <summary>

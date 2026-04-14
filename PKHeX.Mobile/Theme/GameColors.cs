@@ -80,6 +80,7 @@ public static class GameColors
         // Gen 9
         [GameVersion.SL] = (SKColor.Parse("#B82E2E"), SKColor.Parse("#E83F3F")),
         [GameVersion.VL] = (SKColor.Parse("#7B52A8"), SKColor.Parse("#9B72CF")),
+        [GameVersion.ZA] = (SKColor.Parse("#2A2A3A"), SKColor.Parse("#C8A040")),
     };
 
     /// <summary>
