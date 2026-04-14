@@ -49,9 +49,9 @@ public static class EmulatorSaveFinderService
                 var saveDocId = NavigatePath(resolver, treeUri, rootDocId, ["nand", "user", "save"]);
                 if (saveDocId == null) return results;
 
-                // Collect every "main" file found up to 5 directories deep
+                // Collect every "main" file found up to 8 directories deep
                 var mainDocIds = new List<string>();
-                FindNamedFiles(resolver, treeUri, saveDocId, "main", 5, mainDocIds);
+                FindNamedFiles(resolver, treeUri, saveDocId, "main", 8, mainDocIds);
 
                 // Try SaveUtil on each candidate
                 foreach (var mainDocId in mainDocIds)
