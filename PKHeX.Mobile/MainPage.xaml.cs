@@ -557,7 +557,7 @@ public partial class MainPage : ContentPage
             case Android.Views.Keycode.ButtonSelect:
             case Android.Views.Keycode.ButtonStart:
                 _ = Shell.Current.GoToAsync(nameof(SettingsPage)); break;
-            case Android.Views.Keycode.ButtonR3:
+            case Android.Views.Keycode.ButtonThumbR:
                 _ = RefreshSavesAsync(); break;
         }
     }
