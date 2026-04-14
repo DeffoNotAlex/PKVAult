@@ -130,6 +130,25 @@
 
             <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
 
+            <!-- Moiré hero background -->
+            <Border x:Name="Row_HeroBg" StyleId="Toggle"
+                    BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                    StrokeShape="RoundRectangle 6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Moiré Background"
+                               FontAttributes="Bold" FontSize="15"
+                               TextColor="{DynamicResource ThTextPrimary}" />
+                        <Label Text="Animated character pattern behind the hero save card. Disable for a classic gradient."
+                               FontSize="12" TextColor="{DynamicResource ThTextSecondary}" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1" x:Name="MoireSwitch"
+                            Toggled="OnMoireSwitchToggled" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <BoxView HeightRequest="1" Color="{DynamicResource ThDivider}" />
+
             <!-- Animated 3D sprites -->
             <Border x:Name="Row_Animated3D" StyleId="Toggle"
                     BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"

@@ -39,6 +39,9 @@ public partial class MainPage : ContentPage
     // Duotone Moiré — set for B2/W2, Empty otherwise
     private SKColor  _moireBase       = SKColor.Empty;
     private SKColor  _moireAccent     = SKColor.Empty;
+    // Classic gradient (used when Moiré is disabled)
+    private GradientStop? _heroTopStop;
+    private GradientStop? _heroMidStop;
 
     // Moiré renderer — cached to avoid per-frame allocations
     private static readonly string   MoireChars       = " .,-~:;=!*#";
@@ -267,6 +270,39 @@ public partial class MainPage : ContentPage
         _heroColorLight = card.GameColorLight;
         _heroColorDark  = card.GameColorDark;
 
+        bool moireEnabled = Preferences.Default.Get(Pages.SettingsPage.KeyMoireBg, true);
+        HeroGridCanvas.IsVisible = moireEnabled;
+
+        if (!moireEnabled)
+        {
+            // Classic breathing gradient
+            if (_heroTopStop is null)
+            {
+                _heroTopStop = new GradientStop(card.GameColorLight.WithAlpha(55), 0f);
+                _heroMidStop = new GradientStop(card.GameColorDark.WithAlpha(20), 0.6f);
+                HeroPanel.Background = new LinearGradientBrush
+                {
+                    StartPoint = new Point(0.5, 0), EndPoint = new Point(0.5, 1),
+                    GradientStops = [_heroTopStop, _heroMidStop, new GradientStop(Colors.Transparent, 1f)],
+                };
+            }
+            else
+            {
+                _heroTopStop.Color  = card.GameColorLight.WithAlpha(55);
+                _heroMidStop!.Color = card.GameColorDark.WithAlpha(20);
+            }
+        }
+        else
+        {
+            // Clear gradient if switching back to Moiré
+            if (_heroTopStop is not null)
+            {
+                HeroPanel.Background = null;
+                _heroTopStop = null;
+                _heroMidStop = null;
+            }
+        }
+
         // Duotone Moiré (B2/W2 only)
         if (card.MoireAccent is { } accent)
         {
@@ -374,6 +410,15 @@ public partial class MainPage : ContentPage
         HeroCard.TranslationY = 5.0  * Math.Sin(phaseA);
         HeroCard.RotationX    = 3.5  * Math.Sin(phaseA);
         HeroCard.RotationY    = 2.5  * Math.Sin(phaseB);
+
+        if (_heroTopStop is not null && _heroColorLight != Colors.Transparent)
+        {
+            double breath  = 0.5 + 0.5 * Math.Sin(t * Math.PI * 2 / 4.0);
+            byte topAlpha  = (byte)(22 + breath * 90);
+            byte midAlpha  = (byte)(8  + breath * 28);
+            _heroTopStop.Color  = _heroColorLight.WithAlpha(topAlpha);
+            _heroMidStop!.Color = _heroColorDark.WithAlpha(midAlpha);
+        }
 
         HeroGridCanvas.InvalidateSurface();
     }
