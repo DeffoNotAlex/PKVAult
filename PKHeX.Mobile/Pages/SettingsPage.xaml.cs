@@ -172,7 +172,8 @@ public partial class SettingsPage : ContentPage
             case 2: SetToggle(RadarAdaptiveSwitch, delta); break;
             case 4: SetToggle(LegalitySwitch,      delta); break;
             case 5: SetToggle(ThemeSwitch,         delta); break;
-            case 6: SetToggle(Animated3DSwitch,    delta); break;
+            case 6: SetToggle(MoireSwitch,         delta); break;
+            case 7: SetToggle(Animated3DSwitch,    delta); break;
         }
 
         static void SetToggle(Switch sw, int delta)
@@ -208,24 +209,27 @@ public partial class SettingsPage : ContentPage
                 ThemeSwitch.IsToggled = !ThemeSwitch.IsToggled;
                 break;
             case 6:
-                Animated3DSwitch.IsToggled = !Animated3DSwitch.IsToggled;
+                MoireSwitch.IsToggled = !MoireSwitch.IsToggled;
                 break;
             case 7:
-                StartBulkDownload();
+                Animated3DSwitch.IsToggled = !Animated3DSwitch.IsToggled;
                 break;
             case 8:
-                StartAnimBulkDownload();
+                StartBulkDownload();
                 break;
             case 9:
-                _ = FindEdenSavesAsync();
+                StartAnimBulkDownload();
                 break;
             case 10:
-                _ = FindMelonDSSavesAsync();
+                _ = FindEdenSavesAsync();
                 break;
             case 11:
-                _ = FindAzaharSavesAsync();
+                _ = FindMelonDSSavesAsync();
                 break;
             case 12:
+                _ = FindAzaharSavesAsync();
+                break;
+            case 13:
                 _ = FindRetroArchSavesAsync();
                 break;
         }
