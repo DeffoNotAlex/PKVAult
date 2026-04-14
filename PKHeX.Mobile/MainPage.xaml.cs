@@ -34,8 +34,11 @@ public partial class MainPage : ContentPage
     private DateTime          _floatStart = DateTime.UtcNow;
 
     // Hero game colors (used by Moiré canvas + glow/stroke accents)
-    private Color _heroColorLight = Colors.Transparent;
-    private Color _heroColorDark  = Colors.Transparent;
+    private Color    _heroColorLight  = Colors.Transparent;
+    private Color    _heroColorDark   = Colors.Transparent;
+    // Duotone Moiré — set for B2/W2, Empty otherwise
+    private SKColor  _moireBase       = SKColor.Empty;
+    private SKColor  _moireAccent     = SKColor.Empty;
 
     // Moiré renderer — cached to avoid per-frame allocations
     private static readonly string   MoireChars       = " .,-~:;=!*#";
@@ -264,6 +267,23 @@ public partial class MainPage : ContentPage
         _heroColorLight = card.GameColorLight;
         _heroColorDark  = card.GameColorDark;
 
+        // Duotone Moiré (B2/W2 only)
+        if (card.MoireAccent is { } accent)
+        {
+            // Base: near-black for B2, near-white for W2 (derived from dark/light game color)
+            var dark  = card.GameColorDark;
+            bool isBlackGame = dark.Red < 0.3f && dark.Green < 0.3f && dark.Blue < 0.3f;
+            _moireBase   = isBlackGame
+                ? new SKColor(28, 28, 36)       // near-black base for B2
+                : new SKColor(240, 240, 248);    // near-white base for W2
+            _moireAccent = accent;
+        }
+        else
+        {
+            _moireBase   = SKColor.Empty;
+            _moireAccent = SKColor.Empty;
+        }
+
         // Accent glow + card stroke from game color
         HeroGlow0.Color = card.GameColorLight.WithAlpha(64);
         HeroCard.Stroke = new SolidColorBrush(card.GameColorLight.WithAlpha(80));
@@ -450,7 +470,20 @@ public partial class MainPage : ContentPage
                 if (MoireChars[ci] == ' ') continue;
 
                 float alpha = isDark ? 0.30f + w * 0.70f : 0.75f + w * 0.25f;
-                paint.Color = charBase.WithAlpha((byte)(alpha * 255));
+                SKColor color;
+                if (_moireAccent != SKColor.Empty)
+                {
+                    // Duotone: lerp from base (black/white) to accent color
+                    color = new SKColor(
+                        (byte)(_moireBase.Red   + (_moireAccent.Red   - _moireBase.Red)   * w),
+                        (byte)(_moireBase.Green + (_moireAccent.Green - _moireBase.Green) * w),
+                        (byte)(_moireBase.Blue  + (_moireAccent.Blue  - _moireBase.Blue)  * w));
+                }
+                else
+                {
+                    color = charBase;
+                }
+                paint.Color = color.WithAlpha((byte)(alpha * 255));
                 canvas.DrawText(MoireCharStrings[ci], col * CW, fy, paint);
             }
         }
@@ -847,8 +880,9 @@ public partial class MainPage : ContentPage
         public string LastModifiedLabel { get; }
         public string GameShortName { get; }
 
-        public Color GameColorDark { get; }
-        public Color GameColorLight { get; }
+        public Color  GameColorDark { get; }
+        public Color  GameColorLight { get; }
+        public SKColor? MoireAccent { get; }
 
         public ImageSource? IconSource { get; }
         public bool HasIcon { get; }
@@ -864,6 +898,7 @@ public partial class MainPage : ContentPage
             GameShortName = GetGameShortName(entry.Version);
 
             var (dark, light) = GameColors.Get(entry.Version);
+            MoireAccent = GameColors.GetAccent(entry.Version);
             GameColorDark = Color.FromUint((uint)((dark.Alpha << 24) | (dark.Red << 16) | (dark.Green << 8) | dark.Blue));
             GameColorLight = Color.FromUint((uint)((light.Alpha << 24) | (light.Red << 16) | (light.Green << 8) | light.Blue));
 

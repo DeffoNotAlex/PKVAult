@@ -11,6 +11,16 @@ namespace PKHeX.Mobile.Theme;
 /// </summary>
 public static class GameColors
 {
+    /// <summary>
+    /// Optional third color used for duotone Moiré on games with a strong secondary accent
+    /// (e.g. Black 2 blue / White 2 orange). Null for all other games.
+    /// </summary>
+    public static readonly Dictionary<GameVersion, SKColor> AccentMap = new()
+    {
+        [GameVersion.B2] = SKColor.Parse("#3A80FF"), // Kyurem Black / Zekrom blue
+        [GameVersion.W2] = SKColor.Parse("#FF6B30"), // Kyurem White / Reshiram orange
+    };
+
     public static readonly Dictionary<GameVersion, (SKColor Dark, SKColor Light)> Map = new()
     {
         // Gen 1
@@ -79,7 +89,12 @@ public static class GameColors
     {
         if (Map.TryGetValue(version, out var colors))
             return colors;
-        // Neutral fallback
         return (SKColor.Parse("#3A5080"), SKColor.Parse("#5A70A0"));
     }
+
+    /// <summary>
+    /// Returns the duotone accent color for B2/W2, or null for all other games.
+    /// </summary>
+    public static SKColor? GetAccent(GameVersion version)
+        => AccentMap.TryGetValue(version, out var c) ? c : null;
 }
