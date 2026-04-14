@@ -431,8 +431,8 @@ public partial class SecondScreenPage : ContentPage
         if (aspect >= 1f) { drawW = inner; drawH = inner / aspect; }
         else              { drawH = inner; drawW = inner * aspect; }
         float sx = slot.MidX - drawW / 2f, sy = slot.MidY - drawH / 2f;
-        using var paint = new SKPaint { Color = SKColors.White.WithAlpha(alpha), FilterQuality = SKFilterQuality.None };
-        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), paint);
+        using var paint = new SKPaint { Color = SKColors.White.WithAlpha(alpha) };
+        canvas.DrawBitmap(sprite, SKRect.Create(sx, sy, drawW, drawH), new SKSamplingOptions(SKFilterMode.Nearest), paint);
     }
 
     private static void DrawBlueCursor(SKCanvas canvas, SKRect rect, float radius, float pulse)
