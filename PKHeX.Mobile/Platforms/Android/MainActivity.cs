@@ -89,6 +89,7 @@ public class MainActivity : MauiAppCompatActivity
         if (Window?.DecorView is null) return;
         WindowCompat.SetDecorFitsSystemWindows(Window, false);
         var ctrl = WindowCompat.GetInsetsController(Window, Window.DecorView);
+        if (ctrl is null) return;
         ctrl.Hide(WindowInsetsCompat.Type.StatusBars());
         ctrl.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
     }

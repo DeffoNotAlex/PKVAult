@@ -54,7 +54,7 @@ public partial class BankPage : ContentPage
         ThemeService.ThemeChanged += OnThemeChanged;
         // Slide in the inner grid (not `this`) so hit-testing is always correct
         RootGrid.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
-        await RootGrid.TranslateTo(0, 0, 260, Easing.CubicInOut);
+        await RootGrid.TranslateToAsync(0, 0, 260, Easing.CubicInOut);
 
         UpdateModeBanner();
         LoadBox(_boxIndex);
@@ -450,7 +450,7 @@ public partial class BankPage : ContentPage
         if (exitDir != 0) App.BankSlideDir = exitDir;
 
         double exitX = App.BankSlideDir < 0 ? -500 : 500;
-        await RootGrid.TranslateTo(exitX, 0, 260, Easing.CubicInOut);
+        await RootGrid.TranslateToAsync(exitX, 0, 260, Easing.CubicInOut);
         RootGrid.TranslationX = 0;
         await Shell.Current.GoToAsync("..", false);
     }
@@ -679,6 +679,4 @@ public partial class BankPage : ContentPage
         BankNameLabel.Text = _bank.Boxes[_boxIndex].Name;
     }
 
-    private async Task DisplayAlertAsync(string title, string message, string cancel)
-        => await DisplayAlert(title, message, cancel);
 }

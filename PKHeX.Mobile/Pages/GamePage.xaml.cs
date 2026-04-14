@@ -228,7 +228,7 @@ public partial class GamePage : ContentPage
             // Slide out existing content (only when the canvas is visible — single-screen mode)
             bool canSlide = slideDir != 0 && BoxCanvas.Width > 10;
             if (canSlide)
-                await BoxCanvas.TranslateTo(-slideDir * BoxCanvas.Width, 0, 120, Easing.CubicIn);
+                await BoxCanvas.TranslateToAsync(-slideDir * BoxCanvas.Width, 0, 120, Easing.CubicIn);
 
             _currentBox = _sav.GetBoxData(box);
             var boxName = _sav is IBoxDetailName named
@@ -258,7 +258,7 @@ public partial class GamePage : ContentPage
             {
                 // Pre-position canvas on the incoming side, then slide to rest
                 BoxCanvas.TranslationX = slideDir * BoxCanvas.Width;
-                await BoxCanvas.TranslateTo(0, 0, 140, Easing.CubicOut);
+                await BoxCanvas.TranslateToAsync(0, 0, 140, Easing.CubicOut);
             }
 
             UpdateTopPanel();
@@ -1236,7 +1236,7 @@ public partial class GamePage : ContentPage
         ActionMenuPanel.TranslationY = 48;
         ActionMenuOverlay.IsVisible = true;
         UpdateMenuHighlight();
-        _ = ActionMenuOverlay.FadeTo(1, 180, Easing.CubicOut);
+        _ = ActionMenuOverlay.FadeToAsync(1, 180, Easing.CubicOut);
         _ = ActionMenuPanel.TranslateToAsync(0, 0, 180, Easing.CubicOut);
     }
 
@@ -1244,7 +1244,7 @@ public partial class GamePage : ContentPage
     {
         _menuOpen = false;
         await Task.WhenAll(
-            ActionMenuOverlay.FadeTo(0, 130, Easing.CubicIn),
+            ActionMenuOverlay.FadeToAsync(0, 130, Easing.CubicIn),
             ActionMenuPanel.TranslateToAsync(0, 36, 130, Easing.CubicIn));
         ActionMenuOverlay.IsVisible = false;
         ActionMenuOverlay.Opacity   = 1;

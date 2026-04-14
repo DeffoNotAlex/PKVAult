@@ -111,7 +111,7 @@ public partial class SecondScreenPage : ContentPage
             int dir = currentBoxIndex > prevBoxIndex ? 1 : -1;
             double w = BoxCanvas.Width > 10 ? BoxCanvas.Width : 360;
             BoxCanvas.TranslationX = dir * w;
-            _ = BoxCanvas.TranslateTo(0, 0, 180, Easing.CubicOut);
+            _ = BoxCanvas.TranslateToAsync(0, 0, 180, Easing.CubicOut);
         }
 
         var pk = cursorSlot < box.Length ? box[cursorSlot] : null;
