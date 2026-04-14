@@ -1615,6 +1615,9 @@ public partial class GamePage : ContentPage
         await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_cursorSlot}");
     }
 
+    private void OnActionOverlayTapped(object sender, TappedEventArgs e) => CloseActionMenu();
+    private void OnSaveHintTapped(object sender, TappedEventArgs e)     => OpenActionMenu();
+
     private async void OnMenuClicked(object sender, EventArgs e)
         => await Shell.Current.GoToAsync("..");
 
