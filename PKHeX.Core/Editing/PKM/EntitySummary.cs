@@ -100,9 +100,6 @@ public class EntitySummary : IFatefulEncounterReadOnly // do NOT seal, allow inh
     public string Relearn2 => Get(Strings.movelist, Entity.RelearnMove2);
     public string Relearn3 => Get(Strings.movelist, Entity.RelearnMove3);
     public string Relearn4 => Get(Strings.movelist, Entity.RelearnMove4);
-<<<<<<< HEAD
-    public ushort Checksum => Entity is ISanityChecksum s ? s.Checksum : Checksums.CRC16_CCITT(Entity.Data[Entity.SIZE_STORED..]);
-=======
     public ushort Checksum => Entity switch
     {
         ISanityChecksum s => s.Checksum,
@@ -110,7 +107,6 @@ public class EntitySummary : IFatefulEncounterReadOnly // do NOT seal, allow inh
         PK2 gb => gb.GetSingleListChecksum(),
         _ => Checksums.CRC16_CCITT(Entity.Data[..Entity.SIZE_STORED]),
     };
->>>>>>> upstream/master
     public int Friendship => Entity.OriginalTrainerFriendship;
     public int EggYear => Entity.EggMetDate.GetValueOrDefault().Year;
     public int EggMonth => Entity.EggMetDate.GetValueOrDefault().Month;

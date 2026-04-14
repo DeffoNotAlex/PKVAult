@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 using System;
 
->>>>>>> upstream/master
 namespace PKHeX.Core;
 
 /// <summary>
@@ -75,12 +72,9 @@ public interface IBattleTemplate : ISpeciesForm, IGigantamaxReadOnly, IDynamaxLe
     /// <see cref="PKM.Moves"/> of the Set entity.
     /// </summary>
     ushort[] Moves { get; }
-<<<<<<< HEAD
-=======
 
     /// <summary>
     /// Checks if the properties are probably from a Pokémon Champions set.
     /// </summary>
     bool IsChampions => Level == 50 && !IVs.ContainsAnyExcept(31) && EffortValues.IsChampions(EVs);
->>>>>>> upstream/master
 }
