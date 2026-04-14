@@ -911,7 +911,7 @@ public partial class BankViewPage : ContentPage
         var name = _previewPk?.Species > 0 && _previewPk.Species < _strings.specieslist.Length
             ? _strings.specieslist[_previewPk.Species]
             : "this Pokémon";
-        bool ok = await DisplayAlert("Remove from Bank", $"Remove {name} from the bank?", "Remove", "Cancel");
+        bool ok = await DisplayAlertAsync("Remove from Bank", $"Remove {name} from the bank?", "Remove", "Cancel");
         if (!ok) return;
         _bank.ClearSlot(_boxIndex, _cursorSlot);
         await LoadBoxAsync(_boxIndex, resetCursor: false);

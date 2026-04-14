@@ -153,7 +153,7 @@ public partial class MainPage : ContentPage
         {
             if (HeroPreview.IsVisible)
             {
-                await HeroCard.FadeTo(0, 100);
+                await HeroCard.FadeToAsync(0, 100);
                 if (cts.IsCancellationRequested) return;
                 HeroPreview.IsVisible    = false;
                 HeroGridCanvas.IsVisible = false;
@@ -172,7 +172,7 @@ public partial class MainPage : ContentPage
         // Only cross-fade when the displayed save actually changes
         if (wasVisible && _selectedSave is null)
         {
-            await HeroCard.FadeTo(0, 100);
+            await HeroCard.FadeToAsync(0, 100);
             if (cts.IsCancellationRequested) return;
         }
         else if (!wasVisible)
@@ -247,7 +247,7 @@ public partial class MainPage : ContentPage
 
         // Fade card in
         HeroCard.Opacity = 0;
-        await HeroCard.FadeTo(1, 160, Easing.CubicOut);
+        await HeroCard.FadeToAsync(1, 160, Easing.CubicOut);
     }
 
     private async Task LoadPartyAsync(SaveEntry entry)
@@ -391,7 +391,7 @@ public partial class MainPage : ContentPage
 
             if (sav is null)
             {
-                await DisplayAlert("Load Failed",
+                await DisplayAlertAsync("Load Failed",
                     $"Could not parse \"{entry.FileName}\" ({entry.RawData.Length:N0} bytes). Unsupported format.",
                     "OK");
                 return;
@@ -416,7 +416,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Load Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
+            await DisplayAlertAsync("Load Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
         }
     }
 
@@ -459,7 +459,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Export Error", ex.Message, "OK");
+            await DisplayAlertAsync("Export Error", ex.Message, "OK");
         }
     }
 
