@@ -1964,7 +1964,7 @@ public partial class GamePage : ContentPage
             _itemCursor < 0 ? (delta > 0 ? 0 : _itemRows.Count - 1) : _itemCursor + delta,
             0, _itemRows.Count - 1);
         _itemRows[_itemCursor].IsSelected = true;
-        ItemsList.ScrollTo(_itemRows[_itemCursor], ScrollToPosition.MakeVisible, false);
+        ItemsList.ScrollTo(_itemRows[_itemCursor], group: null, position: ScrollToPosition.MakeVisible, animate: false);
         Haptic();
     }
 

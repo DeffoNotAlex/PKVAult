@@ -82,7 +82,6 @@ public partial class DexPage : ContentPage
 
     // Pan state
     private float _panStartOffset;
-    private float _panStartY;
 
     public DexPage(ISecondaryDisplay secondary, DexService dex)
     {
@@ -231,15 +230,11 @@ public partial class DexPage : ContentPage
         }
 
         // Dex number — centred in the bottom strip
-        using var numPaint = new SKPaint
-        {
-            Color       = new SKColor(200, 200, 200, 180),
-            TextSize    = _slotSize * 0.14f,
-            IsAntialias = true,
-            TextAlign   = SKTextAlign.Center,
-        };
-        float numY = rect.Bottom - numStripH / 2f + numPaint.TextSize * 0.38f;
-        canvas.DrawText($"#{species:000}", rect.MidX, numY, numPaint);
+        float fontSize = _slotSize * 0.14f;
+        using var numFont  = new SKFont(SKTypeface.Default, fontSize);
+        using var numPaint = new SKPaint { Color = new SKColor(200, 200, 200, 180), IsAntialias = true };
+        float numY = rect.Bottom - numStripH / 2f + fontSize * 0.38f;
+        canvas.DrawText($"#{species:000}", rect.MidX, numY, SKTextAlign.Center, numFont, numPaint);
     }
 
     // ── Pan gesture (touch scroll) ─────────────────────────────────────────────
@@ -250,7 +245,6 @@ public partial class DexPage : ContentPage
         {
             case GestureStatus.Started:
                 _panStartOffset = _scrollOffsetPx;
-                _panStartY      = 0;
                 break;
             case GestureStatus.Running:
                 float density = (float)DeviceDisplay.MainDisplayInfo.Density;
@@ -343,7 +337,7 @@ public partial class DexPage : ContentPage
     {
         if (App.ActiveSave is null)
         {
-            _ = DisplayAlert("No Save", "Load a save file first.", "OK");
+            _ = DisplayAlertAsync("No Save", "Load a save file first.", "OK");
             return;
         }
         int newly = _dex.ScanSave(App.ActiveSave);
@@ -355,7 +349,7 @@ public partial class DexPage : ContentPage
         string msg = newly > 0
             ? $"{newly} new Pokémon unlocked!"
             : "No new Pokémon found in this save.";
-        _ = DisplayAlert("Scan Complete", msg, "OK");
+        _ = DisplayAlertAsync("Scan Complete", msg, "OK");
     }
 
     // ── UI helpers ─────────────────────────────────────────────────────────────

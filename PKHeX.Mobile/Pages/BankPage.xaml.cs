@@ -711,7 +711,7 @@ public partial class BankPage : ContentPage
     {
         if (_bank.Boxes.Count <= 1)
         {
-            await DisplayAlert("Cannot Remove", "You must have at least one box.", "OK");
+            await DisplayAlertAsync("Cannot Remove", "You must have at least one box.", "OK");
             return;
         }
 
@@ -720,7 +720,7 @@ public partial class BankPage : ContentPage
 
         if (!isEmpty)
         {
-            bool confirmed = await DisplayAlert(
+            bool confirmed = await DisplayAlertAsync(
                 "Remove Box",
                 $"\"{boxName}\" contains Pokémon. They will be permanently deleted. Continue?",
                 "Remove", "Cancel");
