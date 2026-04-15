@@ -31,6 +31,10 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     private ThorPresentation?         _presentation;
     private Display?                  _cachedDisplay;
 
+    // Tracks the active welcome step so Show() can restore it after recreating the page
+    private int               _activeWelcomeStep = -1;
+    private Action<string>?   _activeWelcomeEvent;
+
     public ThorSecondaryDisplay(IServiceProvider services) => _services = services;
 
     public bool IsAvailable => ResolveDisplay() is not null;
@@ -67,6 +71,11 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         {
             _presentation.Show();
             Log.Info(Tag, $"Presentation shown on display id={display.DisplayId} name='{display.Name}'.");
+            // If the welcome wizard was active when the Presentation was dismissed (e.g. by an
+            // SAF file picker), restore the correct step so the bottom screen doesn't revert
+            // to the default box-grid state.
+            if (_activeWelcomeStep >= 0 && _activeWelcomeEvent is not null)
+                _secondPage.ShowWelcomeStep(_activeWelcomeStep, _activeWelcomeEvent);
         }
         catch (Exception ex)
         {
@@ -114,13 +123,21 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBankCanvas());
 
     public void ShowWelcomeStep(int step, Action<string> onEvent)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowWelcomeStep(step, onEvent));
+    {
+        _activeWelcomeStep  = step;
+        _activeWelcomeEvent = onEvent;
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowWelcomeStep(step, onEvent));
+    }
 
     public void NotifyWelcomeSaveFound(string gameName)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.NotifyWelcomeSaveFound(gameName));
 
     public void HideWelcome()
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.HideWelcome());
+    {
+        _activeWelcomeStep  = -1;
+        _activeWelcomeEvent = null;
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.HideWelcome());
+    }
 
     public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelSlide(slideIndex, headline, subtext, onSkip));
