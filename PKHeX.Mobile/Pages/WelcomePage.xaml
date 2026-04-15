@@ -87,7 +87,7 @@
             <!-- Step 1 preview: found saves list -->
             <Grid x:Name="Preview1" IsVisible="False" RowDefinitions="Auto,*" Padding="16,0">
                 <Label Grid.Row="0" x:Name="SaveScanHeaderLabel"
-                       Text="Tap an emulator on the bottom screen to scan"
+                       Text="Tap an emulator to scan for save files"
                        FontSize="13" TextColor="{DynamicResource ThTextSecondary}"
                        Margin="0,8,0,12" HorizontalTextAlignment="Center"
                        HorizontalOptions="Center" />
@@ -104,7 +104,7 @@
                                    FontFamily="NunitoBold" FontSize="16"
                                    TextColor="{DynamicResource ThTextSecondary}"
                                    HorizontalOptions="Center" />
-                            <Label Text="Use the bottom screen to connect your emulator saves."
+                            <Label Text="Select an emulator above to scan for save files."
                                    FontSize="13" TextColor="{DynamicResource ThTextDim}"
                                    HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
@@ -214,27 +214,77 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <!-- Step 1 controls (single-screen simplified) -->
-                <VerticalStackLayout x:Name="SingleStep1Controls" IsVisible="False" Spacing="10">
-                    <Label Text="Use Settings > Emulator Saves to connect your saves, or skip to continue."
-                           FontSize="13" TextColor="{DynamicResource ThTextSecondary}"
-                           HorizontalTextAlignment="Center" HorizontalOptions="Center" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <!-- Step 1 controls (single-screen) — emulator scan buttons -->
+                <VerticalStackLayout x:Name="SingleStep1Controls" IsVisible="False" Spacing="8">
+                    <!-- Emulator grid: 2×2 -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                          ColumnSpacing="8" RowSpacing="8">
+                        <Border Grid.Row="0" Grid.Column="0"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                                Padding="0" HeightRequest="46">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleEdenTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="Eden" FontFamily="NunitoBold" FontSize="14"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="1"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                                Padding="0" HeightRequest="46">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleAzaharTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="Azahar" FontFamily="NunitoBold" FontSize="14"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="0"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                                Padding="0" HeightRequest="46">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleMelonDSTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="MelonDS" FontFamily="NunitoBold" FontSize="14"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="1"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{DynamicResource ThSettingsRow}"
+                                Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
+                                Padding="0" HeightRequest="46">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSingleRetroArchTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="RetroArch" FontFamily="NunitoBold" FontSize="14"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+                    <!-- Manual folder pick + Skip row -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                         <Border Grid.Column="0"
                                 StrokeShape="RoundRectangle 10"
                                 BackgroundColor="{DynamicResource ThSettingsRow}"
                                 Stroke="{DynamicResource ThDivider}" StrokeThickness="1"
-                                Padding="0" HeightRequest="48">
+                                Padding="0" HeightRequest="46">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnSingleSkipTapped" />
+                                <TapGestureRecognizer Tapped="OnSingleManualTapped" />
                             </Border.GestureRecognizers>
-                            <Label Text="Skip" FontFamily="NunitoBold" FontSize="15"
+                            <Label Text="Pick folder" FontFamily="NunitoBold" FontSize="14"
                                    TextColor="{DynamicResource ThTextSecondary}"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
                         <Border Grid.Column="1"
-                                StrokeShape="RoundRectangle 10" Stroke="Transparent" Padding="0"
-                                HeightRequest="48">
+                                StrokeShape="RoundRectangle 10" Stroke="Transparent"
+                                Padding="0" HeightRequest="46">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="#3B8BFF" Offset="0" />

@@ -238,6 +238,9 @@ public partial class WelcomePage : ContentPage
 
         // Show badge on top screen
         var badgeText = ReelBadgeLabels[slideIndex];
+        // "Dual Screen" badge is irrelevant on single-screen devices — suppress it
+        if (!_isDualScreen && slideIndex == 4)
+            badgeText = null;
         if (badgeText is not null)
         {
             ReelBadgeLabel.Text    = badgeText;
@@ -811,6 +814,10 @@ public partial class WelcomePage : ContentPage
         if (_isDualScreen)
             _secondary.ShowWelcomeStep(step, OnWelcomeEvent);
 
+        // Restore dual-screen header wording when on the Thor
+        if (step == 1 && _isDualScreen)
+            SaveScanHeaderLabel.Text = "Tap an emulator on the bottom screen to scan";
+
         if (step == 2)
         {
             UpdateFinalLabel();
@@ -1012,6 +1019,21 @@ public partial class WelcomePage : ContentPage
 
     private void OnSingleGetStartedTapped(object? sender, EventArgs e)
         => OnWelcomeEvent("finish");
+
+    private void OnSingleEdenTapped(object? sender, EventArgs e)
+        => OnWelcomeEvent("eden");
+
+    private void OnSingleAzaharTapped(object? sender, EventArgs e)
+        => OnWelcomeEvent("azahar");
+
+    private void OnSingleMelonDSTapped(object? sender, EventArgs e)
+        => OnWelcomeEvent("melonds");
+
+    private void OnSingleRetroArchTapped(object? sender, EventArgs e)
+        => OnWelcomeEvent("retroarch");
+
+    private void OnSingleManualTapped(object? sender, EventArgs e)
+        => OnWelcomeEvent("manual");
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Emulator scanning
