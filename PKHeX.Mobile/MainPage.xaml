@@ -4,7 +4,7 @@
              xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="PKHeX.Mobile.MainPage"
-             Title="PKVault"
+             Title="PKSafe"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{DynamicResource ThPageBg}">
 
@@ -26,10 +26,10 @@
             <VerticalStackLayout x:Name="HeroEmptyState"
                                  HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="14" VerticalOptions="Center">
-                    <Image Source="pkvault_icon.png"
+                    <Image Source="pksafe_icon.png"
                            WidthRequest="48" HeightRequest="48"
                            VerticalOptions="Center" />
-                    <Label Text="PKVault"
+                    <Label Text="PKSafe"
                            FontFamily="QuicksandExtraBold" FontSize="36"
                            TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
                 </HorizontalStackLayout>

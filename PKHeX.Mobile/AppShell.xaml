@@ -6,7 +6,7 @@
        Shell.FlyoutBehavior="Disabled"
        Shell.NavBarIsVisible="False">
 
-    <ShellContent Title="PKVault"
+    <ShellContent Title="PKSafe"
                   ContentTemplate="{DataTemplate local:MainPage}"
                   Route="MainPage" />
 

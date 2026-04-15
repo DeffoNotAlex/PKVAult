@@ -1,6 +1,6 @@
-<h1><img src="PKHeX.Mobile/Resources/AppIcon/appicon.png" width="48" valign="middle" style="margin-right:10px"/> PKVault</h1>
+<h1><img src="PKHeX.Mobile/Resources/AppIcon/appicon.png" width="48" valign="middle" style="margin-right:10px"/> PKSafe</h1>
 
-**PKVault** is a Pokémon save editor for Android, built on top of [PKHeX](https://github.com/kwsch/PKHeX) — the most complete Pokémon core-series save editor available.
+**PKSafe** is a Pokémon save editor for Android, built on top of [PKHeX](https://github.com/kwsch/PKHeX) — the most complete Pokémon core-series save editor available.
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
@@ -62,7 +62,7 @@
 ### First-Run Welcome Experience
 - Animated intro reel plays on first launch with a floating Pokémon sprite per feature slide
 - Per-slide radial glow, staggered bullet points, and an animated progress bar
-- Finale: Pokémon HOME sprites fly in from the screen edges and form a 5×4 grid, which zooms out to reveal the PKVault logo card
+- Finale: Pokémon HOME sprites fly in from the screen edges and form a 5×4 grid, which zooms out to reveal the PKSafe logo card
 - Background orchestral Pokémon theme music fades out as the wizard begins
 - Tap anywhere or hit Skip to jump straight to setup
 
@@ -97,7 +97,7 @@
 
 ## Building
 
-PKVault is a .NET MAUI application targeting Android, built with .NET 10.
+PKSafe is a .NET MAUI application targeting Android, built with .NET 10.
 
 ```bash
 # Build the Android APK
@@ -119,7 +119,7 @@ CI automatically publishes a signed APK to [GitHub Releases](../../releases) on 
 
 ```
 PKHeX.Core/           # Core library — all game logic, legality, save parsing (no GUI deps)
-PKHeX.Mobile/         # .NET MAUI Android app (PKVault)
+PKHeX.Mobile/         # .NET MAUI Android app (PKSafe)
   Pages/              # ContentPages: MainPage, GamePage, SettingsPage, FolderManagerPage, ...
   Services/           # IFileService, SaveDirectoryService, SpriteCacheService, HomeSpriteCacheService, EmulatorSaveFinderService, ...
   Platforms/Android/  # Android-specific: MainActivity, AndroidFilePicker, GamepadRouter

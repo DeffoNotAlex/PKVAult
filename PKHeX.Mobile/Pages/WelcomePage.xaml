@@ -26,7 +26,7 @@
                      Fill="{DynamicResource ThSettingsRow}"
                      HorizontalOptions="Center" VerticalOptions="Center"
                      Opacity="0.4" />
-            <!-- PKVault logo reveal (fades in over grid at end of finale) -->
+            <!-- PKSafe logo reveal (fades in over grid at end of finale) -->
             <Border x:Name="ReelLogoOverlay" IsVisible="False" Opacity="0"
                     VerticalOptions="Center" HorizontalOptions="Center"
                     StrokeShape="RoundRectangle 24"
@@ -35,10 +35,10 @@
                     Padding="36,28">
                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
                     <HorizontalStackLayout Spacing="16" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image Source="pkvault_icon.png"
+                        <Image Source="pksafe_icon.png"
                                WidthRequest="56" HeightRequest="56"
                                VerticalOptions="Center" />
-                        <Label Text="PKVault"
+                        <Label Text="PKSafe"
                                FontFamily="NunitoBold" FontSize="48"
                                TextColor="White"
                                VerticalOptions="Center" />
@@ -66,7 +66,7 @@
 
         <!-- ── Row 0: Logo / step header ── -->
         <VerticalStackLayout Grid.Row="0" Padding="24,32,24,16" Spacing="4">
-            <Label Text="PKVault"
+            <Label Text="PKSafe"
                    FontFamily="NunitoBold" FontSize="34"
                    TextColor="{DynamicResource ThTextPrimary}" />
             <Label x:Name="StepSubtitleLabel"

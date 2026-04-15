@@ -29,7 +29,7 @@ jobs:
         run: dotnet restore PKHeX.Mobile/PKHeX.Mobile.csproj
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pkvault.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pksafe.jks
 
       - name: Build & sign APK (Release)
         run: >
@@ -38,18 +38,18 @@ jobs:
           -c Release
           -p:AndroidSdkDirectory=$ANDROID_SDK_ROOT
           -p:AndroidKeyStore=true
-          -p:AndroidSigningKeyStore=${{ github.workspace }}/pkvault.jks
-          -p:AndroidSigningKeyAlias=pkvault
+          -p:AndroidSigningKeyStore=${{ github.workspace }}/pksafe.jks
+          -p:AndroidSigningKeyAlias=pksafe
           -p:AndroidSigningKeyPass=${{ secrets.KEY_PASSWORD }}
           -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }}
 
       - name: Upload APK to Release
         run: |
-          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "com.pkvault.app-Signed.apk" | head -1)
+          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "com.pksafe.app-Signed.apk" | head -1)
           echo "Found APK: $APK"
-          cp "$APK" PKVault.apk
+          cp "$APK" PKSafe.apk
           gh release delete nightly --yes 2>/dev/null || true
-          gh release create nightly PKVault.apk \
+          gh release create nightly PKSafe.apk \
             --title "Nightly Build" \
             --notes "Automated build from commit ${{ github.sha }}" \
             --prerelease

@@ -2,14 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="true"
-        android:label="PKVault"
+        android:label="PKSafe"
         android:icon="@mipmap/appicon"
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true"
         android:defaultFocusHighlightEnabled="false">
         <!-- Required for spanning across both Thor screens (foldable / dual-screen spanning model) -->
         <activity
-            android:name="com.pkvault.app.MainActivity"
+            android:name="com.pksafe.app.MainActivity"
             android:resizeableActivity="true" />
     </application>
 

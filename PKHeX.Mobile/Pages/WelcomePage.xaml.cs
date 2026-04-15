@@ -587,7 +587,7 @@ public partial class WelcomePage : ContentPage
         _gridScale = 1.0f;
         MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
 
-        // ── Phase 3: fade in PKVault logo overlay
+        // ── Phase 3: fade in PKSafe logo overlay
         await MainThread.InvokeOnMainThreadAsync(async () =>
         {
             ReelLogoOverlay.IsVisible = true;

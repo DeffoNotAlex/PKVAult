@@ -9,8 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <ApplicationId>com.pkvault.app</ApplicationId>
-    <AssemblyName>PKVault</AssemblyName>
+    <ApplicationId>com.pksafe.app</ApplicationId>
+    <AssemblyName>PKSafe</AssemblyName>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 
