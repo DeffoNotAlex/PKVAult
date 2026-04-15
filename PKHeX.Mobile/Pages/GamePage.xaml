@@ -596,7 +596,7 @@
               BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Header row -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="16,14,16,8">
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="16,14,16,8">
                 <Border StrokeShape="RoundRectangle 10"
                         BackgroundColor="{DynamicResource ThCardBg}"
                         Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
@@ -611,6 +611,10 @@
                 <Label Grid.Column="1" Text="Items" FontFamily="QuicksandExtraBold" FontSize="20"
                        TextColor="{DynamicResource ThTextPrimary}"
                        VerticalOptions="Center" Margin="14,0,0,0"/>
+                <Label x:Name="ItemsSlotInfoLabel" Grid.Column="2"
+                       FontFamily="NunitoBold" FontSize="11"
+                       TextColor="{DynamicResource ThTextSecondary}"
+                       VerticalOptions="Center" IsVisible="False"/>
             </Grid>
 
             <!-- Pocket tab strip -->

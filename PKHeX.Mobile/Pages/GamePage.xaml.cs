@@ -1885,41 +1885,37 @@ public partial class GamePage : ContentPage
         bool isKey = pouch.Type == InventoryType.KeyItems;
         var names  = _strings.itemlist;
 
-        if (pouch.IsCramped)
-        {
-            // Free-slot pouch (Gen 1-5): slots fewer than legal item count.
-            // Build from the full legal list; assign slots lazily on first increment.
-            var validIds = _bag.Info.GetItems(pouch.Type).ToArray();
-            var existingByIndex = pouch.Items
-                .Where(it => it.Index > 0)
-                .ToDictionary(it => it.Index, it => it);
+        // Always build from the full legal item list so unowned items are visible.
+        // - Gen 9 (fixed-slot): every legal ID already has a pre-populated slot in Items[];
+        //   all will be found in existingByIndex with Count=0 if unowned.
+        // - Gen 6-8 (free-slot, PouchDataSize > legal count): owned items occupy slots,
+        //   unowned items get a lazy-assigned free slot on first increment.
+        // - Gen 1-5 (cramped, PouchDataSize < legal count): same lazy-assign path.
+        var validIds = _bag.Info.GetItems(pouch.Type).ToArray();
+        var existingByIndex = pouch.Items
+            .Where(it => it.Index > 0)
+            .ToDictionary(it => it.Index, it => it);
 
-            _allItemRows = validIds
-                .Where(id => id > 0)
-                .Select(id =>
-                {
-                    string nm  = id < names.Length ? names[id] : $"#{id}";
-                    int    max = _bag.GetMaxCount(pouch.Type, id);
-                    return existingByIndex.TryGetValue(id, out var slot)
-                        ? new ItemRow(nm, slot, pouch.Type, max, isKey)
-                        : new ItemRow(nm, id, pouch, pouch.Type, max, isKey);
-                })
-                .ToList();
-        }
-        else
-        {
-            // Fixed-slot pouch (Gen 6+): Items already contains every legal item ID;
-            // count=0 means unowned, count>0 means owned.
-            _allItemRows = pouch.Items
-                .Where(it => it.Index > 0)
-                .Select(it =>
-                {
-                    string nm  = it.Index < names.Length ? names[it.Index] : $"#{it.Index}";
-                    int    max = _bag.GetMaxCount(pouch.Type, it.Index);
-                    return new ItemRow(nm, it, pouch.Type, max, isKey);
-                })
-                .ToList();
-        }
+        _allItemRows = validIds
+            .Where(id => id > 0)
+            .Select(id =>
+            {
+                string nm  = id < names.Length ? names[id] : $"#{id}";
+                int    max = _bag.GetMaxCount(pouch.Type, id);
+                return existingByIndex.TryGetValue(id, out var slot)
+                    ? new ItemRow(nm, slot, pouch.Type, max, isKey)
+                    : new ItemRow(nm, id, pouch, pouch.Type, max, isKey);
+            })
+            .ToList();
+
+        // Show free-slot count for Gen 1-8 formats where slots are a limited resource.
+        // Gen 9 has no concept of free slots (all items pre-allocated), so hide the indicator.
+        int totalSlots = pouch.Items.Length;
+        int usedSlots  = pouch.Items.Count(it => it.Index > 0);
+        int freeSlots  = totalSlots - usedSlots;
+        bool showSlots = totalSlots != validIds.Length; // hidden for Gen 9 exact-match pouches
+        ItemsSlotInfoLabel.Text      = showSlots ? $"{freeSlots} free slot{(freeSlots == 1 ? "" : "s")}" : "";
+        ItemsSlotInfoLabel.IsVisible = showSlots;
 
         _itemSearchText = "";
         ItemSearchEntry.Text = "";
