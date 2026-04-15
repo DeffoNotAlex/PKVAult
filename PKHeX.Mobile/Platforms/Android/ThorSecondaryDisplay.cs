@@ -165,6 +165,18 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         MainThread.BeginInvokeOnMainThread(() => _secondPage.HideReel());
     }
 
+    public void ShowBankManageMenu(int boxIndex, string boxName, int boxCount, Action<string> onAction)
+    {
+        _restoreAction = () => _secondPage.ShowBankManageMenu(boxIndex, boxName, boxCount, onAction);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowBankManageMenu(boxIndex, boxName, boxCount, onAction));
+    }
+
+    public void HideBankManageMenu()
+    {
+        _restoreAction = null;
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.HideBankManageMenu());
+    }
+
     public void Dispose()
     {
         _secondPage.Cleanup();

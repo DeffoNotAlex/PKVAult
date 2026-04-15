@@ -102,6 +102,20 @@ public class BankService
         Save();
     }
 
+    public bool IsBoxEmpty(int box)
+    {
+        if (box >= _boxes.Count) return true;
+        EnsureSlots(_boxes[box]);
+        return _boxes[box].Slots.All(s => s == null);
+    }
+
+    public void RemoveBox(int box)
+    {
+        if (box >= _boxes.Count || _boxes.Count <= 1) return;
+        _boxes.RemoveAt(box);
+        Save();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────
 
     private void EnsureBox(int box)

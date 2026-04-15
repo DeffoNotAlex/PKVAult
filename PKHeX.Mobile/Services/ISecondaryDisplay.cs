@@ -69,4 +69,14 @@ public interface ISecondaryDisplay
 
     /// <summary>Dismiss the reel panel (called when the reel ends and the wizard begins).</summary>
     void HideReel();
+
+    /// <summary>Switch the bottom screen to bank box management mode.</summary>
+    /// <param name="boxIndex">Current box index (0-based).</param>
+    /// <param name="boxName">Display name of the current box.</param>
+    /// <param name="boxCount">Total number of boxes.</param>
+    /// <param name="onAction">Callback fired with "rename", "add", or "remove".</param>
+    void ShowBankManageMenu(int boxIndex, string boxName, int boxCount, Action<string> onAction);
+
+    /// <summary>Dismiss the bank manage panel and return to the bank grid.</summary>
+    void HideBankManageMenu();
 }

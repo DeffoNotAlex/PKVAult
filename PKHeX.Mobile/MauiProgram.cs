@@ -36,6 +36,7 @@ public static class MauiProgram
         builder.Services.AddTransient<Pages.GamePage>();
         builder.Services.AddTransient<Pages.PkmEditorPage>();
         builder.Services.AddTransient<Pages.BankViewPage>();
+        builder.Services.AddTransient<Pages.BankPage>();
         builder.Services.AddTransient<Pages.WelcomePage>();
 
 #if ANDROID

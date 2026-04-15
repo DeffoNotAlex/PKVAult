@@ -12,6 +12,7 @@ public partial class BankPage : ContentPage
     private const int Columns = 6;
     private const int Rows    = 5;
 
+    private readonly ISecondaryDisplay        _secondary;
     private readonly BankService              _bank    = new();
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings              _strings = GameInfo.GetStrings("en");
@@ -32,8 +33,9 @@ public partial class BankPage : ContentPage
     private int  _pickerCursor;
     private bool _pickerOpen;
 
-    public BankPage()
+    public BankPage(ISecondaryDisplay secondary)
     {
+        _secondary = secondary;
         InitializeComponent();
     }
 
@@ -300,7 +302,7 @@ public partial class BankPage : ContentPage
             case Android.Views.Keycode.ButtonR1: _ = SwapToGame(+1); break;
 
             case Android.Views.Keycode.ButtonSelect:
-                _ = PromptRenameBox(); break;
+                OpenBankManageMenu(); break;
         }
     }
 
@@ -668,6 +670,66 @@ public partial class BankPage : ContentPage
         {
             HoverLabel.Text = "Empty slot";
         }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Bank box management menu
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private void OpenBankManageMenu()
+    {
+        var name = _boxIndex < _bank.Boxes.Count ? _bank.Boxes[_boxIndex].Name : $"Bank {_boxIndex + 1}";
+        _secondary.ShowBankManageMenu(_boxIndex, name, _bank.Boxes.Count, OnBankManageAction);
+    }
+
+    private void OnBankManageAction(string action)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            switch (action)
+            {
+                case "rename":
+                    await PromptRenameBox();
+                    break;
+
+                case "add":
+                    _bank.CreateBox($"Bank {_bank.Boxes.Count + 1}");
+                    _boxIndex = _bank.Boxes.Count - 1;
+                    LoadBox(_boxIndex);
+                    break;
+
+                case "remove":
+                    await PromptRemoveBox();
+                    break;
+
+                // "close" — do nothing, menu already dismissed
+            }
+        });
+    }
+
+    private async Task PromptRemoveBox()
+    {
+        if (_bank.Boxes.Count <= 1)
+        {
+            await DisplayAlert("Cannot Remove", "You must have at least one box.", "OK");
+            return;
+        }
+
+        bool isEmpty = _bank.IsBoxEmpty(_boxIndex);
+        string boxName = _bank.Boxes[_boxIndex].Name;
+
+        if (!isEmpty)
+        {
+            bool confirmed = await DisplayAlert(
+                "Remove Box",
+                $"\"{boxName}\" contains Pokémon. They will be permanently deleted. Continue?",
+                "Remove", "Cancel");
+            if (!confirmed) return;
+        }
+
+        _bank.RemoveBox(_boxIndex);
+        _boxIndex = Math.Max(0, _boxIndex - 1);
+        LoadBox(_boxIndex);
     }
 
     private async Task PromptRenameBox()

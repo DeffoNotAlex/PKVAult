@@ -521,6 +521,110 @@
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE F — Bank box management menu                    -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="BankManagePanel" IsVisible="False"
+              RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{DynamicResource ThSettingsBg}">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Padding="20,18,20,10" Spacing="2">
+                <Label Text="Manage Boxes"
+                       FontFamily="NunitoBold" FontSize="22"
+                       TextColor="{DynamicResource ThTextPrimary}" />
+                <Label x:Name="BankManageSubtitle"
+                       FontSize="13" TextColor="{DynamicResource ThTextSecondary}" />
+            </VerticalStackLayout>
+
+            <!-- Menu rows -->
+            <VerticalStackLayout Grid.Row="1" Spacing="8" Padding="16,0" VerticalOptions="Center">
+
+                <!-- Rename -->
+                <Border x:Name="BankManageRow_Rename"
+                        StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThSettingsRow}"
+                        Stroke="Transparent" Padding="16,14">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Grid.Column="0" Text="&#xE3A6;" FontFamily="Phosphor"
+                               FontSize="24" TextColor="{DynamicResource ThAccent}"
+                               VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="Rename Box" FontFamily="NunitoBold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label Text="Change the name of the current box"
+                                   FontSize="11" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Add Box -->
+                <Border x:Name="BankManageRow_Add"
+                        StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThSettingsRow}"
+                        Stroke="Transparent" Padding="16,14">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Grid.Column="0" Text="&#xE252;" FontFamily="Phosphor"
+                               FontSize="24" TextColor="#34D990"
+                               VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="Add Box" FontFamily="NunitoBold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label Text="Append a new empty box to the bank"
+                                   FontSize="11" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Remove Box -->
+                <Border x:Name="BankManageRow_Remove"
+                        StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThSettingsRow}"
+                        Stroke="Transparent" Padding="16,14">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Grid.Column="0" Text="&#xE4C4;" FontFamily="Phosphor"
+                               FontSize="24" TextColor="#FF6B6B"
+                               VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="Remove Box" FontFamily="NunitoBold" FontSize="15"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Label x:Name="BankManageRemoveHint"
+                                   FontSize="11" TextColor="{DynamicResource ThTextSecondary}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+            </VerticalStackLayout>
+
+            <!-- Bottom: hint bar -->
+            <HorizontalStackLayout Grid.Row="2" Spacing="16"
+                                   HorizontalOptions="Center" Padding="0,0,0,20">
+                <HorizontalStackLayout Spacing="6">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="{DynamicResource ThHintBg}"
+                            Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                            WidthRequest="22" HeightRequest="22">
+                        <Label Text="A" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#34D990"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Confirm" FontFamily="Nunito" FontSize="11"
+                           TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="6">
+                    <Border StrokeShape="RoundRectangle 5"
+                            BackgroundColor="{DynamicResource ThHintBg}"
+                            Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                            WidthRequest="22" HeightRequest="22">
+                        <Label Text="B" FontFamily="NunitoExtraBold" FontSize="9" TextColor="#FF6B9D"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Close" FontFamily="Nunito" FontSize="11"
+                           TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
+
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE B — Main menu: save list + action bar           -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="MainMenuPanel" IsVisible="False"

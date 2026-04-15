@@ -25,4 +25,6 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
     public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip) { }
     public void ShowReelTransition() { }
     public void HideReel() { }
+    public void ShowBankManageMenu(int boxIndex, string boxName, int boxCount, Action<string> onAction) { }
+    public void HideBankManageMenu() { }
 }

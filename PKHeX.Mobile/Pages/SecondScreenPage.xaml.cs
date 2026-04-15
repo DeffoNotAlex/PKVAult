@@ -723,6 +723,98 @@ public partial class SecondScreenPage : ContentPage
         _welcomeEvent           = null;
     }
 
+    // ──────────────────────────────────────────────
+    //  Bank manage menu (Mode F)
+    // ──────────────────────────────────────────────
+
+    private Action<string>? _bankManageEvent;
+    private int _bankManageCursor; // 0=Rename 1=Add 2=Remove
+    private static readonly Border[] _bankManageRows = [];
+    private Border[] BankManageRows => [BankManageRow_Rename, BankManageRow_Add, BankManageRow_Remove];
+
+    public void ShowBankManageMenu(int boxIndex, string boxName, int boxCount, Action<string> onAction)
+    {
+        _bankManageEvent  = onAction;
+        _bankManageCursor = 0;
+
+        BoxGridPanel.IsVisible     = false;
+        BankGridPanel.IsVisible    = false;
+        MainMenuPanel.IsVisible    = false;
+        WelcomePanel.IsVisible     = false;
+        BankManagePanel.IsVisible  = true;
+        _mainMenuVisible           = false;
+
+        BankManageSubtitle.Text     = $"{boxName}  ·  {boxCount} box{(boxCount != 1 ? "es" : "")}";
+        BankManageRemoveHint.Text   = boxCount <= 1
+            ? "Cannot remove the last box"
+            : "Delete this box (warns if not empty)";
+        BankManageRow_Remove.Opacity = boxCount <= 1 ? 0.4 : 1.0;
+
+        ApplyBankManageHighlight();
+
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnBankManageGamepadKey;
+        GamepadRouter.KeyReceived += OnBankManageGamepadKey;
+#endif
+    }
+
+    public void HideBankManageMenu()
+    {
+#if ANDROID
+        GamepadRouter.KeyReceived -= OnBankManageGamepadKey;
+#endif
+        BankManagePanel.IsVisible = false;
+        _bankManageEvent          = null;
+    }
+
+    private void ApplyBankManageHighlight()
+    {
+        var rows = BankManageRows;
+        for (int i = 0; i < rows.Length; i++)
+            rows[i].Stroke = i == _bankManageCursor
+                ? Color.FromArgb("#4F80FF")
+                : Colors.Transparent;
+    }
+
+#if ANDROID
+    private void OnBankManageGamepadKey(Android.Views.Keycode keyCode, Android.Views.KeyEventActions action)
+    {
+        if (action != Android.Views.KeyEventActions.Down) return;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            switch (keyCode)
+            {
+                case Android.Views.Keycode.DpadUp:
+                    if (_bankManageCursor > 0) { _bankManageCursor--; ApplyBankManageHighlight(); }
+                    break;
+                case Android.Views.Keycode.DpadDown:
+                    if (_bankManageCursor < 2) { _bankManageCursor++; ApplyBankManageHighlight(); }
+                    break;
+                case Android.Views.Keycode.ButtonA:
+                    FireBankManageAction();
+                    break;
+                case Android.Views.Keycode.ButtonB:
+                    HideBankManageMenu();
+                    _bankManageEvent?.Invoke("close");
+                    break;
+            }
+        });
+    }
+#endif
+
+    private void FireBankManageAction()
+    {
+        var action = _bankManageCursor switch
+        {
+            0 => "rename",
+            1 => "add",
+            2 => "remove",
+            _ => "close",
+        };
+        HideBankManageMenu();
+        _bankManageEvent?.Invoke(action);
+    }
+
     // ── Tap handlers (Step 0) ──────────────────────────────────────────────────
 
     private void OnDarkThemeTapped(object? sender, EventArgs e)
