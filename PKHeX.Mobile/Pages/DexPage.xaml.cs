@@ -8,7 +8,7 @@ namespace PKHeX.Mobile.Pages;
 
 public partial class DexPage : ContentPage
 {
-    private const int Columns      = 8;
+    private const int Columns      = 6;
     private const int TotalSpecies = DexService.MaxSpecies;
     private static int TotalRows   => (TotalSpecies + Columns - 1) / Columns; // 129
 
@@ -17,10 +17,11 @@ public partial class DexPage : ContentPage
     private readonly FileSystemSpriteRenderer _renderer = new();
     private readonly GameStrings              _strings  = GameInfo.GetStrings("en");
 
-    // Pre-created PKM instances per species for sprite lookups (avoids per-frame alloc)
+    // Pre-created PKM instances per species for sprite lookups (avoids per-frame alloc).
+    // PID=16 ensures non-shiny (XOR of TID/SID/PID words = 16, which is >= shiny threshold).
     private static readonly PK9[] _speciesPks =
         Enumerable.Range(1, TotalSpecies)
-            .Select(i => new PK9 { Species = (ushort)i })
+            .Select(i => new PK9 { Species = (ushort)i, PID = 16 })
             .ToArray();
 
     // Type data indexed [1..1025]
@@ -67,6 +68,13 @@ public partial class DexPage : ContentPage
     private float _viewWidthPx;
     private float _viewHeightPx;
     private float _canvasTotalHeight;
+
+    // SkiaSharp type colors — parallel to _typePillColors, used for card tinting
+    private static readonly SKColor[] _typeSkColors =
+        _typePillColors.Select(c => new SKColor(
+            (byte)(c.Red   * 255),
+            (byte)(c.Green * 255),
+            (byte)(c.Blue  * 255))).ToArray();
 
     // Silhouette color filter matrix (keeps alpha, zeroes RGB)
     private static readonly float[] _silhouetteMatrix =
@@ -164,26 +172,51 @@ public partial class DexPage : ContentPage
 
     private void DrawSlot(SKCanvas canvas, SKRect rect, ushort species, bool isCursor)
     {
-        // Slot background
-        var bgColor = isCursor
-            ? new SKColor(40, 90, 180, 90)
-            : new SKColor(255, 255, 255, 15);
-        using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
+        bool unlocked = _dex.IsUnlocked(species);
+        var (t1, _)   = _typeData[species];
+
+        SKColor typeColor = (unlocked && t1 < _typeSkColors.Length)
+            ? _typeSkColors[t1]
+            : new SKColor(120, 120, 120);
+
+        // Background — type-tinted for unlocked, near-invisible for locked
+        using var bgPaint = new SKPaint
+        {
+            Color       = typeColor.WithAlpha(unlocked ? (byte)38 : (byte)12),
+            IsAntialias = true,
+        };
         canvas.DrawRoundRect(rect, 8, 8, bgPaint);
+
+        // Border — type color for unlocked, dim gray for locked; cursor overrides
+        SKColor borderColor = isCursor
+            ? new SKColor(80, 160, 255, 230)
+            : typeColor.WithAlpha(unlocked ? (byte)140 : (byte)45);
+        using var borderPaint = new SKPaint
+        {
+            Color       = borderColor,
+            Style       = SKPaintStyle.Stroke,
+            StrokeWidth = isCursor ? 2.5f : 1.2f,
+            IsAntialias = true,
+        };
+        canvas.DrawRoundRect(rect, 8, 8, borderPaint);
+
+        // Layout: sprite in upper ~80%, number strip at bottom ~20%
+        float numStripH  = _slotSize * 0.20f;
+        float spriteAreaH = rect.Height - numStripH;
 
         // Sprite / silhouette
         var sprite = _renderer.GetSprite(_speciesPks[species - 1]);
         if (sprite.Width > 0 && sprite.Height > 0)
         {
-            float inner  = _slotSize * 0.78f;
+            float inner  = spriteAreaH * 0.82f;
             float aspect = (float)sprite.Width / sprite.Height;
             float drawW  = aspect >= 1f ? inner : inner * aspect;
             float drawH  = aspect >= 1f ? inner / aspect : inner;
-            float sx = rect.MidX - drawW / 2f;
-            float sy = rect.MidY - drawH / 2f;
+            float sx     = rect.MidX - drawW / 2f;
+            float sy     = rect.Top + spriteAreaH / 2f - drawH / 2f;
             var   destRect = SKRect.Create(sx, sy, drawW, drawH);
 
-            if (_dex.IsUnlocked(species))
+            if (unlocked)
             {
                 canvas.DrawBitmap(sprite, destRect);
             }
@@ -197,18 +230,16 @@ public partial class DexPage : ContentPage
             }
         }
 
-        // Cursor outline
-        if (isCursor)
+        // Dex number — centred in the bottom strip
+        using var numPaint = new SKPaint
         {
-            using var cp = new SKPaint
-            {
-                Color       = new SKColor(80, 160, 255, 200),
-                Style       = SKPaintStyle.Stroke,
-                StrokeWidth = 2.5f,
-                IsAntialias = true,
-            };
-            canvas.DrawRoundRect(rect, 8, 8, cp);
-        }
+            Color       = new SKColor(200, 200, 200, 180),
+            TextSize    = _slotSize * 0.14f,
+            IsAntialias = true,
+            TextAlign   = SKTextAlign.Center,
+        };
+        float numY = rect.Bottom - numStripH / 2f + numPaint.TextSize * 0.38f;
+        canvas.DrawText($"#{species:000}", rect.MidX, numY, numPaint);
     }
 
     // ── Pan gesture (touch scroll) ─────────────────────────────────────────────
@@ -252,8 +283,8 @@ public partial class DexPage : ContentPage
             case Android.Views.Keycode.DpadDown:  MoveCursor(+Columns);     break;
             case Android.Views.Keycode.DpadLeft:  MoveCursor(-1);           break;
             case Android.Views.Keycode.DpadRight: MoveCursor(+1);           break;
-            case Android.Views.Keycode.ButtonL1:  MoveCursor(-Columns * 5); break;
-            case Android.Views.Keycode.ButtonR1:  MoveCursor(+Columns * 5); break;
+            case Android.Views.Keycode.ButtonL1:  JumpToGen(-1); break;
+            case Android.Views.Keycode.ButtonR1:  JumpToGen(+1); break;
             case Android.Views.Keycode.ButtonB:
                 _ = Shell.Current.GoToAsync(".."); break;
             case Android.Views.Keycode.ButtonSelect:
@@ -261,6 +292,24 @@ public partial class DexPage : ContentPage
         }
     }
 #endif
+
+    private void JumpToGen(int delta)
+    {
+        ushort curSpecies = (ushort)(_cursorSlot + 1);
+        int curGen = 0;
+        for (int g = 0; g < DexService.Generations.Length; g++)
+        {
+            if (curSpecies >= DexService.Generations[g].Start &&
+                curSpecies <= DexService.Generations[g].End)
+            { curGen = g; break; }
+        }
+        int nextGen = Math.Clamp(curGen + delta, 0, DexService.Generations.Length - 1);
+        if (nextGen == curGen) return;
+        _cursorSlot = DexService.Generations[nextGen].Start - 1;
+        ScrollToCursor();
+        UpdateFooter();
+        DexCanvas.InvalidateSurface();
+    }
 
     private void MoveCursor(int delta)
     {
