@@ -1562,8 +1562,8 @@ public partial class GamePage : ContentPage
         PhoneSheetScrim.InputTransparent  = false;
 
         // Parallel: fade scrim in + slide panel up
-        var fadeIn = PhoneSheetScrim.FadeTo(0.55, 220, Easing.CubicOut);
-        var slideUp = PhoneSheetPanel.TranslateTo(0, 0, 260, Easing.CubicOut);
+        var fadeIn = PhoneSheetScrim.FadeToAsync(0.55, 220, Easing.CubicOut);
+        var slideUp = PhoneSheetPanel.TranslateToAsync(0, 0, 260, Easing.CubicOut);
         await Task.WhenAll(fadeIn, slideUp);
 
         _phoneSheetVisible = true;
@@ -1574,8 +1574,8 @@ public partial class GamePage : ContentPage
         _phoneSheetVisible = false;
         PhoneSheetScrim.InputTransparent = true;
 
-        var fadeOut = PhoneSheetScrim.FadeTo(0, 180, Easing.CubicIn);
-        var slideDown = PhoneSheetPanel.TranslateTo(0, 600, 220, Easing.CubicIn);
+        var fadeOut = PhoneSheetScrim.FadeToAsync(0, 180, Easing.CubicIn);
+        var slideDown = PhoneSheetPanel.TranslateToAsync(0, 600, 220, Easing.CubicIn);
         await Task.WhenAll(fadeOut, slideDown);
 
         PhoneDetailSheet.InputTransparent = true;

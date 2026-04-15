@@ -391,7 +391,7 @@ public partial class BankPage : ContentPage
 
             if (!string.IsNullOrEmpty(App.ActiveSaveFileUri))
             {
-                var data = App.ActiveSave.GetFinalData().ToArray();
+                var data = App.ActiveSave.Write().ToArray();
                 _ = Task.Run(async () =>
                 {
                     try { await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri); }
@@ -701,7 +701,7 @@ public partial class BankPage : ContentPage
     private async void OnBoxHeaderTapped(object? sender, TappedEventArgs e)
     {
         if (_secondary.IsAvailable) return; // Thor uses second-screen menu
-        var action = await DisplayActionSheet("Manage Box", "Cancel", null,
+        var action = await DisplayActionSheetAsync("Manage Box", "Cancel", null,
             "Rename Box", "Add New Box", "Remove Box");
         switch (action)
         {
