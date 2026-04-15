@@ -82,6 +82,13 @@ public class MainActivity : MauiAppCompatActivity
         // Re-run every time the window gains focus so RecyclerViews created
         // after navigation (lazy page inflation) are also caught.
         DisableRecyclerViewFocusHighlight();
+        // Re-show the secondary display when focus returns. OnStop() hides it
+        // whenever another activity takes foreground (e.g. the SAF file picker),
+        // but OnAppearing on the MAUI page doesn't fire in that case because the
+        // navigation stack is unchanged — so we re-show it here instead.
+        var secondary = IPlatformApplication.Current?.Services
+            .GetService<Services.ISecondaryDisplay>();
+        secondary?.Show();
     }
 
     private void SetImmersiveMode()
