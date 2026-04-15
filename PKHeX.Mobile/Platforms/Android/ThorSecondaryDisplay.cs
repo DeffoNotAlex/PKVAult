@@ -31,9 +31,10 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
     private ThorPresentation?         _presentation;
     private Display?                  _cachedDisplay;
 
-    // Tracks the active welcome step so Show() can restore it after recreating the page
-    private int               _activeWelcomeStep = -1;
-    private Action<string>?   _activeWelcomeEvent;
+    // Replayed on _secondPage whenever Show() recreates the Presentation (sleep/picker/etc.)
+    // The lambda closes over value-type params and reads _secondPage at invoke time so it
+    // always targets the freshly-created page, not the old dismissed one.
+    private Action? _restoreAction;
 
     public ThorSecondaryDisplay(IServiceProvider services) => _services = services;
 
@@ -71,11 +72,11 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         {
             _presentation.Show();
             Log.Info(Tag, $"Presentation shown on display id={display.DisplayId} name='{display.Name}'.");
-            // If the welcome wizard was active when the Presentation was dismissed (e.g. by an
-            // SAF file picker), restore the correct step so the bottom screen doesn't revert
-            // to the default box-grid state.
-            if (_activeWelcomeStep >= 0 && _activeWelcomeEvent is not null)
-                _secondPage.ShowWelcomeStep(_activeWelcomeStep, _activeWelcomeEvent);
+            // Re-apply the last known display state. This covers two cases:
+            //   1. SAF file picker: OnStop hides the Presentation; OnAppearing doesn't fire on return.
+            //   2. Sleep/wake: OnWindowFocusChanged fires before MAUI's OnAppearing is dispatched,
+            //      so the freshly created page would otherwise sit at its default (box-grid) state.
+            _restoreAction?.Invoke();
         }
         catch (Exception ex)
         {
@@ -96,10 +97,16 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         PKM[] box, int cursorSlot, int selectedSlot,
         bool moveMode, PKM? movePk, int moveSourceBox, int moveSourceSlot,
         int currentBoxIndex, string boxName, bool?[] legalityCache, bool showLegalityBadges)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBoxGrid(
+    {
+        _restoreAction = () => _secondPage.UpdateBoxGrid(
+            box, cursorSlot, selectedSlot,
+            moveMode, movePk, moveSourceBox, moveSourceSlot,
+            currentBoxIndex, boxName, legalityCache, showLegalityBadges);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBoxGrid(
             box, cursorSlot, selectedSlot,
             moveMode, movePk, moveSourceBox, moveSourceSlot,
             currentBoxIndex, boxName, legalityCache, showLegalityBadges));
+    }
 
     public void UpdateCursor(int cursorSlot, int selectedSlot, bool moveMode, PKM? movePk, int currentBoxIndex)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateCursor(cursorSlot, selectedSlot, moveMode, movePk, currentBoxIndex));
@@ -108,13 +115,19 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.InvalidateBoxCanvas());
 
     public void ShowMainMenu(IList<object> saves, int cursorIndex)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowMainMenu(saves, cursorIndex));
+    {
+        _restoreAction = () => _secondPage.ShowMainMenu(saves, cursorIndex);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowMainMenu(saves, cursorIndex));
+    }
 
     public void UpdateMainMenuState(int cursorIndex, int focusSection, int actionCursor)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateMainMenuState(cursorIndex, focusSection, actionCursor));
 
     public void ShowBankGrid(PKM?[] slots, int cursorSlot, string boxName, int boxIndex, int boxCount)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowBankGrid(slots, cursorSlot, boxName, boxIndex, boxCount));
+    {
+        _restoreAction = () => _secondPage.ShowBankGrid(slots, cursorSlot, boxName, boxIndex, boxCount);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowBankGrid(slots, cursorSlot, boxName, boxIndex, boxCount));
+    }
 
     public void UpdateBankCursor(int cursorSlot)
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.UpdateBankCursor(cursorSlot));
@@ -124,8 +137,7 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     public void ShowWelcomeStep(int step, Action<string> onEvent)
     {
-        _activeWelcomeStep  = step;
-        _activeWelcomeEvent = onEvent;
+        _restoreAction = () => _secondPage.ShowWelcomeStep(step, onEvent);
         MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowWelcomeStep(step, onEvent));
     }
 
@@ -134,19 +146,24 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
 
     public void HideWelcome()
     {
-        _activeWelcomeStep  = -1;
-        _activeWelcomeEvent = null;
+        _restoreAction = null;
         MainThread.BeginInvokeOnMainThread(() => _secondPage.HideWelcome());
     }
 
     public void ShowReelSlide(int slideIndex, string headline, string subtext, Action onSkip)
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelSlide(slideIndex, headline, subtext, onSkip));
+    {
+        _restoreAction = () => _secondPage.ShowReelSlide(slideIndex, headline, subtext, onSkip);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelSlide(slideIndex, headline, subtext, onSkip));
+    }
 
     public void ShowReelTransition()
         => MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowReelTransition());
 
     public void HideReel()
-        => MainThread.BeginInvokeOnMainThread(() => _secondPage.HideReel());
+    {
+        _restoreAction = null;
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.HideReel());
+    }
 
     public void Dispose()
     {
