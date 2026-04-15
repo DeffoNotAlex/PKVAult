@@ -26,6 +26,20 @@
                      Fill="{DynamicResource ThSettingsRow}"
                      HorizontalOptions="Center" VerticalOptions="Center"
                      Opacity="0.4" />
+            <!-- PKVault logo reveal (fades in over grid at end of finale) -->
+            <VerticalStackLayout x:Name="ReelLogoOverlay" IsVisible="False" Opacity="0"
+                                 VerticalOptions="Center" HorizontalOptions="Center"
+                                 Spacing="10">
+                <Label Text="PKVault"
+                       FontFamily="NunitoBold" FontSize="52"
+                       TextColor="White"
+                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                <Label Text="Your Pokémon, anywhere."
+                       FontFamily="Nunito" FontSize="16"
+                       TextColor="#CCFFFFFF"
+                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
             <!-- Feature category badge (lower-left, fades in per slide) -->
             <Border x:Name="ReelBadge" IsVisible="False" Opacity="0"
                     StrokeShape="RoundRectangle 20"

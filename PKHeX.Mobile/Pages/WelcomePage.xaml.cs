@@ -106,24 +106,26 @@ public partial class WelcomePage : ContentPage
 
     // ── Grid finale state ────────────────────────────────────────────────────
 
-    // 4×3 grid of species for the closing finale animation
+    // 5×4 grid of species for the closing finale animation
     private static readonly (ushort Species, byte Form)[] GridSpecies =
     [
-        (025, 0), (006, 0), (094, 0), (133, 0),   // row 0: Pikachu, Charizard, Gengar, Eevee
-        (150, 0), (448, 0), (384, 0), (658, 0),   // row 1: Mewtwo, Lucario, Rayquaza, Greninja
-        (493, 0), (644, 0), (888, 0), (643, 0),   // row 2: Arceus, Zekrom, Zacian, Reshiram
+        (025, 0), (006, 0), (150, 0), (094, 0), (133, 0),   // row 0: Pikachu, Charizard, Mewtwo, Gengar, Eevee
+        (448, 0), (384, 0), (658, 0), (493, 0), (445, 0),   // row 1: Lucario, Rayquaza, Greninja, Arceus, Garchomp
+        (197, 0), (700, 0), (149, 0), (282, 0), (778, 0),   // row 2: Umbreon, Sylveon, Dragonite, Gardevoir, Mimikyu
+        (644, 0), (888, 0), (643, 0), (887, 0), (1007, 0),  // row 3: Zekrom, Zacian, Reshiram, Dragapult, Koraidon
     ];
 
-    private readonly SKBitmap?[] _gridBitmaps = new SKBitmap?[12];
+    private readonly SKBitmap?[] _gridBitmaps = new SKBitmap?[20];
 
     private struct GridSlot
     {
         public SKPoint Start;
         public SKPoint Target;
     }
-    private GridSlot[] _gridSlots = new GridSlot[12];
+    private GridSlot[] _gridSlots = new GridSlot[20];
     private bool  _gridActive;
     private float _gridOpacity = 1f;
+    private float _gridScale   = 1.2f; // zooms from 1.2 → 1.0 after sprites land
     private DateTime _gridStartTime;
 
 #if ANDROID
@@ -372,12 +374,15 @@ public partial class WelcomePage : ContentPage
     {
         _reelActive  = false;
         _gridActive  = false;
+        _gridScale   = 1.0f;
+        _gridOpacity = 0f;
         _reelFloatTimer?.Stop();
         _reelFloatTimer = null;
         _reelCts?.Cancel();
         _reelCts = null;
         _reelSpriteCurrentBitmap = null;
-        ReelBadge.IsVisible = false;
+        ReelBadge.IsVisible      = false;
+        ReelLogoOverlay.IsVisible = false;
     }
 
     private void StartFloatTimer()
@@ -476,15 +481,15 @@ public partial class WelcomePage : ContentPage
 
     private void SetupGridSlots()
     {
-        const int cols = 4, rows = 3;
+        const int cols = 5, rows = 4;
         float w = _canvasSize.Width;
         float h = _canvasSize.Height;
-        float margin = 20f;
+        float margin = 16f;
         float slotW  = (w - margin * (cols + 1)) / cols;
         float slotH  = (h - margin * (rows + 1)) / rows;
 
         var rng = new Random(42); // fixed seed for deterministic start positions
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < GridSpecies.Length; i++)
         {
             int row = i / cols, col = i % cols;
             float tx = margin + col * (slotW + margin) + slotW / 2f;
@@ -492,7 +497,7 @@ public partial class WelcomePage : ContentPage
 
             SKPoint start = rng.Next(4) switch
             {
-                0 => new SKPoint(-130f,  rng.NextSingle() * h),
+                0 => new SKPoint(-130f,    rng.NextSingle() * h),
                 1 => new SKPoint(w + 130f, rng.NextSingle() * h),
                 2 => new SKPoint(rng.NextSingle() * w, -130f),
                 _ => new SKPoint(rng.NextSingle() * w, h + 130f),
@@ -504,18 +509,22 @@ public partial class WelcomePage : ContentPage
 
     private void DrawGridFinale(SKCanvas canvas, SKImageInfo info)
     {
-        double elapsed  = (DateTime.UtcNow - _gridStartTime).TotalMilliseconds;
-        const int cols  = 4;
-        float w         = info.Width;
-        float h         = info.Height;
-        float margin    = 20f;
-        float slotW     = (w - margin * (cols + 1)) / cols;
-        float slotH     = (h - margin * (3   + 1)) / 3;
-        float spriteSize = Math.Min(slotW, slotH) * 0.80f;
+        double elapsed   = (DateTime.UtcNow - _gridStartTime).TotalMilliseconds;
+        const int cols   = 5, rows = 4;
+        float w          = info.Width;
+        float h          = info.Height;
+        float margin     = 16f;
+        float slotW      = (w - margin * (cols + 1)) / cols;
+        float slotH      = (h - margin * (rows + 1)) / rows;
+        float spriteSize = Math.Min(slotW, slotH) * 0.82f;
 
-        for (int i = 0; i < 12; i++)
+        // Apply zoom-out scale transform centred on canvas
+        canvas.Save();
+        canvas.Scale(_gridScale, _gridScale, w / 2f, h / 2f);
+
+        for (int i = 0; i < GridSpecies.Length; i++)
         {
-            double spriteElapsed = elapsed - i * 80;
+            double spriteElapsed = elapsed - i * 65;
             if (spriteElapsed < 0) continue;
 
             // Spring-out easing for fly-in
@@ -545,6 +554,8 @@ public partial class WelcomePage : ContentPage
                 canvas.DrawCircle(x, y, spriteSize / 2f, p);
             }
         }
+
+        canvas.Restore();
     }
 
     private async Task RunGridFinaleAsync()
@@ -556,26 +567,58 @@ public partial class WelcomePage : ContentPage
         SetupGridSlots();
         _gridActive    = true;
         _gridOpacity   = 1f;
+        _gridScale     = 1.2f;
         _gridStartTime = DateTime.UtcNow;
 
-        // Wait for last sprite to land (~80×11 + 500 = 1380ms) plus a hold
-        await Task.Delay(1380 + 600).ConfigureAwait(false);
+        // ── Phase 1: wait for last sprite to land (65ms×19 + 500ms flight = ~1735ms) + brief hold
+        await Task.Delay(1735 + 150).ConfigureAwait(false);
 
-        // Fade out grid
+        // ── Phase 2: zoom out 1.2 → 1.0 over 500ms
+        var zoomStart = DateTime.UtcNow;
+        const int zoomDuration = 500;
+        while (true)
+        {
+            double ms = (DateTime.UtcNow - zoomStart).TotalMilliseconds;
+            if (ms >= zoomDuration) break;
+            _gridScale = 1.2f - 0.2f * (float)(ms / zoomDuration);
+            MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
+            await Task.Delay(16).ConfigureAwait(false);
+        }
+        _gridScale = 1.0f;
+        MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
+
+        // ── Phase 3: fade in PKVault logo overlay
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            ReelLogoOverlay.IsVisible = true;
+            await ReelLogoOverlay.FadeToAsync(1.0, 400);
+        });
+
+        // ── Phase 4: hold with logo visible
+        await Task.Delay(900).ConfigureAwait(false);
+
+        // ── Phase 5: fade out logo and grid simultaneously
+        await MainThread.InvokeOnMainThreadAsync(() =>
+            _ = ReelLogoOverlay.FadeToAsync(0, 380));
+
         var fadeStart = DateTime.UtcNow;
         const int fadeDuration = 380;
         while (true)
         {
-            double elapsedMs = (DateTime.UtcNow - fadeStart).TotalMilliseconds;
-            if (elapsedMs >= fadeDuration) break;
-            _gridOpacity = 1f - (float)(elapsedMs / fadeDuration);
+            double ms = (DateTime.UtcNow - fadeStart).TotalMilliseconds;
+            if (ms >= fadeDuration) break;
+            _gridOpacity = 1f - (float)(ms / fadeDuration);
             MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
             await Task.Delay(16).ConfigureAwait(false);
         }
 
         _gridActive  = false;
         _gridOpacity = 0f;
-        MainThread.BeginInvokeOnMainThread(() => ReelSpriteCanvas.InvalidateSurface());
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            ReelSpriteCanvas.InvalidateSurface();
+            ReelLogoOverlay.IsVisible = false;
+        });
     }
 
     // ── Tap-to-skip on primary screen ───────────────────────────────────────
