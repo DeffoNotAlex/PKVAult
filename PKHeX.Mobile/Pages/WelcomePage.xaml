@@ -27,18 +27,28 @@
                      HorizontalOptions="Center" VerticalOptions="Center"
                      Opacity="0.4" />
             <!-- PKVault logo reveal (fades in over grid at end of finale) -->
-            <VerticalStackLayout x:Name="ReelLogoOverlay" IsVisible="False" Opacity="0"
-                                 VerticalOptions="Center" HorizontalOptions="Center"
-                                 Spacing="10">
-                <Label Text="PKVault"
-                       FontFamily="NunitoBold" FontSize="52"
-                       TextColor="White"
-                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                <Label Text="Your Pokémon, anywhere."
-                       FontFamily="Nunito" FontSize="16"
-                       TextColor="#CCFFFFFF"
-                       HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-            </VerticalStackLayout>
+            <Border x:Name="ReelLogoOverlay" IsVisible="False" Opacity="0"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    StrokeShape="RoundRectangle 24"
+                    BackgroundColor="#E8070C1A"
+                    Stroke="#40FFFFFF" StrokeThickness="1"
+                    Padding="36,28">
+                <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image Source="pkvault_icon.png"
+                               WidthRequest="56" HeightRequest="56"
+                               VerticalOptions="Center" />
+                        <Label Text="PKVault"
+                               FontFamily="NunitoBold" FontSize="48"
+                               TextColor="White"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="Your Pokémon, anywhere."
+                           FontFamily="Nunito" FontSize="15"
+                           TextColor="#CCFFFFFF"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
 
             <!-- Feature category badge (lower-left, fades in per slide) -->
             <Border x:Name="ReelBadge" IsVisible="False" Opacity="0"
