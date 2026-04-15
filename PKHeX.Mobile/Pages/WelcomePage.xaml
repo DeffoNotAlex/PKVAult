@@ -36,8 +36,7 @@
                     Margin="20,0,0,24">
                 <Label x:Name="ReelBadgeLabel"
                        FontFamily="NunitoBold" FontSize="11"
-                       TextColor="White"
-                       LetterSpacing="0.5" />
+                       TextColor="White" />
             </Border>
         </Grid>
 
