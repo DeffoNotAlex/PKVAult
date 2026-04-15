@@ -1171,13 +1171,12 @@ public partial class GamePage : ContentPage
     private static string? GetTrainerIconFile(SaveFile sav)
     {
         // SAV4HGSS always reports GameVersion.HGSS — never HG or SS individually.
-        // Detect from the first Pokémon with a known origin game in party or box 1.
+        // Use majority vote across all party + all boxes (same logic as SaveDirectoryService).
         if (sav.Version == GameVersion.HGSS)
         {
-            var probe = sav.PartyData.FirstOrDefault(p => p.Species > 0 && (p.Version == GameVersion.HG || p.Version == GameVersion.SS))
-                     ?? sav.GetBoxData(0).FirstOrDefault(p => p.Species > 0 && (p.Version == GameVersion.HG || p.Version == GameVersion.SS));
-            if (probe?.Version == GameVersion.SS) return "soulsilver.png";
-            return "heartgold.png"; // default HG if can't determine
+            var resolved = SaveDirectoryService.ResolveHGSS(sav);
+            if (resolved == GameVersion.SS) return "soulsilver.png";
+            return "heartgold.png"; // default HG if empty save
         }
         return GetTrainerIconFile(sav.Version);
     }

@@ -17,17 +17,37 @@ public record SaveEntry(
 public class SaveDirectoryService
 {
     /// <summary>
-    /// SAV4HGSS.Version always returns HGSS. Probe party then box 1 for a
-    /// Pokémon with a native HG or SS origin to resolve the actual game.
+    /// SAV4HGSS.Version always returns HGSS. Scan all party + all boxes and use
+    /// a majority vote to determine whether the save is HeartGold or SoulSilver.
+    /// A first-match probe is unreliable when traded Pokémon from the other version
+    /// appear earlier in the party than native ones.
     /// </summary>
     private static PKHeX.Core.GameVersion ResolveVersion(PKHeX.Core.SaveFile sav)
     {
         if (sav.Version != PKHeX.Core.GameVersion.HGSS) return sav.Version;
-        var probe = sav.PartyData.FirstOrDefault(p => p.Species > 0 &&
-                        (p.Version == PKHeX.Core.GameVersion.HG || p.Version == PKHeX.Core.GameVersion.SS))
-                 ?? sav.GetBoxData(0).FirstOrDefault(p => p.Species > 0 &&
-                        (p.Version == PKHeX.Core.GameVersion.HG || p.Version == PKHeX.Core.GameVersion.SS));
-        return probe?.Version ?? PKHeX.Core.GameVersion.HGSS;
+        return ResolveHGSS(sav);
+    }
+
+    internal static PKHeX.Core.GameVersion ResolveHGSS(PKHeX.Core.SaveFile sav)
+    {
+        int hg = 0, ss = 0;
+        foreach (var pk in sav.PartyData)
+        {
+            if (pk.Species == 0) continue;
+            if (pk.Version == PKHeX.Core.GameVersion.HG) hg++;
+            else if (pk.Version == PKHeX.Core.GameVersion.SS) ss++;
+        }
+        for (int box = 0; box < sav.BoxCount; box++)
+        {
+            foreach (var pk in sav.GetBoxData(box))
+            {
+                if (pk.Species == 0) continue;
+                if (pk.Version == PKHeX.Core.GameVersion.HG) hg++;
+                else if (pk.Version == PKHeX.Core.GameVersion.SS) ss++;
+            }
+        }
+        if (hg == 0 && ss == 0) return PKHeX.Core.GameVersion.HGSS; // empty save, can't determine
+        return ss > hg ? PKHeX.Core.GameVersion.SS : PKHeX.Core.GameVersion.HG;
     }
 
     private const string PrefKey      = "watched_dirs";
