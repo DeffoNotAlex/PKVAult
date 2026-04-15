@@ -610,6 +610,13 @@ public partial class BankPage : ContentPage
         _genSpeciesList.Clear();
         _speciesBorders.Clear();
 
+        // Yield so MAUI completes a layout pass and ScrollView gets its measured width.
+        // Without this, FlexLayout with Wrap="Wrap" wraps at the wrong boundary on Android,
+        // causing the grid to appear visually split into two halves.
+        await Task.Yield();
+        if (SpeciesScroll.Width > 0)
+            SpeciesGrid.WidthRequest = SpeciesScroll.Width;
+
         int maxSpecies = _strings.specieslist.Length - 1;
         for (ushort sp = (ushort)start; sp <= Math.Min(end, maxSpecies); sp++)
             if (!string.IsNullOrWhiteSpace(_strings.specieslist[sp]))
