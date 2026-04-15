@@ -811,8 +811,9 @@ public partial class SecondScreenPage : ContentPage
             2 => "remove",
             _ => "close",
         };
+        var evt = _bankManageEvent; // capture before Hide clears it
         HideBankManageMenu();
-        _bankManageEvent?.Invoke(action);
+        evt?.Invoke(action);
     }
 
     // ── Tap handlers (Step 0) ──────────────────────────────────────────────────
