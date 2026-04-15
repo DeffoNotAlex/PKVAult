@@ -348,84 +348,6 @@
                 </Border>
             </Grid>
 
-            <!-- Items panel (shown instead of box rows 1-3) -->
-            <Grid x:Name="ItemsPanel" Grid.Row="1" Grid.RowSpan="3" IsVisible="False"
-                  RowDefinitions="Auto,*"
-                  BackgroundColor="{DynamicResource ThPageBg}">
-
-                <!-- Pocket tab strip -->
-                <ScrollView Grid.Row="0" Orientation="Horizontal"
-                            HorizontalScrollBarVisibility="Never" Padding="10,6">
-                    <HorizontalStackLayout x:Name="PocketTabBar" Spacing="6"/>
-                </ScrollView>
-
-                <!-- Item list -->
-                <CollectionView x:Name="ItemsList" Grid.Row="1" Margin="10,0,10,4">
-                    <CollectionView.EmptyView>
-                        <Label Text="No items in this pocket."
-                               FontFamily="Nunito" FontSize="13"
-                               TextColor="{DynamicResource ThTextSecondary}"
-                               HorizontalOptions="Center" VerticalOptions="Center"
-                               Margin="0,40"/>
-                    </CollectionView.EmptyView>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid ColumnDefinitions="*,Auto,Auto,Auto"
-                                  Padding="8,0" MinimumHeightRequest="50">
-                                <Grid.Triggers>
-                                    <DataTrigger TargetType="Grid"
-                                                 Binding="{Binding IsSelected}" Value="True">
-                                        <Setter Property="BackgroundColor" Value="#1A3B8FFF"/>
-                                    </DataTrigger>
-                                </Grid.Triggers>
-
-                                <!-- Item name -->
-                                <Label Grid.Column="0" Text="{Binding Name}"
-                                       FontFamily="NunitoBold" FontSize="13"
-                                       TextColor="{DynamicResource ThTextPrimary}"
-                                       VerticalOptions="Center"/>
-
-                                <!-- Decrement -->
-                                <Border Grid.Column="1" IsVisible="{Binding IsEditable}"
-                                        StrokeShape="RoundRectangle 6"
-                                        BackgroundColor="{DynamicResource ThCardBg}"
-                                        Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
-                                        WidthRequest="34" HeightRequest="34" Margin="4,0">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding DecrementCommand}"/>
-                                    </Border.GestureRecognizers>
-                                    <Label Text="−" FontFamily="NunitoBold" FontSize="18"
-                                           TextColor="{DynamicResource ThTextPrimary}"
-                                           HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-
-                                <!-- Count -->
-                                <Label Grid.Column="2" Text="{Binding CountText}"
-                                       FontFamily="NunitoBold" FontSize="13"
-                                       TextColor="{DynamicResource ThTextPrimary}"
-                                       MinimumWidthRequest="56"
-                                       HorizontalTextAlignment="Center"
-                                       VerticalOptions="Center"/>
-
-                                <!-- Increment -->
-                                <Border Grid.Column="3" IsVisible="{Binding IsEditable}"
-                                        StrokeShape="RoundRectangle 6"
-                                        BackgroundColor="{DynamicResource ThCardBg}"
-                                        Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
-                                        WidthRequest="34" HeightRequest="34" Margin="0,0,4,0">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding IncrementCommand}"/>
-                                    </Border.GestureRecognizers>
-                                    <Label Text="+" FontFamily="NunitoBold" FontSize="18"
-                                           TextColor="{DynamicResource ThTextPrimary}"
-                                           HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </Grid>
-
             <!-- Box navigation header -->
             <Grid x:Name="BoxNavRow" Grid.Row="1" ColumnDefinitions="Auto,*,Auto"
                   Padding="16,12,16,8">
@@ -600,7 +522,7 @@
                 <VerticalStackLayout Spacing="0">
 
                     <!-- Menu title -->
-                    <Label Text="Save / Export"
+                    <Label Text="Save / Export / Items"
                            TextColor="{DynamicResource ThActionMenuTitle}" FontSize="11"
                            HorizontalOptions="Center"
                            Margin="0,10,0,8" />
@@ -629,7 +551,7 @@
                             BackgroundColor="{DynamicResource ThSettingsRow}"
                             Stroke="{DynamicResource ThDivider}"
                             StrokeShape="RoundRectangle 8" Padding="16,12"
-                            Margin="8,0,8,10">
+                            Margin="8,0,8,6">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnExportClicked" />
                         </Border.GestureRecognizers>
@@ -643,8 +565,117 @@
                         </HorizontalStackLayout>
                     </Border>
 
+                    <!-- Items option -->
+                    <Border x:Name="MenuItem_Items"
+                            BackgroundColor="{DynamicResource ThSettingsRow}"
+                            Stroke="{DynamicResource ThDivider}"
+                            StrokeShape="RoundRectangle 8" Padding="16,12"
+                            Margin="8,0,8,10">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnItemsMenuClicked" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Label Text="{x:Static theme:Ph.Package}" FontFamily="Phosphor"
+                                   FontSize="20" TextColor="{DynamicResource ThAccent}"
+                                   VerticalOptions="Center" />
+                            <Label x:Name="ItemsMenuLabel" Text="Edit items" FontFamily="NunitoBold"
+                                   FontSize="14" TextColor="{DynamicResource ThTextPrimary}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+
                 </VerticalStackLayout>
             </Border>
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!--  ITEMS PANEL — full-page overlay (both screens)       -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="ItemsPanel" Grid.Row="0" Grid.RowSpan="2" IsVisible="False"
+              RowDefinitions="Auto,Auto,*"
+              BackgroundColor="{DynamicResource ThPageBg}">
+
+            <!-- Header row -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="16,14,16,8">
+                <Border StrokeShape="RoundRectangle 10"
+                        BackgroundColor="{DynamicResource ThCardBg}"
+                        Stroke="{DynamicResource ThNavBtnStroke}" StrokeThickness="1"
+                        WidthRequest="40" HeightRequest="36">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnItemsCloseTapped"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="{x:Static theme:Ph.ArrowLeft}" FontFamily="Phosphor"
+                           FontSize="18" TextColor="{DynamicResource ThTextSecondary}"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                <Label Grid.Column="1" Text="Items" FontFamily="QuicksandExtraBold" FontSize="20"
+                       TextColor="{DynamicResource ThTextPrimary}"
+                       VerticalOptions="Center" Margin="14,0,0,0"/>
+            </Grid>
+
+            <!-- Pocket tab strip -->
+            <ScrollView Grid.Row="1" Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never" Padding="12,4,12,8">
+                <HorizontalStackLayout x:Name="PocketTabBar" Spacing="6"/>
+            </ScrollView>
+
+            <!-- Item list -->
+            <CollectionView x:Name="ItemsList" Grid.Row="2" Margin="10,0,10,4">
+                <CollectionView.EmptyView>
+                    <Label Text="No items in this pocket."
+                           FontFamily="Nunito" FontSize="13"
+                           TextColor="{DynamicResource ThTextSecondary}"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           Margin="0,40"/>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto,Auto,Auto"
+                              Padding="8,0" MinimumHeightRequest="50">
+                            <Grid.Triggers>
+                                <DataTrigger TargetType="Grid"
+                                             Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#1A3B8FFF"/>
+                                </DataTrigger>
+                            </Grid.Triggers>
+                            <Label Grid.Column="0" Text="{Binding Name}"
+                                   FontFamily="NunitoBold" FontSize="13"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   VerticalOptions="Center"/>
+                            <Border Grid.Column="1" IsVisible="{Binding IsEditable}"
+                                    StrokeShape="RoundRectangle 6"
+                                    BackgroundColor="{DynamicResource ThCardBg}"
+                                    Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
+                                    WidthRequest="34" HeightRequest="34" Margin="4,0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding DecrementCommand}"/>
+                                </Border.GestureRecognizers>
+                                <Label Text="−" FontFamily="NunitoBold" FontSize="18"
+                                       TextColor="{DynamicResource ThTextPrimary}"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Grid.Column="2" Text="{Binding CountText}"
+                                   FontFamily="NunitoBold" FontSize="13"
+                                   TextColor="{DynamicResource ThTextPrimary}"
+                                   MinimumWidthRequest="56"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalOptions="Center"/>
+                            <Border Grid.Column="3" IsVisible="{Binding IsEditable}"
+                                    StrokeShape="RoundRectangle 6"
+                                    BackgroundColor="{DynamicResource ThCardBg}"
+                                    Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
+                                    WidthRequest="34" HeightRequest="34" Margin="0,0,4,0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding IncrementCommand}"/>
+                                </Border.GestureRecognizers>
+                                <Label Text="+" FontFamily="NunitoBold" FontSize="18"
+                                       TextColor="{DynamicResource ThTextPrimary}"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </Grid>
 
     </Grid>

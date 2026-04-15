@@ -36,7 +36,7 @@ public partial class GamePage : ContentPage
 
     // Action menu (Start button)
     private bool _menuOpen;
-    private int  _menuCursor; // 0 = Save, 1 = Export
+    private int  _menuCursor; // 0 = Save, 1 = Export, 2 = Items
 
     // Move mode
     private bool _moveMode;
@@ -1227,13 +1227,14 @@ public partial class GamePage : ContentPage
             {
                 case Android.Views.Keycode.DpadUp:
                 case Android.Views.Keycode.DpadLeft:
-                    _menuCursor = 0; UpdateMenuHighlight(); break;
+                    _menuCursor = Math.Max(0, _menuCursor - 1); UpdateMenuHighlight(); break;
                 case Android.Views.Keycode.DpadDown:
                 case Android.Views.Keycode.DpadRight:
-                    _menuCursor = 1; UpdateMenuHighlight(); break;
+                    _menuCursor = Math.Min(2, _menuCursor + 1); UpdateMenuHighlight(); break;
                 case Android.Views.Keycode.ButtonA:
-                    if (_menuCursor == 0) OnSaveClicked(this, EventArgs.Empty);
-                    else                  OnExportClicked(this, EventArgs.Empty);
+                    if      (_menuCursor == 0) OnSaveClicked(this, EventArgs.Empty);
+                    else if (_menuCursor == 1) OnExportClicked(this, EventArgs.Empty);
+                    else                       OnItemsMenuClicked(this, EventArgs.Empty);
                     CloseActionMenu(); break;
                 case Android.Views.Keycode.ButtonB:
                 case Android.Views.Keycode.ButtonStart:
@@ -1313,7 +1314,7 @@ public partial class GamePage : ContentPage
         ActionMenuPanel.BackgroundColor = ThemeColor("ThActionMenuPanel", "#0D1528");
         ActionMenuPanel.Stroke          = ThemeColor("ThActionMenuStroke", "#2A3F70");
         var textPrimary = ThemeColor("ThTextPrimary", "#EDF0FF");
-        foreach (var label in new[] { SaveMenuLabel, ExportMenuLabel })
+        foreach (var label in new[] { SaveMenuLabel, ExportMenuLabel, ItemsMenuLabel })
             label.TextColor = textPrimary;
 
         ActionMenuOverlay.Opacity = 0;
@@ -1348,10 +1349,12 @@ public partial class GamePage : ContentPage
         var focusBg   = ThemeColor("ThSettingsRowFocus", "#182845");
         var accent    = ThemeColor("ThAccent",           "#3B8BFF");
 
-        MenuItem_Save.BackgroundColor   = _menuCursor == 0 ? focusBg   : normalBg;
-        MenuItem_Export.BackgroundColor = _menuCursor == 1 ? focusBg   : normalBg;
-        MenuItem_Save.Stroke            = _menuCursor == 0 ? accent    : Colors.Transparent;
-        MenuItem_Export.Stroke          = _menuCursor == 1 ? accent    : Colors.Transparent;
+        MenuItem_Save.BackgroundColor   = _menuCursor == 0 ? focusBg : normalBg;
+        MenuItem_Export.BackgroundColor = _menuCursor == 1 ? focusBg : normalBg;
+        MenuItem_Items.BackgroundColor  = _menuCursor == 2 ? focusBg : normalBg;
+        MenuItem_Save.Stroke            = _menuCursor == 0 ? accent  : Colors.Transparent;
+        MenuItem_Export.Stroke          = _menuCursor == 1 ? accent  : Colors.Transparent;
+        MenuItem_Items.Stroke           = _menuCursor == 2 ? accent  : Colors.Transparent;
     }
 
     // ──────────────────────────────────────────────
@@ -1760,15 +1763,14 @@ public partial class GamePage : ContentPage
 
     private void OnBoxesTabTapped(object? sender, TappedEventArgs e) => SwitchToBoxesTab();
     private void OnItemsTabTapped(object? sender, TappedEventArgs e) => SwitchToItemsTab();
+    private void OnItemsMenuClicked(object? sender, EventArgs e)     => SwitchToItemsTab();
+    private void OnItemsCloseTapped(object? sender, TappedEventArgs e) => SwitchToBoxesTab();
 
     private void SwitchToItemsTab()
     {
         if (_sav is null) return;
-        _itemsTabActive = true;
-        BoxNavRow.IsVisible    = false;
-        BoxSearchRow.IsVisible = false;
-        BoxCanvas.IsVisible    = false;
-        ItemsPanel.IsVisible   = true;
+        _itemsTabActive      = true;
+        ItemsPanel.IsVisible = true;
         UpdateTabHighlight();
         BuildPocketTabs();
     }
@@ -1776,12 +1778,9 @@ public partial class GamePage : ContentPage
     private void SwitchToBoxesTab()
     {
         CommitItems();
-        _itemsTabActive = false;
-        _itemEditMode   = false;
-        BoxNavRow.IsVisible    = true;
-        BoxSearchRow.IsVisible = true;
-        BoxCanvas.IsVisible    = true;
-        ItemsPanel.IsVisible   = false;
+        _itemsTabActive      = false;
+        _itemEditMode        = false;
+        ItemsPanel.IsVisible = false;
         UpdateTabHighlight();
     }
 
