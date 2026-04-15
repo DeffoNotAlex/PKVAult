@@ -592,7 +592,7 @@
         <!--  ITEMS PANEL — full-page overlay (both screens)       -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="ItemsPanel" Grid.Row="0" Grid.RowSpan="2" IsVisible="False"
-              RowDefinitions="Auto,Auto,*"
+              RowDefinitions="Auto,Auto,Auto,*"
               BackgroundColor="{DynamicResource ThPageBg}">
 
             <!-- Header row -->
@@ -619,8 +619,23 @@
                 <HorizontalStackLayout x:Name="PocketTabBar" Spacing="6"/>
             </ScrollView>
 
+            <!-- Search bar -->
+            <Border Grid.Row="2"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource ThCardBg}"
+                    Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
+                    Margin="12,0,12,8" Padding="10,0">
+                <Entry x:Name="ItemSearchEntry"
+                       Placeholder="Search items…"
+                       PlaceholderColor="{DynamicResource ThTextDim}"
+                       TextColor="{DynamicResource ThTextPrimary}"
+                       FontFamily="Nunito" FontSize="13"
+                       BackgroundColor="Transparent"
+                       TextChanged="OnItemSearchChanged"/>
+            </Border>
+
             <!-- Item list -->
-            <CollectionView x:Name="ItemsList" Grid.Row="2" Margin="10,0,10,4">
+            <CollectionView x:Name="ItemsList" Grid.Row="3" Margin="10,0,10,4">
                 <CollectionView.EmptyView>
                     <Label Text="No items in this pocket."
                            FontFamily="Nunito" FontSize="13"
@@ -636,6 +651,10 @@
                                 <DataTrigger TargetType="Grid"
                                              Binding="{Binding IsSelected}" Value="True">
                                     <Setter Property="BackgroundColor" Value="#1A3B8FFF"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Grid"
+                                             Binding="{Binding IsOwned}" Value="False">
+                                    <Setter Property="Opacity" Value="0.4"/>
                                 </DataTrigger>
                             </Grid.Triggers>
                             <Label Grid.Column="0" Text="{Binding Name}"

@@ -67,7 +67,9 @@ public partial class GamePage : ContentPage
     private int _activePouchIndex;
     private int _itemCursor = -1;
     private bool _itemEditMode;
-    private List<ItemRow> _itemRows = [];
+    private List<ItemRow> _itemRows    = [];
+    private List<ItemRow> _allItemRows = [];
+    private string _itemSearchText    = "";
     private readonly List<Border> _pocketTabBorders = [];
 
     // Search / filter
@@ -1879,22 +1881,75 @@ public partial class GamePage : ContentPage
         _itemCursor       = -1;
         _itemEditMode     = false;
 
-        var pouch     = _bag.Pouches[pouchIndex];
-        bool isKey    = pouch.Type == InventoryType.KeyItems;
-        var names     = _strings.itemlist;
+        var pouch  = _bag.Pouches[pouchIndex];
+        bool isKey = pouch.Type == InventoryType.KeyItems;
+        var names  = _strings.itemlist;
 
-        _itemRows = pouch.Items
-            .Where(it => it.Index > 0)
-            .Select(it =>
-            {
-                string name = it.Index < names.Length ? names[it.Index] : $"#{it.Index}";
-                int max = _bag.GetMaxCount(pouch.Type, it.Index);
-                return new ItemRow(name, it, pouch.Type, max, isKey);
-            })
-            .ToList();
+        if (pouch.IsCramped)
+        {
+            // Free-slot pouch (Gen 1-5): slots fewer than legal item count.
+            // Build from the full legal list; assign slots lazily on first increment.
+            var validIds = _bag.Info.GetItems(pouch.Type).ToArray();
+            var existingByIndex = pouch.Items
+                .Where(it => it.Index > 0)
+                .ToDictionary(it => it.Index, it => it);
 
-        ItemsList.ItemsSource = _itemRows;
+            _allItemRows = validIds
+                .Where(id => id > 0)
+                .Select(id =>
+                {
+                    string nm  = id < names.Length ? names[id] : $"#{id}";
+                    int    max = _bag.GetMaxCount(pouch.Type, id);
+                    return existingByIndex.TryGetValue(id, out var slot)
+                        ? new ItemRow(nm, slot, pouch.Type, max, isKey)
+                        : new ItemRow(nm, id, pouch, pouch.Type, max, isKey);
+                })
+                .ToList();
+        }
+        else
+        {
+            // Fixed-slot pouch (Gen 6+): Items already contains every legal item ID;
+            // count=0 means unowned, count>0 means owned.
+            _allItemRows = pouch.Items
+                .Where(it => it.Index > 0)
+                .Select(it =>
+                {
+                    string nm  = it.Index < names.Length ? names[it.Index] : $"#{it.Index}";
+                    int    max = _bag.GetMaxCount(pouch.Type, it.Index);
+                    return new ItemRow(nm, it, pouch.Type, max, isKey);
+                })
+                .ToList();
+        }
+
+        _itemSearchText = "";
+        ItemSearchEntry.Text = "";
+        ApplyItemFilter();
         UpdatePocketTabHighlight();
+    }
+
+    private void ApplyItemFilter()
+    {
+        string q = _itemSearchText.Trim();
+        _itemRows = string.IsNullOrEmpty(q)
+            ? _allItemRows
+            : _allItemRows
+                .Where(r => r.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        ItemsList.ItemsSource = null;
+        ItemsList.ItemsSource = _itemRows;
+
+        // Reset cursor if it's now out of range
+        if (_itemCursor >= _itemRows.Count)
+        {
+            _itemCursor = -1;
+            _itemEditMode = false;
+        }
+    }
+
+    private void OnItemSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        _itemSearchText = e.NewTextValue ?? "";
+        ApplyItemFilter();
     }
 
     private void UpdatePocketTabHighlight()
