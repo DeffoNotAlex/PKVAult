@@ -1,5 +1,6 @@
 using PKHeX.Mobile.Resources.Styles;
 using SkiaSharp;
+using System.Linq;
 
 namespace PKHeX.Mobile.Services;
 
@@ -60,7 +61,7 @@ public static class ThemeService
         {
             // Update values in-place so DynamicResource bindings stay subscribed.
             // Replacing the dictionary instance (Clear+Add) would detach all bindings.
-            var existing = merged[0];
+            var existing = merged.First();
             foreach (var kvp in source)
                 existing[kvp.Key] = kvp.Value;
         }
