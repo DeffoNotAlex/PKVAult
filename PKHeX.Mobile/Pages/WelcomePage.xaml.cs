@@ -716,12 +716,14 @@ public partial class WelcomePage : ContentPage
                     _chosenTheme = PkTheme.Dark;
                     ThemeService.Apply(PkTheme.Dark);
                     ThemePreviewCanvas.InvalidateSurface();
+                    RefreshPageBackgrounds();
                     break;
 
                 case "theme:light":
                     _chosenTheme = PkTheme.Light;
                     ThemeService.Apply(PkTheme.Light);
                     ThemePreviewCanvas.InvalidateSurface();
+                    RefreshPageBackgrounds();
                     break;
 
                 case "eden":
@@ -1087,6 +1089,16 @@ public partial class WelcomePage : ContentPage
     // ─────────────────────────────────────────────────────────────────────────
     //  Stub pickers for non-Android
     // ─────────────────────────────────────────────────────────────────────────
+
+    // Background colors on Android don't re-apply from DynamicResource on an in-place
+    // dictionary swap — nudge them explicitly after a theme change.
+    private void RefreshPageBackgrounds()
+    {
+        if (Application.Current?.Resources is not { } res) return;
+        var settingsBg = res.TryGetValue("ThSettingsBg", out var v) && v is Color c ? c : Colors.Black;
+        BackgroundColor            = settingsBg;
+        ReelOverlay.BackgroundColor = settingsBg;
+    }
 
     private sealed class NullDirectoryPicker : IDirectoryPicker
     {

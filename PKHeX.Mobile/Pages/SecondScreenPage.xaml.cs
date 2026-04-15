@@ -65,6 +65,22 @@ public partial class SecondScreenPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            // ContentPage.BackgroundColor and container BackgroundColor on Android don't
+            // reliably re-apply from DynamicResource on an in-place dictionary update —
+            // force them explicitly so backgrounds change without a restart.
+            if (Application.Current?.Resources is { } res)
+            {
+                var pageBg     = res.TryGetValue("ThPageBg",     out var v1) && v1 is Color c1 ? c1 : Colors.Black;
+                var settingsBg = res.TryGetValue("ThSettingsBg", out var v2) && v2 is Color c2 ? c2 : Colors.Black;
+
+                BackgroundColor              = pageBg;
+                BoxGridPanel.BackgroundColor = pageBg;
+                MainMenuPanel.BackgroundColor = pageBg;
+                BankGridPanel.BackgroundColor = pageBg;
+                WelcomePanel.BackgroundColor  = settingsBg;
+                ReelPanel.BackgroundColor     = settingsBg;
+            }
+
             BoxCanvas.InvalidateSurface();
             BankCanvas.InvalidateSurface();
             if (_mainMenuVisible)
