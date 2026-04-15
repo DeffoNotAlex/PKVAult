@@ -54,7 +54,19 @@ public static class ThemeService
     {
         if (Application.Current is null) return;
         var merged = Application.Current.Resources.MergedDictionaries;
-        merged.Clear();
-        merged.Add(theme == PkTheme.Light ? new LightTheme() : new DarkTheme());
+        var source = theme == PkTheme.Light ? (ResourceDictionary)new LightTheme() : new DarkTheme();
+
+        if (merged.Count > 0)
+        {
+            // Update values in-place so DynamicResource bindings stay subscribed.
+            // Replacing the dictionary instance (Clear+Add) would detach all bindings.
+            var existing = merged[0];
+            foreach (var kvp in source)
+                existing[kvp.Key] = kvp.Value;
+        }
+        else
+        {
+            merged.Add(source);
+        }
     }
 }
