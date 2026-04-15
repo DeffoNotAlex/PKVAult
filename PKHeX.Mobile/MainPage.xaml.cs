@@ -78,12 +78,9 @@ public partial class MainPage : ContentPage
         _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank, Tile_Dex];
         _partyImages  = [Party0, Party1, Party2, Party3, Party4, Party5];
 
-        // On dual-screen: hero panel fills the entire primary display (Row 0 = *),
-        // and the save list + action bar moves to the secondary screen.
         bool dual = _secondary.IsAvailable;
         BottomPanel.IsVisible = !dual;
-        RootGrid.RowDefinitions[0].Height = dual ? GridLength.Star : GridLength.Auto;
-        RootGrid.RowDefinitions[1].Height = dual ? new GridLength(0) : GridLength.Star;
+        ApplyMainPageLayout(dual, Width > Height);
 
         if (App.RescanNeeded || App.LoadedSaves.Count == 0)
         {
@@ -108,6 +105,54 @@ public partial class MainPage : ContentPage
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
         _floatTimer?.Stop();
+    }
+
+    protected override void OnSizeChanged()
+    {
+        base.OnSizeChanged();
+        if (Width <= 0 || Height <= 0) return;
+        bool dual = _secondary.IsAvailable;
+        if (!dual) ApplyMainPageLayout(dual, Width > Height);
+    }
+
+    /// <summary>
+    /// Portrait single-screen: hero Auto top, save list Star below.
+    /// Landscape single-screen: two columns — hero left (*), save list right (*).
+    /// Thor (dual): hero fills full screen (Row 0 = *), BottomPanel hidden.
+    /// </summary>
+    private void ApplyMainPageLayout(bool dual, bool landscape)
+    {
+        if (dual)
+        {
+            RootGrid.RowDefinitions[0].Height   = GridLength.Star;
+            RootGrid.RowDefinitions[1].Height   = new GridLength(0);
+            RootGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            return;
+        }
+
+        if (landscape)
+        {
+            // Two-column: hero left, save list + action bar right — both fill height
+            RootGrid.RowDefinitions[0].Height   = GridLength.Star;
+            RootGrid.RowDefinitions[1].Height   = new GridLength(0);
+            RootGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width = GridLength.Star;
+            Grid.SetRow(BottomPanel, 0);
+            Grid.SetColumn(BottomPanel, 1);
+            HeroPanel.MinimumHeightRequest = 0; // height is unconstrained — fills column
+        }
+        else
+        {
+            // Portrait: hero Auto on top, save list fills below
+            RootGrid.RowDefinitions[0].Height   = GridLength.Auto;
+            RootGrid.RowDefinitions[1].Height   = GridLength.Star;
+            RootGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            Grid.SetRow(BottomPanel, 1);
+            Grid.SetColumn(BottomPanel, 0);
+            HeroPanel.MinimumHeightRequest = 190;
+        }
     }
 
     private void OnThemeChanged()

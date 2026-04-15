@@ -168,10 +168,18 @@ public partial class WelcomePage : ContentPage
         SingleScreenControls.IsVisible = !_isDualScreen;
 
         if (_isDualScreen)
+        {
             _secondary.Show();
-
-        // Start the reel before wizard step 0
-        _ = StartReelAsync();
+            // Dual screen: full reel → theme selection → emulator scan → done
+            _ = StartReelAsync();
+        }
+        else
+        {
+            // Single screen: skip reel and theme selection — jump straight to emulator scan
+            ReelOverlay.IsVisible = false;
+            _step = 1;
+            ApplyStep(1, animate: false);
+        }
     }
 
     protected override void OnDisappearing()
@@ -838,6 +846,12 @@ public partial class WelcomePage : ContentPage
 
     private void UpdateStepSubtitle(int step)
     {
+        // Single-screen skips theme step, so renumber accordingly
+        if (!_isDualScreen)
+        {
+            StepSubtitleLabel.Text = step >= 2 ? "Step 2 of 2 — Done!" : "Step 1 of 2 — Connect your saves";
+            return;
+        }
         StepSubtitleLabel.Text = step switch
         {
             0 => "Step 1 of 3 — Choose your look",

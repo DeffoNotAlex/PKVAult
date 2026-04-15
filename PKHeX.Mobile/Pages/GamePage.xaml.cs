@@ -95,6 +95,7 @@ public partial class GamePage : ContentPage
 
     private readonly ISecondaryDisplay _secondary;
     private bool _isPhone;
+    private bool _isLandscapePhone;
     private PKM? _phoneSheetPk;
     private bool _phoneSheetVisible;
 
@@ -208,13 +209,19 @@ public partial class GamePage : ContentPage
 
         _secondary.Show();
 
-        // Layout: Thor gets top screen (Row 0 = *) + second screen (Row 1 = 0, drawn by SecondScreenPage).
-        // Phone gets no top screen (Row 0 = 0) + full-height box grid (Row 1 = *) + compact trainer strip.
-        bool dualScreen = !_isPhone;
-        RootGrid.RowDefinitions[0].Height = _isPhone ? new GridLength(0) : GridLength.Star;
-        RootGrid.RowDefinitions[1].Height = dualScreen ? new GridLength(0) : GridLength.Star;
-        TopScreenPanel.IsVisible = !_isPhone;
-        PhoneTrainerStrip.IsVisible = _isPhone;
+        // Apply layout for current device mode and orientation
+        if (_isPhone)
+            ApplyPhoneLayout(Width > Height);
+        else
+        {
+            // Thor: top screen (Row 0 = *) + second screen collapsed (Row 1 = 0)
+            RootGrid.RowDefinitions[0].Height    = GridLength.Star;
+            RootGrid.RowDefinitions[1].Height    = new GridLength(0);
+            RootGrid.ColumnDefinitions[0].Width  = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width  = new GridLength(0);
+            TopScreenPanel.IsVisible             = true;
+            PhoneTrainerStrip.IsVisible          = false;
+        }
 
         LoadBox(_boxIndex);
     }
@@ -241,6 +248,60 @@ public partial class GamePage : ContentPage
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
         _pulseTimer?.Stop();
+    }
+
+    protected override void OnSizeChanged()
+    {
+        base.OnSizeChanged();
+        if (!_isPhone || Width <= 0 || Height <= 0) return;
+        bool landscape = Width > Height;
+        if (landscape != _isLandscapePhone)
+            ApplyPhoneLayout(landscape);
+    }
+
+    /// <summary>
+    /// Switches GamePage between portrait-phone and landscape-phone layouts.
+    /// Portrait: trainer strip at top of box grid, bottom sheet for detail.
+    /// Landscape: two-column split (TopScreenPanel left, box grid right) — mirrors Thor layout.
+    /// Thor path is never touched by this method.
+    /// </summary>
+    private void ApplyPhoneLayout(bool landscape)
+    {
+        _isLandscapePhone = landscape;
+
+        if (landscape)
+        {
+            // Two-column: left = TopScreenPanel (trainer + detail), right = box grid
+            RootGrid.RowDefinitions[0].Height    = GridLength.Star;
+            RootGrid.RowDefinitions[1].Height    = new GridLength(0);
+            RootGrid.ColumnDefinitions[0].Width  = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width  = new GridLength(2, GridUnitType.Star);
+            Grid.SetRow(BottomGrid, 0);
+            Grid.SetColumn(BottomGrid, 1);
+            TopScreenPanel.IsVisible    = true;
+            PhoneTrainerStrip.IsVisible = false;
+
+            // Dismiss bottom sheet if it was open — left panel handles detail
+            if (_phoneSheetVisible)
+            {
+                PhoneSheetPanel.TranslationY = 600;
+                PhoneSheetScrim.Opacity = 0;
+                PhoneDetailSheet.InputTransparent = true;
+                _phoneSheetVisible = false;
+            }
+        }
+        else
+        {
+            // Portrait: trainer strip at top, box fills screen, detail via bottom sheet
+            RootGrid.RowDefinitions[0].Height    = new GridLength(0);
+            RootGrid.RowDefinitions[1].Height    = GridLength.Star;
+            RootGrid.ColumnDefinitions[0].Width  = GridLength.Star;
+            RootGrid.ColumnDefinitions[1].Width  = new GridLength(0);
+            Grid.SetRow(BottomGrid, 1);
+            Grid.SetColumn(BottomGrid, 0);
+            TopScreenPanel.IsVisible    = false;
+            PhoneTrainerStrip.IsVisible = true;
+        }
     }
 
     private void OnThemeChanged()
@@ -1826,7 +1887,7 @@ public partial class GamePage : ContentPage
         if (_currentBox[slot].Species == 0) return;
         _selectedSlot = slot;
         BoxCanvas.InvalidateSurface();
-        if (_isPhone) _ = ShowPhoneDetailSheetAsync(_currentBox[slot]);
+        if (_isPhone && !_isLandscapePhone) _ = ShowPhoneDetailSheetAsync(_currentBox[slot]);
     }
 
     /// <summary>Clear selected outline.</summary>
@@ -1834,7 +1895,7 @@ public partial class GamePage : ContentPage
     {
         _selectedSlot = -1;
         BoxCanvas.InvalidateSurface();
-        if (_isPhone && _phoneSheetVisible) _ = HidePhoneDetailSheetAsync();
+        if (_isPhone && !_isLandscapePhone && _phoneSheetVisible) _ = HidePhoneDetailSheetAsync();
     }
 
     // ──────────────────────────────────────────────

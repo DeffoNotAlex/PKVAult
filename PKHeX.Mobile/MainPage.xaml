@@ -8,7 +8,8 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="{DynamicResource ThPageBg}">
 
-    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" RowSpacing="2">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" ColumnDefinitions="*,*"
+          RowSpacing="2" ColumnSpacing="2">
 
         <!-- ══════════════════════════════════════════════════════ -->
         <!--  TOP SECTION — Hero: centered save card              -->
