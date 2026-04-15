@@ -619,7 +619,55 @@ public partial class BankViewPage : ContentPage
                 CycleDetailView(); break;
             case Android.Views.Keycode.ButtonB:
                 _ = Shell.Current.GoToAsync(".."); break;
+            case Android.Views.Keycode.ButtonSelect:
+                OpenBankManageMenu(); break;
         }
+    }
+
+    private void OpenBankManageMenu()
+    {
+        var name = _boxIndex < _bank.Boxes.Count ? _bank.Boxes[_boxIndex].Name : $"Bank {_boxIndex + 1}";
+        _secondary.ShowBankManageMenu(_boxIndex, name, _bank.Boxes.Count, OnBankManageAction);
+    }
+
+    private void OnBankManageAction(string action)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            switch (action)
+            {
+                case "rename":
+                    var current = _boxIndex < _bank.Boxes.Count ? _bank.Boxes[_boxIndex].Name : "";
+                    var newName = await DisplayPromptAsync("Rename Box", "Enter a new name:", initialValue: current, maxLength: 24);
+                    if (newName is null) break;
+                    _bank.RenameBox(_boxIndex, newName.Trim().Length > 0 ? newName.Trim() : current);
+                    await LoadBoxAsync(_boxIndex, resetCursor: false);
+                    break;
+
+                case "add":
+                    _bank.CreateBox($"Bank {_bank.Boxes.Count + 1}");
+                    await LoadBoxAsync(_bank.Boxes.Count - 1);
+                    break;
+
+                case "remove":
+                    if (_bank.Boxes.Count <= 1)
+                    {
+                        await DisplayAlert("Cannot Remove", "You must have at least one box.", "OK");
+                        break;
+                    }
+                    if (!_bank.IsBoxEmpty(_boxIndex))
+                    {
+                        bool confirmed = await DisplayAlert(
+                            "Remove Box",
+                            $"\"{_bank.Boxes[_boxIndex].Name}\" contains Pokémon. They will be permanently deleted. Continue?",
+                            "Remove", "Cancel");
+                        if (!confirmed) break;
+                    }
+                    _bank.RemoveBox(_boxIndex);
+                    await LoadBoxAsync(Math.Max(0, _boxIndex - 1));
+                    break;
+            }
+        });
     }
 
     private void HandlePickerKey(Android.Views.Keycode keyCode)
