@@ -26,7 +26,7 @@
             <VerticalStackLayout x:Name="HeroEmptyState"
                                  HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="14" VerticalOptions="Center">
-                    <Image Source="pksafe_icon.png"
+                    <Image Source="pkvault_icon.png"
                            WidthRequest="48" HeightRequest="48"
                            VerticalOptions="Center" />
                     <Label Text="PKSafe"

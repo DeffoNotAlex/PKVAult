@@ -35,7 +35,7 @@
                     Padding="36,28">
                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
                     <HorizontalStackLayout Spacing="16" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image Source="pksafe_icon.png"
+                        <Image Source="pkvault_icon.png"
                                WidthRequest="56" HeightRequest="56"
                                VerticalOptions="Center" />
                         <Label Text="PKSafe"
