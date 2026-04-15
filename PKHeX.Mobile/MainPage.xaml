@@ -226,6 +226,18 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="0,0,0,8">
+                            <!-- Suppress Android's native orange selection highlight;
+                                 we manage selection appearance ourselves via CardStroke. -->
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup Name="CommonStates">
+                                    <VisualState Name="Normal" />
+                                    <VisualState Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="Transparent" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
                             <Border x:Name="CardBorder"
                                     StrokeShape="RoundRectangle 14"
                                     BackgroundColor="{Binding CardBackground}"

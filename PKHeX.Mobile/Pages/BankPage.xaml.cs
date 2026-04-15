@@ -376,13 +376,28 @@ public partial class BankPage : ContentPage
         var pk = App.PendingMove!;
         _bank.Deposit(_boxIndex, _cursorSlot, pk);
 
-        // Clear source game slot
+        // Clear source game slot and immediately write back the save file so the
+        // bank and the save on disk stay in sync. Without writeback the slot is only
+        // cleared in memory; if the user never manually saves, the Pokémon appears
+        // in both the save file and the bank (apparent clone).
         if (App.ActiveSave != null && App.PendingSourceBox >= 0)
         {
             App.ActiveSave.SetBoxSlotAtIndex(
                 App.ActiveSave.BlankPKM,
                 App.PendingSourceBox,
                 App.PendingSourceSlot);
+            App.PendingSourceBox  = -1;
+            App.PendingSourceSlot = -1;
+
+            if (!string.IsNullOrEmpty(App.ActiveSaveFileUri))
+            {
+                var data = App.ActiveSave.GetFinalData().ToArray();
+                _ = Task.Run(async () =>
+                {
+                    try { await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri); }
+                    catch { /* writeback failure is non-fatal; user can still manually save */ }
+                });
+            }
         }
 
         App.PendingMove = null;

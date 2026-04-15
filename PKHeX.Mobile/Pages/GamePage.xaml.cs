@@ -1508,7 +1508,7 @@ public partial class GamePage : ContentPage
         UpdateMoveRows(pk);
 
         // Info panel fields
-        DetailAbility.Text = pk.Ability < _strings.abilitylist.Length
+        DetailAbility.Text = pk.Ability >= 0 && pk.Ability < _strings.abilitylist.Length
             ? _strings.abilitylist[pk.Ability] : "—";
         DetailItem.Text = pk.HeldItem > 0 && pk.HeldItem < _strings.itemlist.Length
             ? _strings.itemlist[pk.HeldItem] : "None";
