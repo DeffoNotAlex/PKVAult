@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:theme="clr-namespace:PKHeX.Mobile.Theme"
+             x:Class="PKHeX.Mobile.Pages.DexPage"
+             BackgroundColor="{DynamicResource ThPageBg}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ── Header ── -->
+        <Grid Grid.Row="0" Padding="16,12,16,8" ColumnDefinitions="*,Auto"
+              BackgroundColor="{DynamicResource ThPageBg}">
+            <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
+                <Label Text="Pokédex" FontFamily="NunitoBold" FontSize="22"
+                       TextColor="{DynamicResource ThTextPrimary}" />
+                <Label x:Name="CaughtLabel" FontFamily="Nunito" FontSize="12"
+                       TextColor="{DynamicResource ThTextSecondary}" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                <Border StrokeShape="RoundRectangle 5"
+                        BackgroundColor="{DynamicResource ThHintBg}"
+                        Stroke="{DynamicResource ThHintStroke}" StrokeThickness="1"
+                        Padding="6,3">
+                    <Label Text="Select" FontFamily="NunitoExtraBold" FontSize="9"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                </Border>
+                <Label Text="Scan save" FontFamily="Nunito" FontSize="11"
+                       TextColor="{DynamicResource ThTextDim}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- ── Dex grid (virtual scroll) ── -->
+        <skia:SKCanvasView Grid.Row="1" x:Name="DexCanvas"
+                           PaintSurface="OnDexPaint">
+            <skia:SKCanvasView.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnPan" />
+            </skia:SKCanvasView.GestureRecognizers>
+        </skia:SKCanvasView>
+
+        <!-- ── Footer: hovered species info ── -->
+        <Border Grid.Row="2"
+                BackgroundColor="{DynamicResource ThCardBg}"
+                StrokeShape="RoundRectangle 0"
+                Stroke="Transparent" Padding="16,10,16,14">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                    <Label x:Name="SpeciesNameLabel" FontFamily="NunitoBold" FontSize="15"
+                           TextColor="{DynamicResource ThTextPrimary}" />
+                    <Label x:Name="SpeciesNumLabel" FontFamily="Nunito" FontSize="11"
+                           TextColor="{DynamicResource ThTextSecondary}" />
+                </VerticalStackLayout>
+                <HorizontalStackLayout Grid.Column="1" x:Name="TypePills"
+                                       Spacing="6" VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+    </Grid>
+</ContentPage>

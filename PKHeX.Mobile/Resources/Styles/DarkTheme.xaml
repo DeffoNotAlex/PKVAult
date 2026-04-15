@@ -65,5 +65,6 @@
     <Color x:Key="ThIconBgPink">#1FFF6B9D</Color>
     <Color x:Key="ThIconBgOrange">#1FFF9F43</Color>
     <Color x:Key="ThIconBgGreen">#1F34D990</Color>
+    <Color x:Key="ThIconBgPurple">#1FA855E2</Color>
 
 </ResourceDictionary>

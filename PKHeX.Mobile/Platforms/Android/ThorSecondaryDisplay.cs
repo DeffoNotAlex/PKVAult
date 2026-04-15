@@ -177,6 +177,18 @@ public sealed class ThorSecondaryDisplay : ISecondaryDisplay, IDisposable
         MainThread.BeginInvokeOnMainThread(() => _secondPage.HideBankManageMenu());
     }
 
+    public void ShowDexStats(int totalCaught, int totalSpecies, int[] caughtPerGen, int[] totalPerGen)
+    {
+        _restoreAction = () => _secondPage.ShowDexStats(totalCaught, totalSpecies, caughtPerGen, totalPerGen);
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.ShowDexStats(totalCaught, totalSpecies, caughtPerGen, totalPerGen));
+    }
+
+    public void HideDexStats()
+    {
+        _restoreAction = null;
+        MainThread.BeginInvokeOnMainThread(() => _secondPage.HideDexStats());
+    }
+
     public void Dispose()
     {
         _secondPage.Cleanup();

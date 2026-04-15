@@ -625,6 +625,43 @@
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════ -->
+        <!--  MODE G — Pokédex stats                               -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Grid x:Name="DexStatsPanel" IsVisible="False"
+              RowDefinitions="Auto,Auto,Auto,*"
+              BackgroundColor="{DynamicResource ThSettingsBg}"
+              Padding="20,24,20,20">
+
+            <!-- Header -->
+            <HorizontalStackLayout Grid.Row="0" Spacing="10">
+                <Label Text="&#xe466;" FontFamily="PhosphorFill" FontSize="28"
+                       TextColor="{DynamicResource ThAccent}" VerticalOptions="Center" />
+                <Label Text="Pokédex" FontFamily="NunitoBold" FontSize="26"
+                       TextColor="{DynamicResource ThTextPrimary}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label x:Name="DexTotalLabel" Grid.Row="1"
+                   FontFamily="Nunito" FontSize="14"
+                   TextColor="{DynamicResource ThTextSecondary}"
+                   Margin="0,6,0,0" />
+
+            <!-- Overall progress bar -->
+            <Grid Grid.Row="2" Margin="0,10,0,16" HeightRequest="8">
+                <Border StrokeShape="RoundRectangle 4"
+                        BackgroundColor="{DynamicResource ThSettingsRow}" />
+                <Border x:Name="DexProgressFill" StrokeShape="RoundRectangle 4"
+                        BackgroundColor="{DynamicResource ThAccent}"
+                        HorizontalOptions="Start" WidthRequest="0" />
+            </Grid>
+
+            <!-- Per-gen breakdown -->
+            <ScrollView Grid.Row="3">
+                <VerticalStackLayout x:Name="DexGenList" Spacing="8" />
+            </ScrollView>
+
+        </Grid>
+
+        <!-- ══════════════════════════════════════════════════════ -->
         <!--  MODE B — Main menu: save list + action bar           -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="MainMenuPanel" IsVisible="False"

@@ -75,7 +75,7 @@ public partial class MainPage : ContentPage
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
         _secondary.Show();
-        _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank];
+        _actionTiles = [Tile_Search, Tile_Gifts, Tile_Export, Tile_Bank, Tile_Dex];
         _partyImages  = [Party0, Party1, Party2, Party3, Party4, Party5];
 
         // On dual-screen: hero panel fills the entire primary display (Row 0 = *),
@@ -609,6 +609,9 @@ public partial class MainPage : ContentPage
             case 3: // Bank
                 _ = Shell.Current.GoToAsync(nameof(BankViewPage));
                 break;
+            case 4: // Dex
+                _ = Shell.Current.GoToAsync(nameof(DexPage));
+                break;
         }
     }
 
@@ -645,6 +648,7 @@ public partial class MainPage : ContentPage
     private void OnGiftsTapped(object? sender, EventArgs e) => ActivateTile(1);
     private void OnExportTapped(object? sender, EventArgs e) => ActivateTile(2);
     private void OnBankTapped(object? sender, EventArgs e) => ActivateTile(3);
+    private void OnDexTapped(object? sender, EventArgs e) => ActivateTile(4);
 
     // ── Action bar highlight ─────────────────────────────────────────────────
 
@@ -824,7 +828,7 @@ public partial class MainPage : ContentPage
     private void MoveRight()
     {
         Haptic();
-        if (_focusSection == 1 && _actionCursor >= 1 && _actionCursor < 4)
+        if (_focusSection == 1 && _actionCursor >= 1 && _actionCursor < 5)
         {
             _actionCursor++;
             UpdateActionHighlight();

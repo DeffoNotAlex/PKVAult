@@ -79,4 +79,10 @@ public interface ISecondaryDisplay
 
     /// <summary>Dismiss the bank manage panel and return to the bank grid.</summary>
     void HideBankManageMenu();
+
+    /// <summary>Switch the bottom screen to Pokédex stats mode.</summary>
+    void ShowDexStats(int totalCaught, int totalSpecies, int[] caughtPerGen, int[] totalPerGen);
+
+    /// <summary>Dismiss the Pokédex stats panel.</summary>
+    void HideDexStats();
 }

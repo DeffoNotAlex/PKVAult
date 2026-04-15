@@ -32,12 +32,14 @@ public static class MauiProgram
             });
 
         builder.Services.AddSingleton<IFileService, FileService>();
+        builder.Services.AddSingleton<DexService>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<Pages.GamePage>();
         builder.Services.AddTransient<Pages.PkmEditorPage>();
         builder.Services.AddTransient<Pages.BankViewPage>();
         builder.Services.AddTransient<Pages.BankPage>();
         builder.Services.AddTransient<Pages.WelcomePage>();
+        builder.Services.AddTransient<Pages.DexPage>();
 
 #if ANDROID
         // Always use ThorSecondaryDisplay on Android — display detection is lazy

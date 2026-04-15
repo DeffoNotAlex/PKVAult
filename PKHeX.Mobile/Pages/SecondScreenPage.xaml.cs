@@ -816,6 +816,109 @@ public partial class SecondScreenPage : ContentPage
         evt?.Invoke(action);
     }
 
+    // ── Mode G — Pokédex stats ─────────────────────────────────────────────────
+
+    private static readonly string[] _genNames =
+        DexService.Generations.Select(g => g.Name).ToArray();
+
+    public void ShowDexStats(int totalCaught, int totalSpecies, int[] caughtPerGen, int[] totalPerGen)
+    {
+        BoxGridPanel.IsVisible    = false;
+        BankGridPanel.IsVisible   = false;
+        MainMenuPanel.IsVisible   = false;
+        WelcomePanel.IsVisible    = false;
+        BankManagePanel.IsVisible = false;
+        ReelPanel.IsVisible       = false;
+        DexStatsPanel.IsVisible   = true;
+        _mainMenuVisible          = false;
+
+        DexTotalLabel.Text = $"{totalCaught} / {totalSpecies} collected";
+
+        // Progress bar fill — defer until layout so Width is known
+        DexStatsPanel.SizeChanged -= OnDexPanelSizeChanged;
+        DexStatsPanel.SizeChanged += OnDexPanelSizeChanged;
+        _dexProgressFraction = totalSpecies > 0 ? (double)totalCaught / totalSpecies : 0;
+        ApplyDexProgressWidth();
+
+        // Rebuild per-gen rows
+        DexGenList.Children.Clear();
+        for (int g = 0; g < _genNames.Length && g < caughtPerGen.Length; g++)
+        {
+            int caught = caughtPerGen[g];
+            int total  = totalPerGen[g];
+            double frac = total > 0 ? (double)caught / total : 0;
+
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitionCollection(
+                    new ColumnDefinition(new GridLength(70)),
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(new GridLength(52))),
+                ColumnSpacing = 10,
+            };
+
+            row.Add(new Label
+            {
+                Text = _genNames[g],
+                FontFamily = "NunitoBold", FontSize = 11,
+                TextColor = Color.FromArgb("#8899BB"),
+                VerticalOptions = LayoutOptions.Center,
+            }, 0, 0);
+
+            var barBg = new Border
+            {
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 3 },
+                BackgroundColor = Color.FromArgb("#1AFFFFFF"),
+                HeightRequest = 6,
+                VerticalOptions = LayoutOptions.Center,
+            };
+            var barFill = new Border
+            {
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 3 },
+                BackgroundColor = caught == total
+                    ? Color.FromArgb("#34D990")
+                    : Color.FromArgb("#3B8BFF"),
+                HeightRequest = 6,
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center,
+            };
+            var barGrid = new Grid { Children = { barBg, barFill } };
+            // Set fill width after layout
+            barBg.SizeChanged += (_, _) =>
+                barFill.WidthRequest = barBg.Width * frac;
+
+            row.Add(barGrid, 1, 0);
+
+            row.Add(new Label
+            {
+                Text = $"{caught}/{total}",
+                FontFamily = "Nunito", FontSize = 10,
+                TextColor = Color.FromArgb("#8899BB"),
+                HorizontalTextAlignment = TextAlignment.End,
+                VerticalOptions = LayoutOptions.Center,
+            }, 2, 0);
+
+            DexGenList.Children.Add(row);
+        }
+    }
+
+    public void HideDexStats()
+    {
+        DexStatsPanel.IsVisible = false;
+        DexStatsPanel.SizeChanged -= OnDexPanelSizeChanged;
+    }
+
+    private double _dexProgressFraction;
+
+    private void OnDexPanelSizeChanged(object? sender, EventArgs e) => ApplyDexProgressWidth();
+
+    private void ApplyDexProgressWidth()
+    {
+        double panelWidth = DexStatsPanel.Width - 40; // subtract Padding left+right
+        if (panelWidth > 0)
+            DexProgressFill.WidthRequest = panelWidth * _dexProgressFraction;
+    }
+
     // ── Tap handlers (Step 0) ──────────────────────────────────────────────────
 
     private void OnDarkThemeTapped(object? sender, EventArgs e)

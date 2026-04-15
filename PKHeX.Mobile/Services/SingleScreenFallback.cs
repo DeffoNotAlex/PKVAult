@@ -27,4 +27,6 @@ public sealed class SingleScreenFallback : ISecondaryDisplay
     public void HideReel() { }
     public void ShowBankManageMenu(int boxIndex, string boxName, int boxCount, Action<string> onAction) { }
     public void HideBankManageMenu() { }
+    public void ShowDexStats(int totalCaught, int totalSpecies, int[] caughtPerGen, int[] totalPerGen) { }
+    public void HideDexStats() { }
 }
