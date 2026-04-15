@@ -29,9 +29,23 @@ jobs:
         run: dotnet restore PKHeX.Mobile/PKHeX.Mobile.csproj
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pksafe.jks
+        id: keystore
+        run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "KEYSTORE_BASE64 secret is not set — will build unsigned debug APK."
+            echo "signing=false" >> $GITHUB_OUTPUT
+          else
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pksafe.jks
+            # Verify the keystore is valid and the alias exists
+            keytool -list -keystore pksafe.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias pkvault 2>&1 || {
+              echo "::error::Keystore verification failed — check KEYSTORE_PASSWORD and that alias 'pkvault' exists."
+              exit 1
+            }
+            echo "signing=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build & sign APK (Release)
+        if: steps.keystore.outputs.signing == 'true'
         run: >
           dotnet build PKHeX.Mobile/PKHeX.Mobile.csproj
           -f net10.0-android
@@ -39,13 +53,21 @@ jobs:
           -p:AndroidSdkDirectory=$ANDROID_SDK_ROOT
           -p:AndroidKeyStore=true
           -p:AndroidSigningKeyStore=${{ github.workspace }}/pksafe.jks
-          -p:AndroidSigningKeyAlias=pksafe
+          -p:AndroidSigningKeyAlias=pkvault
           -p:AndroidSigningKeyPass=${{ secrets.KEY_PASSWORD }}
           -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }}
 
+      - name: Build unsigned APK (no keystore)
+        if: steps.keystore.outputs.signing != 'true'
+        run: >
+          dotnet build PKHeX.Mobile/PKHeX.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidSdkDirectory=$ANDROID_SDK_ROOT
+
       - name: Upload APK to Release
         run: |
-          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "com.pksafe.app-Signed.apk" | head -1)
+          APK=$(find PKHeX.Mobile/bin/Release/net10.0-android -name "*.apk" | head -1)
           echo "Found APK: $APK"
           cp "$APK" PKSafe.apk
           gh release delete nightly --yes 2>/dev/null || true
