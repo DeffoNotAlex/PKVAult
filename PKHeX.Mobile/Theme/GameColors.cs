@@ -45,8 +45,9 @@ public static class GameColors
         [GameVersion.D]  = (SKColor.Parse("#4858A0"), SKColor.Parse("#6878C0")),
         [GameVersion.P]  = (SKColor.Parse("#A868B8"), SKColor.Parse("#C888D8")),
         [GameVersion.Pt] = (SKColor.Parse("#888898"), SKColor.Parse("#A8A8B8")),
-        [GameVersion.HG] = (SKColor.Parse("#B88D1C"), SKColor.Parse("#DAA520")),
-        [GameVersion.SS] = (SKColor.Parse("#8C8CA0"), SKColor.Parse("#B0B0C8")),
+        [GameVersion.HG]   = (SKColor.Parse("#B88D1C"), SKColor.Parse("#DAA520")),
+        [GameVersion.SS]   = (SKColor.Parse("#8C8CA0"), SKColor.Parse("#B0B0C8")),
+        [GameVersion.HGSS] = (SKColor.Parse("#B88D1C"), SKColor.Parse("#DAA520")), // SAV4HGSS always reports HGSS; default to HG gold
 
         // Gen 5
         [GameVersion.B]  = (SKColor.Parse("#3A3A4A"), SKColor.Parse("#5A5A6A")),
