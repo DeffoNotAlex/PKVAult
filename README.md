@@ -55,6 +55,15 @@
 - Filter by title, species, or compatibility with the active save
 - Inject any compatible gift into the first available box slot
 
+### Universal Pokédex
+- Grid of all 1,025 base species rendered with SkiaSharp — virtual scroll keeps it smooth regardless of dex size
+- Species appear as silhouettes until unlocked; scan any loaded save to mark every Pokémon you own as collected (additive — unlocks are never revoked)
+- Each slot shows a type-tinted card with the species' type colour, Pokémon HOME sprite, and dex number
+- Footer bar shows the selected species' name, number, and type pill(s)
+- Completion stats per generation displayed on the second screen (AYN Thor)
+- L1/R1 jumps between generations (Kanto → Johto → … → Paldea)
+- Full gamepad navigation; Select scans the active save
+
 ### In-App Pokémon Bank *(in progress)*
 - Cross-save storage for transferring Pokémon between different saves
 - Drag-and-deposit workflow from the box browser
