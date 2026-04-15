@@ -607,7 +607,9 @@ public partial class MainPage : ContentPage
                     _ = ExportSaveAsync();
                 break;
             case 3: // Bank
-                _ = Shell.Current.GoToAsync(nameof(BankViewPage));
+                // On Thor (dual screen): BankViewPage shows detail on top screen, grid on second screen.
+                // On phone: BankPage shows the full grid on the primary screen (BankViewPage has no grid there).
+                _ = Shell.Current.GoToAsync(_secondary.IsAvailable ? nameof(BankViewPage) : nameof(BankPage));
                 break;
             case 4: // Dex
                 _ = Shell.Current.GoToAsync(nameof(DexPage));

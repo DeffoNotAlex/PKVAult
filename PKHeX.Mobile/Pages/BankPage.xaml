@@ -21,6 +21,9 @@
                     TextColor="White"
                     FontSize="18" Padding="0" />
             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="1">
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBoxHeaderTapped"/>
+                </VerticalStackLayout.GestureRecognizers>
                 <Label x:Name="BankNameLabel"
                        TextColor="{DynamicResource ThTextPrimary}" FontSize="16" FontAttributes="Bold"
                        HorizontalOptions="Center" />

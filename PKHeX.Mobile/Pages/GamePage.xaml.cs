@@ -94,6 +94,9 @@ public partial class GamePage : ContentPage
     private CancellationTokenSource? _radarAnimCts;
 
     private readonly ISecondaryDisplay _secondary;
+    private bool _isPhone;
+    private PKM? _phoneSheetPk;
+    private bool _phoneSheetVisible;
 
     public GamePage(ISecondaryDisplay secondary)
     {
@@ -135,6 +138,8 @@ public partial class GamePage : ContentPage
         bool freshSave = _sav != sav;
         _sav = sav;
 
+        _isPhone = !_secondary.IsAvailable;
+
         // Always reset so WebView reloads cleanly after any navigation away.
         // Also reset _previewSpecies so the scale/toggle changes from Settings
         // take effect even when returning to the same Pokémon.
@@ -158,6 +163,16 @@ public partial class GamePage : ContentPage
             if (iconFile != null)
                 TrainerGameIcon.Source = ImageSource.FromStream(
                     ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
+
+            // Phone compact strip
+            if (_isPhone)
+            {
+                PhoneTrainerName.Text = sav.OT;
+                PhoneGameLabel.Text   = $"Pokémon {sav.Version}";
+                if (iconFile != null)
+                    PhoneGameIcon.Source = ImageSource.FromStream(
+                        ct => FileSystem.OpenAppPackageFileAsync($"gameicons/{iconFile}").WaitAsync(ct));
+            }
         }
 
         // If returning from bank with a withdrawn Pokémon, enter move mode
@@ -193,11 +208,13 @@ public partial class GamePage : ContentPage
 
         _secondary.Show();
 
-        // When the second screen is active, collapse Row 1 (the box grid) from the
-        // primary (top) screen so it fills the entire bottom screen via SecondScreenPage.
-        // Row 0 (trainer card + Pokémon detail) stays on the top screen.
-        bool dualScreen = _secondary.IsAvailable;
-        RootGrid.RowDefinitions[1].Height = dualScreen ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        // Layout: Thor gets top screen (Row 0 = *) + second screen (Row 1 = 0, drawn by SecondScreenPage).
+        // Phone gets no top screen (Row 0 = 0) + full-height box grid (Row 1 = *) + compact trainer strip.
+        bool dualScreen = !_isPhone;
+        RootGrid.RowDefinitions[0].Height = _isPhone ? new GridLength(0) : GridLength.Star;
+        RootGrid.RowDefinitions[1].Height = dualScreen ? new GridLength(0) : GridLength.Star;
+        TopScreenPanel.IsVisible = !_isPhone;
+        PhoneTrainerStrip.IsVisible = _isPhone;
 
         LoadBox(_boxIndex);
     }
@@ -206,6 +223,15 @@ public partial class GamePage : ContentPage
     {
         base.OnDisappearing();
         CommitItems();
+        // Instantly reset sheet so it's off-screen when returning
+        if (_isPhone)
+        {
+            PhoneSheetPanel.TranslationY = 600;
+            PhoneSheetScrim.Opacity = 0;
+            PhoneDetailSheet.InputTransparent = true;
+            _phoneSheetVisible = false;
+            _phoneSheetPk = null;
+        }
 #if ANDROID
         GamepadRouter.KeyReceived        -= OnGamepadKey;
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
@@ -256,6 +282,7 @@ public partial class GamePage : ContentPage
                 ? named.GetBoxName(box)
                 : $"Box {box + 1}";
             BoxNameLabel.Text = boxName;
+            if (_isPhone) PhoneBoxLabel.Text = boxName;
 
             // Update idle panel box info
             IdleBoxNameLabel.Text = boxName;
@@ -1463,6 +1490,126 @@ public partial class GamePage : ContentPage
     }
 
     // ──────────────────────────────────────────────
+    //  Phone detail bottom sheet
+    // ──────────────────────────────────────────────
+
+    private async Task ShowPhoneDetailSheetAsync(PKM pk)
+    {
+        _phoneSheetPk = pk;
+        UpdatePhoneSheetContent(pk);
+
+        PhoneDetailSheet.InputTransparent = false;
+        PhoneSheetScrim.InputTransparent  = false;
+
+        // Parallel: fade scrim in + slide panel up
+        var fadeIn = PhoneSheetScrim.FadeTo(0.55, 220, Easing.CubicOut);
+        var slideUp = PhoneSheetPanel.TranslateTo(0, 0, 260, Easing.CubicOut);
+        await Task.WhenAll(fadeIn, slideUp);
+
+        _phoneSheetVisible = true;
+    }
+
+    private async Task HidePhoneDetailSheetAsync()
+    {
+        _phoneSheetVisible = false;
+        PhoneSheetScrim.InputTransparent = true;
+
+        var fadeOut = PhoneSheetScrim.FadeTo(0, 180, Easing.CubicIn);
+        var slideDown = PhoneSheetPanel.TranslateTo(0, 600, 220, Easing.CubicIn);
+        await Task.WhenAll(fadeOut, slideDown);
+
+        PhoneDetailSheet.InputTransparent = true;
+        _phoneSheetPk = null;
+    }
+
+    private void UpdatePhoneSheetContent(PKM pk)
+    {
+        var speciesName = pk.Species < _strings.specieslist.Length
+            ? _strings.specieslist[pk.Species] : pk.Species.ToString();
+        var natureName = (int)pk.Nature < _strings.natures.Length
+            ? _strings.natures[(int)pk.Nature] : "";
+
+        PhoneSheetSpecies.Text    = speciesName + (pk.IsShiny ? "  ✦" : "");
+        PhoneSheetLevelNature.Text = $"Lv.{pk.CurrentLevel}  ·  {natureName}";
+
+        // Type badges
+        PhoneSheetTypeBadges.Children.Clear();
+        var types = new List<int> { pk.PersonalInfo.Type1 };
+        if (pk.PersonalInfo.Type2 != pk.PersonalInfo.Type1)
+            types.Add(pk.PersonalInfo.Type2);
+        foreach (var typeId in types)
+        {
+            var typeName = typeId < _strings.types.Length ? _strings.types[typeId] : "???";
+            var color = Theme.TypeColors.Map.TryGetValue(typeName, out var c)
+                ? Color.FromUint((uint)((c.Alpha << 24) | (c.Red << 16) | (c.Green << 8) | c.Blue))
+                : Color.FromArgb("#A8A878");
+            PhoneSheetTypeBadges.Children.Add(new Border
+            {
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+                BackgroundColor = color,
+                Stroke = Colors.Transparent,
+                Padding = new Thickness(10, 2),
+                Content = new Label
+                {
+                    Text = typeName.ToUpperInvariant(),
+                    FontFamily = "NunitoExtraBold",
+                    FontSize = 9,
+                    TextColor = Colors.White,
+                    CharacterSpacing = 0.5,
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalTextAlignment = TextAlignment.Center,
+                },
+            });
+        }
+
+        // Moves
+        var phoneNames = new[] { PhoneMoveName0, PhoneMoveName1, PhoneMoveName2, PhoneMoveName3 };
+        var phonePPs   = new[] { PhoneMovePP0, PhoneMovePP1, PhoneMovePP2, PhoneMovePP3 };
+        var phoneDots  = new[] { PhoneMoveDot0, PhoneMoveDot1, PhoneMoveDot2, PhoneMoveDot3 };
+        var phoneRows  = new[] { PhoneMoveRow0, PhoneMoveRow1, PhoneMoveRow2, PhoneMoveRow3 };
+        int[] moves = [pk.Move1, pk.Move2, pk.Move3, pk.Move4];
+        int[] pps   = [pk.Move1_PP, pk.Move2_PP, pk.Move3_PP, pk.Move4_PP];
+        var ctx = _sav?.Context ?? EntityContext.Gen9;
+        for (int i = 0; i < 4; i++)
+        {
+            if (moves[i] == 0) { phoneRows[i].IsVisible = false; continue; }
+            phoneRows[i].IsVisible = true;
+            phoneNames[i].Text = moves[i] < _strings.movelist.Length
+                ? _strings.movelist[moves[i]] : $"Move {moves[i]}";
+            phonePPs[i].Text = $"PP {pps[i]}";
+            var moveTypeName = MoveInfo.GetType((ushort)moves[i], ctx) is var mt && mt < _strings.types.Length
+                ? _strings.types[mt] : "Normal";
+            if (Theme.TypeColors.Map.TryGetValue(moveTypeName, out var tc))
+                phoneDots[i].Fill = new SolidColorBrush(
+                    Color.FromUint((uint)((tc.Alpha << 24) | (tc.Red << 16) | (tc.Green << 8) | tc.Blue)));
+        }
+
+        PhoneSheetCanvas.InvalidateSurface();
+    }
+
+    private void OnPhoneSheetSpritePaint(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+        if (_phoneSheetPk is null) return;
+        var sprite = _sprites.GetSprite(_phoneSheetPk);
+        float aspect = sprite.Width > 0 ? (float)sprite.Width / sprite.Height : 1f;
+        float w = e.Info.Width, h = e.Info.Height;
+        float drawW, drawH;
+        if (w / h <= aspect) { drawW = w; drawH = w / aspect; }
+        else                 { drawH = h; drawW = h * aspect; }
+        canvas.DrawBitmap(sprite, SKRect.Create((w - drawW) / 2f, (h - drawH) / 2f, drawW, drawH));
+    }
+
+    private void OnPhoneSheetScrimTapped(object? sender, TappedEventArgs e) => DeselectSlot();
+
+    private void OnPhoneSheetEditTapped(object? sender, TappedEventArgs e)
+    {
+        DeselectSlot();
+        _ = OpenEditor();
+    }
+
+    // ──────────────────────────────────────────────
     //  X toggle: info+radar  ↔  moves+compat
     // ──────────────────────────────────────────────
 
@@ -1679,6 +1826,7 @@ public partial class GamePage : ContentPage
         if (_currentBox[slot].Species == 0) return;
         _selectedSlot = slot;
         BoxCanvas.InvalidateSurface();
+        if (_isPhone) _ = ShowPhoneDetailSheetAsync(_currentBox[slot]);
     }
 
     /// <summary>Clear selected outline.</summary>
@@ -1686,6 +1834,7 @@ public partial class GamePage : ContentPage
     {
         _selectedSlot = -1;
         BoxCanvas.InvalidateSurface();
+        if (_isPhone && _phoneSheetVisible) _ = HidePhoneDetailSheetAsync();
     }
 
     // ──────────────────────────────────────────────

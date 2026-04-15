@@ -682,6 +682,20 @@ public partial class BankPage : ContentPage
         _secondary.ShowBankManageMenu(_boxIndex, name, _bank.Boxes.Count, OnBankManageAction);
     }
 
+    // Phone-accessible manage menu: tapping the box name in the header
+    private async void OnBoxHeaderTapped(object? sender, TappedEventArgs e)
+    {
+        if (_secondary.IsAvailable) return; // Thor uses second-screen menu
+        var action = await DisplayActionSheet("Manage Box", "Cancel", null,
+            "Rename Box", "Add New Box", "Remove Box");
+        switch (action)
+        {
+            case "Rename Box": OnBankManageAction("rename"); break;
+            case "Add New Box": OnBankManageAction("add"); break;
+            case "Remove Box": OnBankManageAction("remove"); break;
+        }
+    }
+
     private void OnBankManageAction(string action)
     {
         MainThread.BeginInvokeOnMainThread(async () =>
