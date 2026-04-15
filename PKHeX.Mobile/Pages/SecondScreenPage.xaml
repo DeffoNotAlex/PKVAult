@@ -756,7 +756,7 @@
                     <Label Text="Open Boxes" FontFamily="NunitoExtraBold" FontSize="15"
                            TextColor="#1A5A96" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="10">
                     <Border x:Name="Menu_Search" Grid.Column="0" StrokeShape="RoundRectangle 8"
                             BackgroundColor="{DynamicResource ThCardBg}"
                             Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
@@ -814,6 +814,22 @@
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                             <Label Text="Bank" FontFamily="NunitoBold" FontSize="10"
+                                   TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border x:Name="Menu_Dex" Grid.Column="4" StrokeShape="RoundRectangle 8"
+                            BackgroundColor="{DynamicResource ThCardBg}"
+                            Stroke="{DynamicResource ThTileStroke}" StrokeThickness="1"
+                            Padding="0" HeightRequest="70">
+                        <VerticalStackLayout Spacing="5" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                                    BackgroundColor="{DynamicResource ThIconBgPurple}"
+                                    WidthRequest="34" HeightRequest="34" HorizontalOptions="Center">
+                                <Label Text="{x:Static theme:Ph.Stack}" FontFamily="Phosphor"
+                                       FontSize="20" TextColor="#A855E2"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Dex" FontFamily="NunitoBold" FontSize="10"
                                    TextColor="{DynamicResource ThTextSecondary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>

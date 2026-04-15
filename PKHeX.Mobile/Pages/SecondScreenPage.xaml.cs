@@ -332,7 +332,7 @@ public partial class SecondScreenPage : ContentPage
         };
         Menu_OpenBoxes.Stroke = primaryFocused ? Color.FromArgb("#5AAAD0") : Colors.Transparent;
 
-        Border[] tiles = [Menu_Search, Menu_Gifts, Menu_Export, Menu_Bank];
+        Border[] tiles = [Menu_Search, Menu_Gifts, Menu_Export, Menu_Bank, Menu_Dex];
         for (int i = 0; i < tiles.Length; i++)
         {
             bool focused = focusSection == 1 && actionCursor == i + 1;
