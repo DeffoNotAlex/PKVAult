@@ -107,12 +107,12 @@ public partial class MainPage : ContentPage
         _floatTimer?.Stop();
     }
 
-    protected override void OnSizeChanged()
+    protected override void OnSizeAllocated(double width, double height)
     {
-        base.OnSizeChanged();
-        if (Width <= 0 || Height <= 0) return;
+        base.OnSizeAllocated(width, height);
+        if (width <= 0 || height <= 0) return;
         bool dual = _secondary.IsAvailable;
-        if (!dual) ApplyMainPageLayout(dual, Width > Height);
+        if (!dual) ApplyMainPageLayout(dual, width > height);
     }
 
     /// <summary>

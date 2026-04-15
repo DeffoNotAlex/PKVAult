@@ -250,11 +250,11 @@ public partial class GamePage : ContentPage
         _pulseTimer?.Stop();
     }
 
-    protected override void OnSizeChanged()
+    protected override void OnSizeAllocated(double width, double height)
     {
-        base.OnSizeChanged();
-        if (!_isPhone || Width <= 0 || Height <= 0) return;
-        bool landscape = Width > Height;
+        base.OnSizeAllocated(width, height);
+        if (!_isPhone || width <= 0 || height <= 0) return;
+        bool landscape = width > height;
         if (landscape != _isLandscapePhone)
             ApplyPhoneLayout(landscape);
     }
