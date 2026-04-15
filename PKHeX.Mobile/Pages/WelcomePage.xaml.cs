@@ -650,6 +650,7 @@ public partial class WelcomePage : ContentPage
 
             _mediaPlayer.Looping = true;
             _mediaPlayer.Prepare();
+            _mediaPlayer.SeekTo(1000); // skip the silent first second
             _mediaPlayer.Start();
         }
         catch

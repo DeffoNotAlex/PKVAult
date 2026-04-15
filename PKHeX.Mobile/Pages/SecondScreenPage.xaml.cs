@@ -72,14 +72,31 @@ public partial class SecondScreenPage : ContentPage
             {
                 var pageBg     = res.TryGetValue("ThPageBg",     out var v1) && v1 is Color c1 ? c1 : Colors.Black;
                 var settingsBg = res.TryGetValue("ThSettingsBg", out var v2) && v2 is Color c2 ? c2 : Colors.Black;
+                var rowBg      = res.TryGetValue("ThSettingsRow", out var v3) && v3 is Color c3 ? c3 : Colors.Black;
 
-                BackgroundColor              = pageBg;
-                BoxGridPanel.BackgroundColor = pageBg;
+                BackgroundColor               = pageBg;
+                BoxGridPanel.BackgroundColor  = pageBg;
                 MainMenuPanel.BackgroundColor = pageBg;
                 BankGridPanel.BackgroundColor = pageBg;
                 WelcomePanel.BackgroundColor  = settingsBg;
                 ReelPanel.BackgroundColor     = settingsBg;
+
+                // Emulator-row Borders in WelcomeStep1Panel
+                WelcomeRow_Eden.BackgroundColor    = rowBg;
+                WelcomeRow_Azahar.BackgroundColor  = rowBg;
+                WelcomeRow_MelonDS.BackgroundColor = rowBg;
+                WelcomeRow_RetroArch.BackgroundColor = rowBg;
+                WelcomeRow_Manual.BackgroundColor  = rowBg;
+
+                // Theme-card Borders in WelcomeStep0Panel
+                ThemeCardDark.BackgroundColor  = rowBg;
+                ThemeCardLight.BackgroundColor = rowBg;
             }
+
+            // Force-rebind CollectionView cells so CardBackground re-renders on Android
+            var src = MenuSavesList.ItemsSource;
+            MenuSavesList.ItemsSource = null;
+            MenuSavesList.ItemsSource = src;
 
             BoxCanvas.InvalidateSurface();
             BankCanvas.InvalidateSurface();
