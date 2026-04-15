@@ -59,12 +59,19 @@
 - Cross-save storage for transferring Pokémon between different saves
 - Drag-and-deposit workflow from the box browser
 
+### First-Run Welcome Experience
+- Animated intro reel plays on first launch with a floating Pokémon sprite per feature slide
+- Per-slide radial glow, staggered bullet points, and an animated progress bar
+- Finale: Pokémon HOME sprites fly in from the screen edges and form a 5×4 grid, which zooms out to reveal the PKVault logo card
+- Background orchestral Pokémon theme music fades out as the wizard begins
+- Tap anywhere or hit Skip to jump straight to setup
+
 ### Settings
 - **Display Language** — affects species, move, and ability names throughout the app
 - **Shiny Sprites** — toggle alternate-colour sprites for shiny Pokémon
 - **Adaptive Radar Scale** — scale the stat chart to the Pokémon's best stat so weaker Pokémon fill more of the graph (off = fixed 0–255 scale)
 - **Legality Badges** — show a green/red dot on each Pokémon in the box view
-- **Light / Dark Theme** — full theme system with SkiaSharp palette switching
+- **Light / Dark Theme** — instant live switching; no restart required
 - **Manage Save Folders/Files** — add or remove folders and individual files scanned on startup
 - **Download HOME Sprites** — bulk-download and cache all Pokémon HOME-style sprites (~120 MB) for offline use
 - **Download Animated Sprites** — bulk-download and cache all animated GIF sprites (~200 MB) for offline use
