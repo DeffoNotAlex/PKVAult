@@ -32,6 +32,7 @@ public partial class BankViewPage : ContentPage
     private readonly List<Border> _genBorders      = [];
     private readonly List<Border> _speciesBorders  = [];
     private bool               _pickerOpen;
+    private bool               _bankManageOpen;
 
     private static readonly (int Start, int End, string Region)[] GenRanges =
     [
@@ -596,6 +597,16 @@ public partial class BankViewPage : ContentPage
 
     private void HandleGamepadKey(Android.Views.Keycode keyCode)
     {
+        if (_bankManageOpen)
+        {
+            // B closes the menu (second screen handles it internally too, that's fine)
+            if (keyCode == Android.Views.Keycode.ButtonB)
+            {
+                _bankManageOpen = false;
+                _secondary.HideBankManageMenu();
+            }
+            return; // eat all keys while manage menu is open
+        }
         if (_pickerOpen) { HandlePickerKey(keyCode); return; }
         switch (keyCode)
         {
@@ -626,12 +637,14 @@ public partial class BankViewPage : ContentPage
 
     private void OpenBankManageMenu()
     {
+        _bankManageOpen = true;
         var name = _boxIndex < _bank.Boxes.Count ? _bank.Boxes[_boxIndex].Name : $"Bank {_boxIndex + 1}";
         _secondary.ShowBankManageMenu(_boxIndex, name, _bank.Boxes.Count, OnBankManageAction);
     }
 
     private void OnBankManageAction(string action)
     {
+        _bankManageOpen = false;
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             switch (action)
