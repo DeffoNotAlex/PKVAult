@@ -142,3 +142,4 @@ This project is not affiliated with Nintendo, Game Freak, or The Pokémon Compan
 - **[SkiaSharp](https://github.com/mono/SkiaSharp)** — 2D graphics for MAUI
 - **[Phosphor Icons](https://phosphoricons.com)** — icon font used throughout the UI (MIT)
 - Pokémon Legends: Arceus sprites from the [National Pokédex Icon Dex](https://www.deviantart.com/pikafan2000/art/National-Pokedex-Version-Delta-Icon-Dex-824897934) project
+- **Welcome screen music:** "Pokémon: Red & Blue Title Theme (Fanmade Orchestration)" by [MawsMash](https://www.youtube.com/watch?v=qSGsAJFeLas) — used for atmosphere in the first-run welcome screen. Original composition © Game Freak / Nintendo / The Pokémon Company.
