@@ -335,7 +335,8 @@
         <!--  BOTTOM SCREEN — box grid / items                    -->
         <!-- ══════════════════════════════════════════════════════ -->
         <Grid x:Name="BottomGrid" Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
-              BackgroundColor="{DynamicResource ThPageBg}">
+              BackgroundColor="{DynamicResource ThPageBg}"
+              IsClippedToBounds="True">
 
             <!-- Compact trainer strip — phone single-screen only, hidden on Thor -->
             <Grid x:Name="PhoneTrainerStrip" Grid.Row="0" IsVisible="False"
