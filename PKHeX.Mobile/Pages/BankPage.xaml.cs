@@ -353,7 +353,7 @@ public partial class BankPage : ContentPage
         }
         else // Species
         {
-            const int sCols = 4;
+            const int sCols = 8;
             switch (keyCode)
             {
                 case Android.Views.Keycode.DpadLeft:
@@ -683,7 +683,7 @@ public partial class BankPage : ContentPage
 
     private void ScrollSpeciesIntoView()
     {
-        const int cols  = 4;
+        const int cols  = 8;
         const int cellH = 102;
         int row        = _speciesCursor / cols;
         double topY    = row * cellH;
