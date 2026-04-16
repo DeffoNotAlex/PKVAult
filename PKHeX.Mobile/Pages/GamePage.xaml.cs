@@ -957,8 +957,9 @@ public partial class GamePage : ContentPage
             ? TopSelectedPanel.Width
             : (_canvasW > 0 ? _canvasW : 80);
         double ch = TopSelectedPanel.Height > 0 ? TopSelectedPanel.Height : (_canvasH > 0 ? _canvasH : 80);
-        int spriteW = (int)Math.Max(cw * 0.8, 80);
-        int spriteH = (int)Math.Max(ch * 0.8, 80);
+        double scale = _isLandscapePhone ? 0.55 : 0.8;
+        int spriteW = (int)Math.Max(cw * scale, 80);
+        int spriteH = (int)Math.Max(ch * scale, 80);
 
         if (!_spriteWebViewReady)
         {
