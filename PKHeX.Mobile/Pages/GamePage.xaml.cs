@@ -1720,6 +1720,7 @@ public partial class GamePage : ContentPage
                 cols[0].Width = new GridLength(0);
                 cols[1].Width = GridLength.Star;
                 cols[2].Width = new GridLength(0);
+                PreviewCanvas.InvalidateSurface();
                 break;
             case 1: // Moves
                 cols[0].Width = new GridLength(0);
@@ -1735,6 +1736,13 @@ public partial class GamePage : ContentPage
                 RadarCanvas.InvalidateSurface();
                 break;
         }
+
+        // Column width changes don't always force an immediate layout pass on Android.
+        // Calling requestLayout() on the native view guarantees the next frame redraws correctly.
+#if ANDROID
+        (TopSelectedPanel.Handler?.PlatformView as Android.Views.View)?.RequestLayout();
+#endif
+
         LandscapeViewDots.IsVisible = true;
         ViewDot0.Opacity = _landscapeDetailView == 0 ? 1.0 : 0.35;
         ViewDot1.Opacity = _landscapeDetailView == 1 ? 1.0 : 0.35;
