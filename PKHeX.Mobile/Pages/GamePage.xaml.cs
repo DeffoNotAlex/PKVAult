@@ -1829,8 +1829,22 @@ public partial class GamePage : ContentPage
 
         if (_moveSourceBox == -1)
         {
-            // Withdraw from bank: place in game slot, then clear the bank slot
-            _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
+            // Withdraw from bank: convert format if needed, then place in game slot.
+            var pk = _movePk;
+            if (pk.GetType() != _sav.PKMType)
+            {
+                var converted = PKHeX.Core.EntityConverter.ConvertToType(pk, _sav.PKMType, out var convertResult);
+                if (converted is null)
+                {
+                    _ = DisplayAlertAsync("Incompatible",
+                        $"This Pokémon ({pk.GetType().Name}) can't be transferred to this game ({_sav.PKMType.Name}).",
+                        "OK");
+                    return;
+                }
+                pk = converted;
+            }
+
+            _sav.SetBoxSlotAtIndex(pk, _boxIndex, _cursorSlot);
             if (App.PendingSourceBox >= 0)
             {
                 new Services.BankService().ClearSlot(App.PendingSourceBox, App.PendingSourceSlot);
