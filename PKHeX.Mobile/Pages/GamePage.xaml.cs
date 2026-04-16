@@ -949,24 +949,17 @@ public partial class GamePage : ContentPage
             return;
         }
 
-        // In landscape-phone mode the sprite column expands to the full TopSelectedPanel
-        // width, but _canvasW/_canvasH may still hold the old squished-column value when
-        // LoadAnimatedSprite is first called (Android layout hasn't completed yet).
-        // Use the panel's actual current width/height as the authoritative size.
-        double cw = _isLandscapePhone && TopSelectedPanel.Width > 0
-            ? TopSelectedPanel.Width
-            : (_canvasW > 0 ? _canvasW : 80);
-        double ch = TopSelectedPanel.Height > 0 ? TopSelectedPanel.Height : (_canvasH > 0 ? _canvasH : 80);
-        double scale = _isLandscapePhone ? 0.55 : 0.8;
-        int spriteW = (int)Math.Max(cw * scale, 80);
-        int spriteH = (int)Math.Max(ch * scale, 80);
+        // Use CSS viewport units (vw/vh) for the sprite so sizing is always relative to
+        // the WebView container — pixel values derived from MAUI layout measurements are
+        // unreliable here because the layout pass may not have completed yet.
+        int pct = _isLandscapePhone ? 55 : 80;
 
         if (!_spriteWebViewReady)
         {
             SpriteWebView.IsVisible = true;
             PreviewCanvas.IsVisible = false;
             await Task.Delay(50);
-            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri, spriteW, spriteH) };
+            SpriteWebView.Source    = new HtmlWebViewSource { Html = BuildSpriteShell(dataUri, pct) };
             _spriteWebViewReady     = true;
         }
         else
@@ -974,8 +967,8 @@ public partial class GamePage : ContentPage
             var js = $$"""
                 var s=document.getElementById('s');
                 s.src='{{dataUri}}';
-                s.style.width='{{spriteW}}px';
-                s.style.height='{{spriteH}}px';
+                s.style.maxWidth='{{pct}}vw';
+                s.style.maxHeight='{{pct}}vh';
                 """;
             await SpriteWebView.EvaluateJavaScriptAsync(js);
         }
@@ -987,14 +980,14 @@ public partial class GamePage : ContentPage
     private static string ToShowdownFormSuffix(string formName)
         => Services.SpriteCacheService.ToShowdownFormSuffix(formName);
 
-    private static string BuildSpriteShell(string src, int w, int h) => $$"""
+    private static string BuildSpriteShell(string src, int pct) => $$"""
         <!DOCTYPE html>
         <html><head>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <style>*{margin:0;padding:0}body{background:transparent;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden}</style>
         </head><body>
         <img id="s" src="{{src}}"
-             style="width:{{w}}px;height:{{h}}px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
+             style="max-width:{{pct}}vw;max-height:{{pct}}vh;width:auto;height:auto;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))">
         </body></html>
         """;
 
