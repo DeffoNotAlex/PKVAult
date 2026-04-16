@@ -949,11 +949,16 @@ public partial class GamePage : ContentPage
             return;
         }
 
-        // Use cached canvas bounds — PreviewCanvas.Width is -1 during the first call
-        // because TopSelectedPanel is invisible during the initial layout pass.
-        // _canvasW/_canvasH are set by SizeChanged once the panel actually renders.
-        int spriteW = (int)Math.Max(_canvasW * 0.8, 80);
-        int spriteH = (int)Math.Max(_canvasH * 0.8, 80);
+        // In landscape-phone mode the sprite column expands to the full TopSelectedPanel
+        // width, but _canvasW/_canvasH may still hold the old squished-column value when
+        // LoadAnimatedSprite is first called (Android layout hasn't completed yet).
+        // Use the panel's actual current width/height as the authoritative size.
+        double cw = _isLandscapePhone && TopSelectedPanel.Width > 0
+            ? TopSelectedPanel.Width
+            : (_canvasW > 0 ? _canvasW : 80);
+        double ch = TopSelectedPanel.Height > 0 ? TopSelectedPanel.Height : (_canvasH > 0 ? _canvasH : 80);
+        int spriteW = (int)Math.Max(cw * 0.8, 80);
+        int spriteH = (int)Math.Max(ch * 0.8, 80);
 
         if (!_spriteWebViewReady)
         {
@@ -1714,6 +1719,10 @@ public partial class GamePage : ContentPage
     private void ApplyLandscapeDetailView()
     {
         var cols = TopSelectedPanel.ColumnDefinitions;
+        bool isSprite = _landscapeDetailView == 0;
+        TypeBadgeRow.IsVisible    = isSprite;
+        DetailNameBlock.IsVisible = isSprite;
+
         switch (_landscapeDetailView)
         {
             case 0: // Sprite
