@@ -1726,21 +1726,28 @@ public partial class GamePage : ContentPage
 
         switch (_landscapeDetailView)
         {
-            case 0: // Sprite
+            case 0: // Sprite — restore whichever canvas was active
                 cols[0].Width = new GridLength(0);
                 cols[1].Width = GridLength.Star;
                 cols[2].Width = new GridLength(0);
-                PreviewCanvas.InvalidateSurface();
+                bool use3D = _spriteWebViewReady && Preferences.Default.Get(SettingsPage.KeyAnimated3D, true);
+                SpriteWebView.IsVisible = use3D;
+                PreviewCanvas.IsVisible = !use3D;
+                if (!use3D) PreviewCanvas.InvalidateSurface();
                 break;
-            case 1: // Moves
+            case 1: // Moves — hide sprite so it doesn't bleed through
                 cols[0].Width = new GridLength(0);
                 cols[1].Width = new GridLength(0);
                 cols[2].Width = GridLength.Star;
+                SpriteWebView.IsVisible = false;
+                PreviewCanvas.IsVisible = false;
                 break;
-            case 2: // Stats — always show radar, not compat panel
+            case 2: // Stats — hide sprite, always show radar not compat panel
                 cols[0].Width = GridLength.Star;
                 cols[1].Width = new GridLength(0);
                 cols[2].Width = new GridLength(0);
+                SpriteWebView.IsVisible = false;
+                PreviewCanvas.IsVisible = false;
                 _detailToggled = false;
                 ApplyDetailToggle();
                 RadarCanvas.InvalidateSurface();
