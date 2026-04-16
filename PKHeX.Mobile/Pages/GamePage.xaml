@@ -107,6 +107,17 @@
                   RowDefinitions="*"
                   ColumnDefinitions="3.5*,4.5*,3*" Padding="8,6">
 
+                <!-- Landscape-phone cycle indicator (3 dots) — spans all columns, visible only on phone landscape -->
+                <HorizontalStackLayout x:Name="LandscapeViewDots"
+                                        Grid.Column="0" Grid.ColumnSpan="3"
+                                        HorizontalOptions="Center" VerticalOptions="End"
+                                        Spacing="7" Margin="0,0,0,10"
+                                        IsVisible="False" InputTransparent="True">
+                    <Ellipse x:Name="ViewDot0" WidthRequest="7" HeightRequest="7" Fill="White" />
+                    <Ellipse x:Name="ViewDot1" WidthRequest="7" HeightRequest="7" Fill="White" Opacity="0.35" />
+                    <Ellipse x:Name="ViewDot2" WidthRequest="7" HeightRequest="7" Fill="White" Opacity="0.35" />
+                </HorizontalStackLayout>
+
                 <!-- Column 0: Stat radar / Compatibility list -->
                 <Grid Grid.Column="0">
                     <!-- Radar (default) -->

@@ -34,6 +34,9 @@ public partial class GamePage : ContentPage
     // X-toggle: false = info+radar (default), true = moves+compat
     private bool _detailToggled;
 
+    // Landscape-phone cycle view: 0 = Sprite, 1 = Moves, 2 = Stats
+    private int _landscapeDetailView;
+
     // Action menu (Start button)
     private bool _menuOpen;
     private int  _menuCursor; // 0 = Save, 1 = Export, 2 = Items
@@ -301,6 +304,9 @@ public partial class GamePage : ContentPage
             Grid.SetColumn(BottomGrid, 0);
             TopScreenPanel.IsVisible    = false;
             PhoneTrainerStrip.IsVisible = true;
+            // Restore 3-column proportions so the panel is correct if we rotate back
+            RestoreLandscapeColumns();
+            _landscapeDetailView = 0;
         }
     }
 
@@ -1358,7 +1364,15 @@ public partial class GamePage : ContentPage
             case Android.Views.Keycode.ButtonL1: _ = SwapToBank(-1); break;
             case Android.Views.Keycode.ButtonR1: _ = SwapToBank(+1); break;
 
-            case Android.Views.Keycode.ButtonX: OnSearchClicked(this, EventArgs.Empty); break;
+            case Android.Views.Keycode.ButtonX:
+                if (_isLandscapePhone && TopSelectedPanel.IsVisible)
+                {
+                    _landscapeDetailView = (_landscapeDetailView + 1) % 3;
+                    ApplyLandscapeDetailView();
+                }
+                else
+                    OnSearchClicked(this, EventArgs.Empty);
+                break;
             case Android.Views.Keycode.ButtonY:
                 if (_moveMode) { CancelMoveMode(); break; }
                 if (_searchMode) break;
@@ -1516,8 +1530,11 @@ public partial class GamePage : ContentPage
         DetailBall.Text = pk.Ball > 0 && pk.Ball < _strings.balllist.Length
             ? _strings.balllist[pk.Ball] : "—";
 
-        // Apply current toggle state
-        ApplyDetailToggle();
+        // Apply current toggle / landscape-cycle state
+        if (_isLandscapePhone)
+            ApplyLandscapeDetailView();
+        else
+            ApplyDetailToggle();
 
         TopIdlePanel.IsVisible     = false;
         TopSelectedPanel.IsVisible = true;
@@ -1547,6 +1564,7 @@ public partial class GamePage : ContentPage
         PreviewCanvas.IsVisible    = true;
         TopIdlePanel.IsVisible     = true;
         TopSelectedPanel.IsVisible = false;
+        if (_isLandscapePhone) LandscapeViewDots.IsVisible = false;
     }
 
     // ──────────────────────────────────────────────
@@ -1687,6 +1705,50 @@ public partial class GamePage : ContentPage
         // Left column only — moves are always shown in right column
         RadarBorder.IsVisible = !_detailToggled;
         CompatPanel.IsVisible =  _detailToggled;
+    }
+
+    /// <summary>
+    /// Expand one of the three TopSelectedPanel columns to fill the full left panel
+    /// and collapse the other two. Only active in landscape-phone mode.
+    /// </summary>
+    private void ApplyLandscapeDetailView()
+    {
+        var cols = TopSelectedPanel.ColumnDefinitions;
+        switch (_landscapeDetailView)
+        {
+            case 0: // Sprite
+                cols[0].Width = new GridLength(0);
+                cols[1].Width = GridLength.Star;
+                cols[2].Width = new GridLength(0);
+                break;
+            case 1: // Moves
+                cols[0].Width = new GridLength(0);
+                cols[1].Width = new GridLength(0);
+                cols[2].Width = GridLength.Star;
+                break;
+            case 2: // Stats — always show radar, not compat panel
+                cols[0].Width = GridLength.Star;
+                cols[1].Width = new GridLength(0);
+                cols[2].Width = new GridLength(0);
+                _detailToggled = false;
+                ApplyDetailToggle();
+                RadarCanvas.InvalidateSurface();
+                break;
+        }
+        LandscapeViewDots.IsVisible = true;
+        ViewDot0.Opacity = _landscapeDetailView == 0 ? 1.0 : 0.35;
+        ViewDot1.Opacity = _landscapeDetailView == 1 ? 1.0 : 0.35;
+        ViewDot2.Opacity = _landscapeDetailView == 2 ? 1.0 : 0.35;
+    }
+
+    /// <summary>Restore the original 3-column proportions (used when leaving landscape-phone mode).</summary>
+    private void RestoreLandscapeColumns()
+    {
+        var cols = TopSelectedPanel.ColumnDefinitions;
+        cols[0].Width = new GridLength(3.5, GridUnitType.Star);
+        cols[1].Width = new GridLength(4.5, GridUnitType.Star);
+        cols[2].Width = new GridLength(3.0, GridUnitType.Star);
+        LandscapeViewDots.IsVisible = false;
     }
 
     private void UpdateCompatPanel(PKM pk)
