@@ -439,6 +439,15 @@ public partial class BankPage : ContentPage
         // bank and the save on disk stay in sync. Without writeback the slot is only
         // cleared in memory; if the user never manually saves, the Pokémon appears
         // in both the save file and the bank (apparent clone).
+        if (_session.ActiveSave != null && _session.PendingSourceBox == -2)
+        {
+            // Source was a party slot
+            _session.ActiveSave.SetPartySlotAtIndex(
+                _session.ActiveSave.BlankPKM,
+                _session.PendingSourceSlot);
+            _session.PendingSourceBox  = -1;
+            _session.PendingSourceSlot = -1;
+        }
         if (_session.ActiveSave != null && _session.PendingSourceBox >= 0)
         {
             _session.ActiveSave.SetBoxSlotAtIndex(

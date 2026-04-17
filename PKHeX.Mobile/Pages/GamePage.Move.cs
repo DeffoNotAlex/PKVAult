@@ -16,7 +16,7 @@ public partial class GamePage
         if (_cursorSlot >= _currentBox.Length) return;
         if (_currentBox[_cursorSlot].Species == 0) return;
         _movePk         = _currentBox[_cursorSlot].Clone();
-        _moveSourceBox  = _boxIndex;
+        _moveSourceBox  = _boxIndex == -1 ? -2 : _boxIndex; // -2 = party, -1 = bank (reserved)
         _moveSourceSlot = _cursorSlot;
         _moveMode       = true;
         BoxCanvas.InvalidateSurface();
@@ -36,7 +36,7 @@ public partial class GamePage
 
         if (_moveSourceBox == -1)
         {
-            // Withdraw from bank: convert format if needed, then place in game slot.
+            // Withdraw from bank: convert format if needed, then place in game slot or party.
             var pk = _movePk;
             if (pk.GetType() != _sav.PKMType)
             {
@@ -51,7 +51,11 @@ public partial class GamePage
                 pk = converted;
             }
 
-            _sav.SetBoxSlotAtIndex(pk, _boxIndex, _cursorSlot);
+            if (_boxIndex == -1)
+                _sav.SetPartySlotAtIndex(pk, _cursorSlot);
+            else
+                _sav.SetBoxSlotAtIndex(pk, _boxIndex, _cursorSlot);
+
             if (_session.PendingSourceBox >= 0)
             {
                 new BankService().ClearSlot(_session.PendingSourceBox, _session.PendingSourceSlot);
@@ -60,10 +64,18 @@ public partial class GamePage
         }
         else
         {
-            // Box-to-box swap
+            // Box-to-box (or party) swap
             var destPk = _currentBox[_cursorSlot];
-            _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
-            _sav.SetBoxSlotAtIndex(destPk, _moveSourceBox, _moveSourceSlot);
+
+            if (_boxIndex == -1)
+                _sav.SetPartySlotAtIndex(_movePk, _cursorSlot);
+            else
+                _sav.SetBoxSlotAtIndex(_movePk, _boxIndex, _cursorSlot);
+
+            if (_moveSourceBox == -2)
+                _sav.SetPartySlotAtIndex(destPk, _moveSourceSlot);
+            else
+                _sav.SetBoxSlotAtIndex(destPk, _moveSourceBox, _moveSourceSlot);
         }
 
         CancelMoveMode();

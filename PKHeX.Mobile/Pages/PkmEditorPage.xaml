@@ -41,28 +41,32 @@
         </Grid>
 
         <!-- Row 1: Tab bar -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="0"
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="0"
               BackgroundColor="{DynamicResource ThSettingsBg}">
             <Button x:Name="TabStats"  Grid.Column="0" Text="Stats"
                     Clicked="OnTabClicked"
                     BackgroundColor="{DynamicResource ThAccent}" TextColor="{DynamicResource ThTextPrimary}"
-                    FontSize="13" Padding="0,8" CornerRadius="0" />
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabMoves" Grid.Column="1" Text="Moves"
                     Clicked="OnTabClicked"
                     BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
-                    FontSize="13" Padding="0,8" CornerRadius="0" />
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabMet"   Grid.Column="2" Text="Met"
                     Clicked="OnTabClicked"
                     BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
-                    FontSize="13" Padding="0,8" CornerRadius="0" />
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
             <Button x:Name="TabOT"    Grid.Column="3" Text="OT"
                     Clicked="OnTabClicked"
                     BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
-                    FontSize="13" Padding="0,8" CornerRadius="0" />
-            <Button x:Name="TabLegal" Grid.Column="4" Text="⚖"
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabMisc"  Grid.Column="4" Text="Misc"
                     Clicked="OnTabClicked"
                     BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
-                    FontSize="13" Padding="0,8" CornerRadius="0" />
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
+            <Button x:Name="TabLegal" Grid.Column="5" Text="⚖"
+                    Clicked="OnTabClicked"
+                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextSecondary}"
+                    FontSize="12" Padding="0,8" CornerRadius="0" />
         </Grid>
 
         <!-- Row 2: Scrollable content panels (only one visible at a time) -->
@@ -624,6 +628,85 @@
                                     BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThTextPrimary}"
                                     FontSize="12" Padding="0" WidthRequest="38" />
                         </Grid>
+                    </Border>
+
+                </VerticalStackLayout>
+
+                <!-- ── MISC ── -->
+                <VerticalStackLayout x:Name="MiscPanel" IsVisible="False" Spacing="4">
+
+                    <Border x:Name="Row_Happiness" StyleId="Step:Happiness"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                            StrokeShape="RoundRectangle 6" Padding="8,6">
+                        <Grid ColumnDefinitions="90,*,Auto,Auto">
+                            <Label Grid.Column="0" Text="Happiness"
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
+                            <Entry Grid.Column="1" x:Name="HappinessEntry"
+                                   Keyboard="Numeric" BackgroundColor="Transparent"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                            <Button Grid.Column="2" Text="−" StyleId="Step:Happiness"
+                                    Clicked="OnStepDec"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThAccentLight}"
+                                    FontSize="12" Padding="0" WidthRequest="38" />
+                            <Button Grid.Column="3" Text="+" StyleId="Step:Happiness"
+                                    Clicked="OnStepInc"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThAccentLight}"
+                                    FontSize="12" Padding="0" WidthRequest="38" />
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="Row_HeldItem" StyleId="Pick:HeldItem"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                            StrokeShape="RoundRectangle 6" Padding="8,6">
+                        <Grid ColumnDefinitions="90,*,Auto,Auto">
+                            <Label Grid.Column="0" Text="Held Item"
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
+                            <Picker Grid.Column="1" x:Name="HeldItemPicker"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{DynamicResource ThTextPrimary}" />
+                            <Button Grid.Column="2" Text="−" StyleId="Pick:HeldItem"
+                                    Clicked="OnPickerDec"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThAccentLight}"
+                                    FontSize="12" Padding="0" WidthRequest="38" />
+                            <Button Grid.Column="3" Text="+" StyleId="Pick:HeldItem"
+                                    Clicked="OnPickerInc"
+                                    BackgroundColor="{DynamicResource ThNavBtnBg}" TextColor="{DynamicResource ThAccentLight}"
+                                    FontSize="12" Padding="0" WidthRequest="38" />
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="Row_PID" StyleId="Text"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                            StrokeShape="RoundRectangle 6" Padding="8,6">
+                        <Grid ColumnDefinitions="90,*">
+                            <Label Grid.Column="0" Text="PID (hex)"
+                                   VerticalOptions="Center" TextColor="{DynamicResource ThTextSecondary}" />
+                            <Entry Grid.Column="1" x:Name="PIDEntry"
+                                   BackgroundColor="Transparent"
+                                   TextColor="{DynamicResource ThTextPrimary}" />
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="Row_Markings" StyleId="Text"
+                            BackgroundColor="{DynamicResource ThSettingsRow}" Stroke="Transparent"
+                            StrokeShape="RoundRectangle 6" Padding="8,6">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Markings" TextColor="{DynamicResource ThTextSecondary}" />
+                            <HorizontalStackLayout Spacing="12">
+                                <CheckBox x:Name="MarkCircle"   Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="●" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                                <CheckBox x:Name="MarkTriangle" Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="▲" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                                <CheckBox x:Name="MarkSquare"   Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="■" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                                <CheckBox x:Name="MarkHeart"    Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="♥" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                                <CheckBox x:Name="MarkStar"     Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="★" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                                <CheckBox x:Name="MarkDiamond"  Color="{DynamicResource ThAccentLight}" />
+                                <Label Text="◆" VerticalOptions="Center" TextColor="{DynamicResource ThTextPrimary}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
                     </Border>
 
                 </VerticalStackLayout>

@@ -7,25 +7,29 @@ using Microsoft.Maui.Graphics;
 
 namespace PKHeX.Mobile.Pages;
 
-[QueryProperty(nameof(BoxIndexParam), "box")]
+[QueryProperty(nameof(BoxIndexParam),  "box")]
 [QueryProperty(nameof(SlotIndexParam), "slot")]
+[QueryProperty(nameof(IsPartyParam),   "party")]
 public partial class PkmEditorPage : ContentPage
 {
     private PKM? _pk;
-    private int _boxIndex;
-    private int _slotIndex;
+    private int  _boxIndex;
+    private int  _slotIndex;
+    private bool _isParty;
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings _strings = GameInfo.GetStrings("en");
     private bool _movesPopulated;
-    private int _currentTab = 0;
+    private bool _heldItemsPopulated;
+    private int  _currentTab = 0;
     private LegalityAnalysis? _legalityResult;
 
-    private int[] _focusRow = new int[4];
-    private Border[][] _tabRows = null!;
+    private int[]      _focusRow = new int[6];
+    private Border[][] _tabRows  = null!;
     private CancellationTokenSource? _dpadRepeatCts;
 
     public string? BoxIndexParam  { set => int.TryParse(value, out _boxIndex); }
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
+    public string? IsPartyParam   { set => _isParty = value == "1"; }
 
     private readonly ISecondaryDisplay _secondary;
     private readonly SessionState      _session;
@@ -72,6 +76,7 @@ public partial class PkmEditorPage : ContentPage
             [Row_Move1, Row_Move2, Row_Move3, Row_Move4],
             [Row_MetLevel, Row_Ball, Row_MetLoc, Row_OriginGame],
             [Row_OTName, Row_TID, Row_SID, Row_Language],
+            [Row_Happiness, Row_HeldItem, Row_PID, Row_Markings],
             [],   // Legal tab — read-only, no navigable rows
         ];
     }
@@ -110,7 +115,9 @@ public partial class PkmEditorPage : ContentPage
 
         if (_session.ActiveSave is null) return;
 
-        _pk = _session.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
+        _pk = _isParty
+            ? _session.ActiveSave.GetPartySlotAtIndex(_slotIndex)
+            : _session.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
         await _sprites.PreloadBoxAsync([_pk]);
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
@@ -165,11 +172,14 @@ public partial class PkmEditorPage : ContentPage
         MovesPanel.IsVisible  = tab == 1;
         MetPanel.IsVisible    = tab == 2;
         OTPanel.IsVisible     = tab == 3;
-        LegalPanel.IsVisible  = tab == 4;
+        MiscPanel.IsVisible   = tab == 4;
+        LegalPanel.IsVisible  = tab == 5;
 
         if (tab == 1)
             EnsureMovesPopulated();
         if (tab == 4)
+            EnsureHeldItemsPopulated();
+        if (tab == 5)
             _ = RunLegalityAsync();
 
         UpdateTabHighlights();
@@ -188,13 +198,15 @@ public partial class PkmEditorPage : ContentPage
         TabMoves.BackgroundColor  = _currentTab == 1 ? selected : unselected;
         TabMet.BackgroundColor    = _currentTab == 2 ? selected : unselected;
         TabOT.BackgroundColor     = _currentTab == 3 ? selected : unselected;
-        TabLegal.BackgroundColor  = _currentTab == 4 ? selected : unselected;
+        TabMisc.BackgroundColor   = _currentTab == 4 ? selected : unselected;
+        TabLegal.BackgroundColor  = _currentTab == 5 ? selected : unselected;
 
         TabStats.TextColor  = _currentTab == 0 ? selText : unselText;
         TabMoves.TextColor  = _currentTab == 1 ? selText : unselText;
         TabMet.TextColor    = _currentTab == 2 ? selText : unselText;
         TabOT.TextColor     = _currentTab == 3 ? selText : unselText;
-        TabLegal.TextColor  = _currentTab == 4 ? selText : unselText;
+        TabMisc.TextColor   = _currentTab == 4 ? selText : unselText;
+        TabLegal.TextColor  = _currentTab == 5 ? selText : unselText;
     }
 
     private void OnTabClicked(object sender, EventArgs e)
@@ -203,7 +215,8 @@ public partial class PkmEditorPage : ContentPage
                 : sender == TabMoves  ? 1
                 : sender == TabMet    ? 2
                 : sender == TabOT     ? 3
-                : 4;
+                : sender == TabMisc   ? 4
+                : 5;
         SwitchTab(tab);
     }
 
@@ -230,11 +243,11 @@ public partial class PkmEditorPage : ContentPage
         {
             case Android.Views.Keycode.ButtonL1:
             case Android.Views.Keycode.Button5:
-                SwitchTab((_currentTab + 4) % 5); break;
+                SwitchTab((_currentTab + 5) % 6); break;
 
             case Android.Views.Keycode.ButtonR1:
             case Android.Views.Keycode.Button6:
-                SwitchTab((_currentTab + 1) % 5); break;
+                SwitchTab((_currentTab + 1) % 6); break;
 
             case Android.Views.Keycode.ButtonB:
                 _ = Shell.Current.GoToAsync(".."); break;
@@ -304,10 +317,11 @@ public partial class PkmEditorPage : ContentPage
             "EV_SPA"  => (EvSpaEntry,            0,     252),
             "EV_SPD"  => (EvSpdEntry,            0,     252),
             "EV_SPE"  => (EvSpeEntry,            0,     252),
-            "MetLevel"=> (MetLevelEntry,         0,     100),
-            "TID"     => (TIDEntry,              0,     65535),
-            "SID"     => (SIDEntry,              0,     65535),
-            _         => (null,                  0,     0),
+            "MetLevel"  => (MetLevelEntry,       0,     100),
+            "TID"       => (TIDEntry,            0,     65535),
+            "SID"       => (SIDEntry,            0,     65535),
+            "Happiness" => (HappinessEntry,      0,     255),
+            _           => (null,                0,     0),
         };
 
         if (entry is null) return;
@@ -326,6 +340,7 @@ public partial class PkmEditorPage : ContentPage
             "Move3"    => Move3Picker,
             "Move4"    => Move4Picker,
             "Language" => LanguagePicker,
+            "HeldItem" => HeldItemPicker,
             _          => null,
         };
 
@@ -387,6 +402,15 @@ public partial class PkmEditorPage : ContentPage
                     case 1: TIDEntry.Focus();       break;
                     case 2: SIDEntry.Focus();       break;
                     case 3: LanguagePicker.Focus(); break;
+                }
+                break;
+
+            case 4: // Misc
+                switch (row)
+                {
+                    case 0: HappinessEntry.Focus();  break;
+                    case 1: HeldItemPicker.Focus();  break;
+                    case 2: PIDEntry.Focus();        break;
                 }
                 break;
         }
@@ -537,6 +561,38 @@ public partial class PkmEditorPage : ContentPage
         SIDEntry.Text = pk.SID16.ToString();
         LanguagePicker.SelectedIndex = pk.Language < LanguagePicker.Items.Count
             ? pk.Language : 0;
+
+        // Misc
+        HappinessEntry.Text = pk.CurrentFriendship.ToString();
+        PIDEntry.Text = pk.PID.ToString("X8");
+        if (pk is IAppliedMarkings7 m7)
+        {
+            MarkCircle.IsChecked   = m7.MarkingCircle   != MarkingColor.None;
+            MarkTriangle.IsChecked = m7.MarkingTriangle != MarkingColor.None;
+            MarkSquare.IsChecked   = m7.MarkingSquare   != MarkingColor.None;
+            MarkHeart.IsChecked    = m7.MarkingHeart    != MarkingColor.None;
+            MarkStar.IsChecked     = m7.MarkingStar     != MarkingColor.None;
+            MarkDiamond.IsChecked  = m7.MarkingDiamond  != MarkingColor.None;
+        }
+        else if (pk is IAppliedMarkings4 m4)
+        {
+            MarkCircle.IsChecked   = m4.MarkingCircle;
+            MarkTriangle.IsChecked = m4.MarkingTriangle;
+            MarkSquare.IsChecked   = m4.MarkingSquare;
+            MarkHeart.IsChecked    = m4.MarkingHeart;
+            MarkStar.IsChecked     = m4.MarkingStar;
+            MarkDiamond.IsChecked  = m4.MarkingDiamond;
+        }
+        else if (pk is IAppliedMarkings3 m3)
+        {
+            MarkCircle.IsChecked   = m3.MarkingCircle;
+            MarkTriangle.IsChecked = m3.MarkingTriangle;
+            MarkSquare.IsChecked   = m3.MarkingSquare;
+            MarkHeart.IsChecked    = m3.MarkingHeart;
+            MarkStar.IsChecked     = false;
+            MarkDiamond.IsChecked  = false;
+        }
+        // HeldItem picker is populated lazily on tab switch
     }
 
     private void EnsureMovesPopulated()
@@ -561,6 +617,20 @@ public partial class PkmEditorPage : ContentPage
             Move3Picker.SelectedIndex = pk.Move3 < moves.Length ? pk.Move3 : 0;
             Move4Picker.SelectedIndex = pk.Move4 < moves.Length ? pk.Move4 : 0;
         }
+    }
+
+    private void EnsureHeldItemsPopulated()
+    {
+        if (_heldItemsPopulated) return;
+        _heldItemsPopulated = true;
+
+        HeldItemPicker.Items.Add("None");
+        var items = _strings.itemlist;
+        for (int i = 1; i < items.Length; i++)
+            HeldItemPicker.Items.Add(string.IsNullOrWhiteSpace(items[i]) ? $"#{i}" : items[i]);
+
+        if (_pk is { } pk)
+            HeldItemPicker.SelectedIndex = pk.HeldItem < HeldItemPicker.Items.Count ? pk.HeldItem : 0;
     }
 
     private void OnSpritePaint(object sender, SKPaintSurfaceEventArgs e)
@@ -597,7 +667,10 @@ public partial class PkmEditorPage : ContentPage
     {
         if (_pk is null || _session.ActiveSave is null) return;
         ApplyChanges();
-        _session.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
+        if (_isParty)
+            _session.ActiveSave.SetPartySlotAtIndex(_pk, _slotIndex);
+        else
+            _session.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
 
         // Write back to original file if a URI is available
         if (!string.IsNullOrEmpty(_session.ActiveSaveFileUri))
@@ -676,6 +749,42 @@ public partial class PkmEditorPage : ContentPage
 
         if (LanguagePicker.SelectedIndex >= 0)
             pk.Language = LanguagePicker.SelectedIndex;
+
+        // Misc
+        if (TryParseRange(HappinessEntry.Text, 0, 255, out var happiness))
+            pk.CurrentFriendship = happiness;
+
+        if (_heldItemsPopulated && HeldItemPicker.SelectedIndex >= 0)
+            pk.HeldItem = HeldItemPicker.SelectedIndex;
+
+        if (uint.TryParse(PIDEntry.Text, System.Globalization.NumberStyles.HexNumber, null, out var pid))
+            pk.PID = pid;
+
+        if (pk is IAppliedMarkings7 wm7)
+        {
+            wm7.MarkingCircle   = MarkCircle.IsChecked   ? MarkingColor.Blue : MarkingColor.None;
+            wm7.MarkingTriangle = MarkTriangle.IsChecked ? MarkingColor.Blue : MarkingColor.None;
+            wm7.MarkingSquare   = MarkSquare.IsChecked   ? MarkingColor.Blue : MarkingColor.None;
+            wm7.MarkingHeart    = MarkHeart.IsChecked    ? MarkingColor.Blue : MarkingColor.None;
+            wm7.MarkingStar     = MarkStar.IsChecked     ? MarkingColor.Blue : MarkingColor.None;
+            wm7.MarkingDiamond  = MarkDiamond.IsChecked  ? MarkingColor.Blue : MarkingColor.None;
+        }
+        else if (pk is IAppliedMarkings4 wm4)
+        {
+            wm4.MarkingCircle   = MarkCircle.IsChecked;
+            wm4.MarkingTriangle = MarkTriangle.IsChecked;
+            wm4.MarkingSquare   = MarkSquare.IsChecked;
+            wm4.MarkingHeart    = MarkHeart.IsChecked;
+            wm4.MarkingStar     = MarkStar.IsChecked;
+            wm4.MarkingDiamond  = MarkDiamond.IsChecked;
+        }
+        else if (pk is IAppliedMarkings3 wm3)
+        {
+            wm3.MarkingCircle   = MarkCircle.IsChecked;
+            wm3.MarkingTriangle = MarkTriangle.IsChecked;
+            wm3.MarkingSquare   = MarkSquare.IsChecked;
+            wm3.MarkingHeart    = MarkHeart.IsChecked;
+        }
     }
 
     private static bool TryParseRange(string? text, int min, int max, out int value)

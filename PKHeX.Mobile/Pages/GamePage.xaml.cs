@@ -393,10 +393,23 @@ public partial class GamePage : ContentPage
                 if (ct.IsCancellationRequested) { BoxCanvas.TranslationX = 0; return; }
             }
 
-            _currentBox = _sav.GetBoxData(box);
-            var boxName = _sav is IBoxDetailName named
-                ? named.GetBoxName(box)
-                : $"Box {box + 1}";
+            string boxName;
+            if (box == -1)
+            {
+                // Party view — virtual box before box 0
+                var partyArr = new PKM[6];
+                for (int i = 0; i < 6; i++)
+                    partyArr[i] = _sav.GetPartySlotAtIndex(i);
+                _currentBox = partyArr;
+                boxName = "Party";
+            }
+            else
+            {
+                _currentBox = _sav.GetBoxData(box);
+                boxName = _sav is IBoxDetailName named
+                    ? named.GetBoxName(box)
+                    : $"Box {box + 1}";
+            }
             BoxNameLabel.Text = boxName;
             if (_isPhone) PhoneBoxLabel.Text = boxName;
 
@@ -450,7 +463,8 @@ public partial class GamePage : ContentPage
 
     private void OnPrevBox(object sender, EventArgs e)
     {
-        if (_sav is null || _boxIndex <= 0) return;
+        if (_sav is null || _boxIndex <= -1) return;
+        if (_boxIndex == 0 && !_sav.HasParty) return;
         _boxSlideDir = -1;
         _boxIndex--;
         DeselectSlot();
@@ -543,7 +557,8 @@ public partial class GamePage : ContentPage
             }
             bool isCursor = i == _cursorSlot;
             bool isSelected = i == _selectedSlot && !_moveMode && !_searchMode;
-            bool isSource = !_searchMode && _moveMode && _moveSourceBox == _boxIndex && i == _moveSourceSlot;
+            int effectiveSourceBox = _boxIndex == -1 ? -2 : _boxIndex;
+            bool isSource = !_searchMode && _moveMode && _moveSourceBox == effectiveSourceBox && i == _moveSourceSlot;
             bool filled = pk.Species != 0;
 
             // ── Slot background ──
@@ -1915,8 +1930,9 @@ public partial class GamePage : ContentPage
                 _currentBox, _cursorSlot, _selectedSlot,
                 _moveMode, _movePk, _moveSourceBox, _moveSourceSlot,
                 _boxIndex,
-                _boxIndex < (_sav?.BoxCount ?? 0) && _sav is IBoxDetailName n
-                    ? n.GetBoxName(_boxIndex) : $"Box {_boxIndex + 1}",
+                _boxIndex == -1 ? "Party"
+                    : (_boxIndex < (_sav?.BoxCount ?? 0) && _sav is IBoxDetailName n
+                        ? n.GetBoxName(_boxIndex) : $"Box {_boxIndex + 1}"),
                 _legalityCache, _showLegalityBadges);
         });
     }
@@ -1950,7 +1966,10 @@ public partial class GamePage : ContentPage
         // Always edit the slot the cursor is currently on
         if (_cursorSlot < 0 || _cursorSlot >= _currentBox.Length) return;
         if (_currentBox[_cursorSlot].Species == 0) return;
-        await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_cursorSlot}");
+        if (_boxIndex == -1)
+            await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?party=1&slot={_cursorSlot}");
+        else
+            await Shell.Current.GoToAsync($"{nameof(PkmEditorPage)}?box={_boxIndex}&slot={_cursorSlot}");
     }
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
