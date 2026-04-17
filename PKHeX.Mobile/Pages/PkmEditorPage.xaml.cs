@@ -752,7 +752,7 @@ public partial class PkmEditorPage : ContentPage
 
         // Misc
         if (TryParseRange(HappinessEntry.Text, 0, 255, out var happiness))
-            pk.CurrentFriendship = happiness;
+            pk.CurrentFriendship = (byte)happiness;
 
         if (_heldItemsPopulated && HeldItemPicker.SelectedIndex >= 0)
             pk.HeldItem = HeldItemPicker.SelectedIndex;
