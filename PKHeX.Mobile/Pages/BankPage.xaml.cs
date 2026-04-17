@@ -25,6 +25,7 @@ public partial class BankPage : ContentPage
     // Move state (withdraw: grabbed from bank; deposit: arrived from game)
     private bool _moveMode;   // true = grabbed from bank (withdraw grab)
     private PKM? _movePk;
+    private int  _moveSourceBox;
     private int  _moveSourceSlot;
 
     // Picker state (A on empty slot — gen → species browser, mirrors BankViewPage)
@@ -463,30 +464,34 @@ public partial class BankPage : ContentPage
 
     private void EnterWithdrawMode()
     {
-        _movePk        = _currentSlots[_cursorSlot]!.Clone();
+        _movePk         = _currentSlots[_cursorSlot]!.Clone();
+        _moveSourceBox  = _boxIndex;
         _moveSourceSlot = _cursorSlot;
-        _moveMode      = true;
+        _moveMode       = true;
         BankCanvas.InvalidateSurface();
         UpdateModeBanner();
     }
 
     private void ExecuteWithdrawDrop()
     {
-        // Swap: dest → source, grabbed → dest
+        // Move grabbed Pokémon to the cursor slot (current box).
+        // Clear or swap the original source slot, which may be in a different box.
         var destPk = _currentSlots[_cursorSlot];
         if (destPk?.Species > 0)
-            _bank.Deposit(_boxIndex, _moveSourceSlot, destPk);
+            _bank.Deposit(_moveSourceBox, _moveSourceSlot, destPk); // swap dest → source
         else
-            _bank.ClearSlot(_boxIndex, _moveSourceSlot);
-        _bank.Deposit(_boxIndex, _cursorSlot, _movePk!);
+            _bank.ClearSlot(_moveSourceBox, _moveSourceSlot);       // vacate source
+        _bank.Deposit(_boxIndex, _cursorSlot, _movePk!);            // place grabbed → dest
         CancelMoveMode();
         LoadBox(_boxIndex);
     }
 
     private void CancelMoveMode()
     {
-        _moveMode = false;
-        _movePk   = null;
+        _moveMode       = false;
+        _movePk         = null;
+        _moveSourceBox  = -1;
+        _moveSourceSlot = -1;
         BankCanvas.InvalidateSurface();
         UpdateModeBanner();
     }
