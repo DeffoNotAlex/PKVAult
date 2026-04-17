@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading.Channels;
 using PKHeX.Core;
 
 namespace PKHeX.Mobile.Services;
@@ -16,6 +17,48 @@ public class BankService
 
     public BankService() => _boxes = Load();
 
+    // ── Background write queue ────────────────────────────────────
+    //
+    // Writes are serialized through a bounded channel (capacity 1, DropOldest).
+    // Rapid saves (e.g. rapid deposits) collapse into a single disk write of the
+    // latest state, avoiding both main-thread blocking and write storms.
+
+    private static readonly Channel<string> _writeQueue = Channel.CreateBounded<string>(
+        new BoundedChannelOptions(1)
+        {
+            FullMode    = BoundedChannelFullMode.DropOldest,
+            SingleReader = true,
+        });
+
+    static BankService()
+    {
+        // Long-lived background consumer — one writer loop for the app lifetime.
+        _ = Task.Run(async () =>
+        {
+            await foreach (var json in _writeQueue.Reader.ReadAllAsync().ConfigureAwait(false))
+            {
+                try   { await File.WriteAllTextAsync(FilePath, json).ConfigureAwait(false); }
+                catch { /* disk write failed; next Save() will retry */ }
+            }
+        });
+    }
+
+    // ── Corruption warning ────────────────────────────────────────
+
+    /// <summary>
+    /// If bank.json was corrupt on last load, returns the path of the backup file
+    /// and resets the flag so the warning is only shown once.
+    /// Returns null if no corruption was detected.
+    /// </summary>
+    public static string? TakeCorruptionWarning()
+    {
+        var path = _corruptBackupPath;
+        _corruptBackupPath = null;
+        return path;
+    }
+
+    private static string? _corruptBackupPath;
+
     // ── Persistence ───────────────────────────────────────────────
 
     private static List<BankBox> Load()
@@ -28,13 +71,29 @@ public class BankService
                 var data = JsonSerializer.Deserialize<List<BankBox>>(json);
                 if (data is { Count: > 0 }) return data;
             }
-            catch { }
+            catch
+            {
+                // Back up the corrupt file so the user can recover it manually.
+                try
+                {
+                    var backupPath = FilePath + ".bak";
+                    File.Copy(FilePath, backupPath, overwrite: true);
+                    _corruptBackupPath = backupPath;
+                }
+                catch { /* backup failed — still fall back to defaults */ }
+            }
         }
         return DefaultBoxes();
     }
 
     public void Save()
-        => File.WriteAllText(FilePath, JsonSerializer.Serialize(_boxes));
+    {
+        // Serialize on the calling thread (fast), then hand off to the background writer.
+        // TryWrite never blocks — if the queue is full the oldest pending write is dropped
+        // because the in-memory state it encoded is already stale.
+        var json = JsonSerializer.Serialize(_boxes);
+        _writeQueue.Writer.TryWrite(json);
+    }
 
     private static List<BankBox> DefaultBoxes()
         => Enumerable.Range(0, 5).Select(i => new BankBox { Name = $"Bank {i + 1}" }).ToList();

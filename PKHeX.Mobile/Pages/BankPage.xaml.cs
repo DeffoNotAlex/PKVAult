@@ -81,6 +81,13 @@ public partial class BankPage : ContentPage
         RootGrid.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
         await RootGrid.TranslateToAsync(0, 0, 260, Easing.CubicInOut);
 
+        // Warn once if bank.json was corrupt on load (backup saved alongside it)
+        var backupPath = BankService.TakeCorruptionWarning();
+        if (backupPath is not null)
+            await DisplayAlert("Bank Data Corrupted",
+                $"Your bank file was unreadable and has been reset. A backup was saved to:\n{backupPath}",
+                "OK");
+
         UpdateModeBanner();
         LoadBox(_boxIndex);
     }

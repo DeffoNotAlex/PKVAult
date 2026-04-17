@@ -111,6 +111,13 @@ public partial class BankViewPage : ContentPage
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
 
+        // Warn once if bank.json was corrupt on load (backup saved alongside it)
+        var backupPath = BankService.TakeCorruptionWarning();
+        if (backupPath is not null)
+            await DisplayAlert("Bank Data Corrupted",
+                $"Your bank file was unreadable and has been reset. A backup was saved to:\n{backupPath}",
+                "OK");
+
         await LoadBoxAsync(_boxIndex, resetCursor: false);
     }
 

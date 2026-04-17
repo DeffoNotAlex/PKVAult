@@ -25,7 +25,7 @@ public partial class GamePage : ContentPage
     private int _selectedSlot = -1;   // selected outline (A-confirmed), -1 = none
     private PKM? _previewPk;          // Pokémon shown in top panel (follows cursor)
     private int  _previewSpecies = -1; // debounce WebView reloads
-    private bool _loadingBox;
+    private CancellationTokenSource _loadBoxCts = new();
     private bool   _spriteWebViewReady; // true after first full HTML load
     private double _canvasW, _canvasH;  // cached after first layout (TopSelectedPanel is invisible during initial layout pass)
     private bool _showLegalityBadges;
@@ -75,6 +75,10 @@ public partial class GamePage : ContentPage
     private string _itemSearchText    = "";
     private readonly List<Border> _pocketTabBorders = [];
 
+    // Pre-built type badge views — updated in-place instead of recreated per cursor move
+    private readonly Border[] _typeBadges       = CreateTypeBadgePool();
+    private readonly Border[] _phoneTypeBadges  = CreateTypeBadgePool();
+
     // Search / filter
     private bool _searchMode = false;
     private record struct SearchSlot(int Box, int Slot, PKM Pk);
@@ -107,6 +111,11 @@ public partial class GamePage : ContentPage
         _secondary = secondary;
         InitializeComponent();
 
+        // Seed the type badge pools into their containers once.
+        // UpdateTypeBadges / UpdatePhoneSheetContent update them in-place from here on.
+        foreach (var b in _typeBadges)      TypeBadgeRow.Children.Add(b);
+        foreach (var b in _phoneTypeBadges) PhoneSheetTypeBadges.Children.Add(b);
+
         // Keep the radar frosted-glass box square regardless of row height.
         RadarBorder.SizeChanged += (_, _) =>
         {
@@ -122,6 +131,29 @@ public partial class GamePage : ContentPage
             if (PreviewCanvas.Height > 0) _canvasH = PreviewCanvas.Height;
         };
     }
+
+    private static Border[] CreateTypeBadgePool() =>
+    [
+        CreateTypeBadge(),
+        CreateTypeBadge(),
+    ];
+
+    private static Border CreateTypeBadge() => new()
+    {
+        StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+        Stroke       = Colors.Transparent,
+        Padding      = new Thickness(10, 2),
+        IsVisible    = false,
+        Content      = new Label
+        {
+            FontFamily              = "NunitoExtraBold",
+            FontSize                = 9,
+            TextColor               = Colors.White,
+            CharacterSpacing        = 0.5,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment   = TextAlignment.Center,
+        },
+    };
 
     // ──────────────────────────────────────────────
     //  Lifecycle
@@ -251,6 +283,8 @@ public partial class GamePage : ContentPage
 #endif
         ThemeService.ThemeChanged -= OnThemeChanged;
         _pulseTimer?.Stop();
+        _radarAnimCts?.Cancel();
+        _loadBoxCts.Cancel();
     }
 
     protected override void OnSizeAllocated(double width, double height)
@@ -333,16 +367,29 @@ public partial class GamePage : ContentPage
 
     private async void LoadBox(int box)
     {
-        if (_sav is null || _loadingBox) return;
-        _loadingBox = true;
+        if (_sav is null) return;
+
+        // Cancel any in-flight load and abort its MAUI animation immediately.
+        // This guarantees _boxIndex always reflects what is actually displayed.
+        _loadBoxCts.Cancel();
+        _loadBoxCts = new CancellationTokenSource();
+        var ct = _loadBoxCts.Token;
+
+        BoxCanvas.CancelAnimations();
+        BoxCanvas.TranslationX = 0;
+
         int slideDir = _boxSlideDir;
         _boxSlideDir = 0;
+
         try
         {
             // Slide out existing content (only when the canvas is visible — single-screen mode)
             bool canSlide = slideDir != 0 && BoxCanvas.Width > 10;
             if (canSlide)
+            {
                 await BoxCanvas.TranslateToAsync(-slideDir * BoxCanvas.Width, 0, 120, Easing.CubicIn);
+                if (ct.IsCancellationRequested) { BoxCanvas.TranslationX = 0; return; }
+            }
 
             _currentBox = _sav.GetBoxData(box);
             var boxName = _sav is IBoxDetailName named
@@ -356,10 +403,12 @@ public partial class GamePage : ContentPage
             int filled = _currentBox.Count(pk => pk.Species != 0);
             IdleBoxFillLabel.Text = $"{filled} / {_currentBox.Length} filled";
 
-            _secondary.UpdateBoxGrid(
-                _currentBox, _cursorSlot, _selectedSlot,
-                _moveMode, _movePk, _moveSourceBox, _moveSourceSlot,
-                _boxIndex, boxName, _legalityCache, _showLegalityBadges);
+            if (!ct.IsCancellationRequested)
+                _secondary.UpdateBoxGrid(
+                    _currentBox, _cursorSlot, _selectedSlot,
+                    _moveMode, _movePk, _moveSourceBox, _moveSourceSlot,
+                    _boxIndex, boxName, _legalityCache, _showLegalityBadges);
+
             // Clear selected outline if the slot is now empty (e.g. Pokémon was moved/deleted in editor)
             if (_selectedSlot >= 0 && (_selectedSlot >= _currentBox.Length
                 || _currentBox[_selectedSlot].Species == 0))
@@ -373,6 +422,8 @@ public partial class GamePage : ContentPage
             BoxCanvas.InvalidateSurface();
 
             await _sprites.PreloadBoxAsync(_currentBox);
+            if (ct.IsCancellationRequested) return;
+
             BoxCanvas.InvalidateSurface();
 
             if (canSlide)
@@ -380,10 +431,15 @@ public partial class GamePage : ContentPage
                 // Pre-position canvas on the incoming side, then slide to rest
                 BoxCanvas.TranslationX = slideDir * BoxCanvas.Width;
                 await BoxCanvas.TranslateToAsync(0, 0, 140, Easing.CubicOut);
+                if (ct.IsCancellationRequested) { BoxCanvas.TranslationX = 0; return; }
             }
             if (_showLegalityBadges) _ = RunLegalityBadgesAsync(_currentBox);
         }
-        finally { _loadingBox = false; }
+        catch (Exception) when (ct.IsCancellationRequested)
+        {
+            // A navigation fired mid-load — snap canvas back and let the new load take over.
+            BoxCanvas.TranslationX = 0;
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -1043,7 +1099,7 @@ public partial class GamePage : ContentPage
             _cryPlayer.Prepare();
             _cryPlayer.Start();
         }
-        catch { _cryPlayer = null; }
+        catch { _cryPlayer?.Release(); _cryPlayer = null; }
     }
 #endif
 
@@ -1093,37 +1149,24 @@ public partial class GamePage : ContentPage
 
     private void UpdateTypeBadges(PKM pk)
     {
-        TypeBadgeRow.Children.Clear();
-        var types = new List<int> { pk.PersonalInfo.Type1 };
-        if (pk.PersonalInfo.Type2 != pk.PersonalInfo.Type1)
-            types.Add(pk.PersonalInfo.Type2);
+        int type1 = pk.PersonalInfo.Type1;
+        int type2 = pk.PersonalInfo.Type2;
+        bool dual = type2 != type1;
 
-        foreach (var typeId in types)
-        {
-            var typeName = typeId < _strings.types.Length ? _strings.types[typeId] : "???";
-            var color = Theme.TypeColors.Map.TryGetValue(typeName, out var c)
-                ? Color.FromUint((uint)((c.Alpha << 24) | (c.Red << 16) | (c.Green << 8) | c.Blue))
-                : Color.FromArgb("#A8A878");
+        ApplyTypeBadge(_typeBadges[0], type1, visible: true);
+        ApplyTypeBadge(_typeBadges[1], type2, visible: dual);
+    }
 
-            var badge = new Border
-            {
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-                BackgroundColor = color,
-                Stroke = Colors.Transparent,
-                Padding = new Thickness(10, 2),
-                Content = new Label
-                {
-                    Text = typeName.ToUpperInvariant(),
-                    FontFamily = "NunitoExtraBold",
-                    FontSize = 9,
-                    TextColor = Colors.White,
-                    CharacterSpacing = 0.5,
-                    HorizontalTextAlignment = TextAlignment.Center,
-                    VerticalTextAlignment = TextAlignment.Center,
-                },
-            };
-            TypeBadgeRow.Children.Add(badge);
-        }
+    private void ApplyTypeBadge(Border badge, int typeId, bool visible)
+    {
+        badge.IsVisible = visible;
+        if (!visible) return;
+
+        var typeName = typeId < _strings.types.Length ? _strings.types[typeId] : "???";
+        badge.BackgroundColor = Theme.TypeColors.Map.TryGetValue(typeName, out var c)
+            ? Color.FromUint((uint)((c.Alpha << 24) | (c.Red << 16) | (c.Green << 8) | c.Blue))
+            : Color.FromArgb("#A8A878");
+        ((Label)badge.Content!).Text = typeName.ToUpperInvariant();
     }
 
     // ──────────────────────────────────────────────
@@ -1609,34 +1652,13 @@ public partial class GamePage : ContentPage
         PhoneSheetSpecies.Text    = speciesName + (pk.IsShiny ? "  ✦" : "");
         PhoneSheetLevelNature.Text = $"Lv.{pk.CurrentLevel}  ·  {natureName}";
 
-        // Type badges
-        PhoneSheetTypeBadges.Children.Clear();
-        var types = new List<int> { pk.PersonalInfo.Type1 };
-        if (pk.PersonalInfo.Type2 != pk.PersonalInfo.Type1)
-            types.Add(pk.PersonalInfo.Type2);
-        foreach (var typeId in types)
+        // Type badges — update pooled views in-place
         {
-            var typeName = typeId < _strings.types.Length ? _strings.types[typeId] : "???";
-            var color = Theme.TypeColors.Map.TryGetValue(typeName, out var c)
-                ? Color.FromUint((uint)((c.Alpha << 24) | (c.Red << 16) | (c.Green << 8) | c.Blue))
-                : Color.FromArgb("#A8A878");
-            PhoneSheetTypeBadges.Children.Add(new Border
-            {
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-                BackgroundColor = color,
-                Stroke = Colors.Transparent,
-                Padding = new Thickness(10, 2),
-                Content = new Label
-                {
-                    Text = typeName.ToUpperInvariant(),
-                    FontFamily = "NunitoExtraBold",
-                    FontSize = 9,
-                    TextColor = Colors.White,
-                    CharacterSpacing = 0.5,
-                    HorizontalTextAlignment = TextAlignment.Center,
-                    VerticalTextAlignment = TextAlignment.Center,
-                },
-            });
+            int t1 = pk.PersonalInfo.Type1;
+            int t2 = pk.PersonalInfo.Type2;
+            bool dual = t2 != t1;
+            ApplyTypeBadge(_phoneTypeBadges[0], t1, visible: true);
+            ApplyTypeBadge(_phoneTypeBadges[1], t2, visible: dual);
         }
 
         // Moves

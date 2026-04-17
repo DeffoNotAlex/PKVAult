@@ -30,6 +30,10 @@ public static class SpriteCacheService
     private static readonly HashSet<string> _inFlight = [];
     private static readonly object          _lock     = new();
 
+    // Per-session CDN backoff: set after the first download failure so we stop
+    // hammering the network when the CDN is unreachable. Resets on next app launch.
+    private static bool _cdnUnavailable;
+
     // ── Bulk download state ───────────────────────────────────────────────────
 
     public static bool IsBulkDownloading { get; private set; }
@@ -168,9 +172,12 @@ public static class SpriteCacheService
     {
         var cachePath = CachePath(slug, shiny);
 
-        // Cache hit
+        // Cache hit — always serve from disk even when CDN is marked unavailable
         if (File.Exists(cachePath) && new FileInfo(cachePath).Length > 50)
             return ToDataUri(await File.ReadAllBytesAsync(cachePath));
+
+        // Don't attempt network if a previous failure marked the CDN as unreachable
+        if (_cdnUnavailable) return null;
 
         // Deduplicate concurrent requests for the same slug
         var cacheKey = shiny ? $"ani-shiny/{slug}" : $"ani/{slug}";
@@ -266,6 +273,15 @@ public static class SpriteCacheService
                 var bytes = await Http.GetByteArrayAsync(url);
                 if (bytes.Length > 50) return bytes;
             }
+            catch (HttpRequestException ex)
+            {
+                // 404 = sprite legitimately missing from CDN (e.g. form variant). Don't backoff.
+                // Any other status (0 = no connection, 5xx = server error) = mark CDN unreachable.
+                if (ex.StatusCode is not System.Net.HttpStatusCode.NotFound)
+                    _cdnUnavailable = true;
+                return null;
+            }
+            catch (TaskCanceledException) { _cdnUnavailable = true; return null; } // timeout
             catch { }
         }
         return null;
