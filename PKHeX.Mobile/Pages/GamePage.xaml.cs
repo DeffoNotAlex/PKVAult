@@ -1993,7 +1993,19 @@ public partial class GamePage : ContentPage
                                                    : (bool?)new PKHeX.Core.LegalityAnalysis(pk).Valid)
                     .ToArray());
         _legalityCache = results;
-        MainThread.BeginInvokeOnMainThread(() => BoxCanvas.InvalidateSurface());
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            BoxCanvas.InvalidateSurface();
+            // Push the filled cache to the secondary screen — it only received the
+            // empty array at LoadBox time and has no other way to learn it was filled.
+            _secondary.UpdateBoxGrid(
+                _currentBox, _cursorSlot, _selectedSlot,
+                _moveMode, _movePk, _moveSourceBox, _moveSourceSlot,
+                _boxIndex,
+                _boxIndex < (_sav?.BoxCount ?? 0) && _sav is IBoxDetailName n
+                    ? n.GetBoxName(_boxIndex) : $"Box {_boxIndex + 1}",
+                _legalityCache, _showLegalityBadges);
+        });
     }
 
     /// <summary>Mark slot with selected outline (does not change the top panel display).</summary>
