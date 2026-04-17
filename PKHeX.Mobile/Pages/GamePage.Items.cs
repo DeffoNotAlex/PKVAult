@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls.Shapes;
 using PKHeX.Core;
 using PKHeX.Mobile.Models;
+using PKHeX.Mobile.Services;
 using static PKHeX.Mobile.Services.ThemeService;
 
 namespace PKHeX.Mobile.Pages;

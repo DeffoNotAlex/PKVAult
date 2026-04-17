@@ -116,7 +116,7 @@ public partial class BankViewPage : ContentPage
         // Warn once if bank.json was corrupt on load (backup saved alongside it)
         var backupPath = BankService.TakeCorruptionWarning();
         if (backupPath is not null)
-            await DisplayAlert("Bank Data Corrupted",
+            await DisplayAlertAsync("Bank Data Corrupted",
                 $"Your bank file was unreadable and has been reset. A backup was saved to:\n{backupPath}",
                 "OK");
 
