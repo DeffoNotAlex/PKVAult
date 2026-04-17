@@ -185,7 +185,7 @@ public partial class BankPage : ContentPage
 
             bool isCursor   = i == _cursorSlot;
             bool isSelected = i == _selectedSlot;
-            bool isSource   = _moveMode && i == _moveSourceSlot;
+            bool isSource   = _moveMode && _boxIndex == _moveSourceBox && i == _moveSourceSlot;
             bool filled     = pk?.Species > 0;
 
             // Slot background
