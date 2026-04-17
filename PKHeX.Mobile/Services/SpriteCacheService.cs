@@ -26,9 +26,10 @@ public static class SpriteCacheService
         Timeout = TimeSpan.FromSeconds(12),
     };
 
-    // In-flight guard so rapid cursor moves don't stack duplicate downloads
-    private static readonly HashSet<string> _inFlight = [];
-    private static readonly object          _lock     = new();
+    // In-flight deduplication: maps cache key → shared download Task.
+    // Callers that arrive while a download is in progress await the same Task
+    // rather than returning null, so the sprite appears for all of them on completion.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Task<string?>> _inFlight = new();
 
     // Per-session CDN backoff: set after the first download failure so we stop
     // hammering the network when the CDN is unreachable. Resets on next app launch.
@@ -179,26 +180,31 @@ public static class SpriteCacheService
         // Don't attempt network if a previous failure marked the CDN as unreachable
         if (_cdnUnavailable) return null;
 
-        // Deduplicate concurrent requests for the same slug
+        // Deduplicate concurrent requests for the same slug.
+        // GetOrAdd is atomic: all callers for the same key share the same Task and
+        // all receive the result when the download completes — no caller gets null
+        // just because a download was already in progress.
         var cacheKey = shiny ? $"ani-shiny/{slug}" : $"ani/{slug}";
-        lock (_lock)
-        {
-            if (_inFlight.Contains(cacheKey)) return null;
-            _inFlight.Add(cacheKey);
-        }
+        var task = _inFlight.GetOrAdd(cacheKey, _ => DownloadAndCacheAsync(slug, shiny, cachePath));
+        return await task;
+    }
 
+    private static async Task<string?> DownloadAndCacheAsync(string slug, bool shiny, string cachePath)
+    {
+        var cacheKey = shiny ? $"ani-shiny/{slug}" : $"ani/{slug}";
         try
         {
-            var bytes = await DownloadAsync(slug, shiny);
+            var bytes = await DownloadAsync(slug, shiny).ConfigureAwait(false);
             if (bytes is null) return null;
 
             Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-            await File.WriteAllBytesAsync(cachePath, bytes);
+            await File.WriteAllBytesAsync(cachePath, bytes).ConfigureAwait(false);
             return ToDataUri(bytes);
         }
         finally
         {
-            lock (_lock) _inFlight.Remove(cacheKey);
+            // Remove from dictionary so a future request (e.g. after CDN recovers) can retry.
+            _inFlight.TryRemove(cacheKey, out _);
         }
     }
 
