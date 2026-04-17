@@ -21,6 +21,7 @@ namespace PKHeX.Mobile.Pages;
 public partial class WelcomePage : ContentPage
 {
     private readonly ISecondaryDisplay _secondary;
+    private readonly SessionState      _session;
 
     private int _step;
     private bool _isDualScreen;
@@ -148,9 +149,10 @@ public partial class WelcomePage : ContentPage
     //  Construction
     // ─────────────────────────────────────────────────────────────────────────
 
-    public WelcomePage(ISecondaryDisplay secondary)
+    public WelcomePage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
         FoundSavesList.ItemsSource = _foundSaves;
     }
@@ -1062,7 +1064,7 @@ public partial class WelcomePage : ContentPage
         if (found.Count == 0) return;
 
         _dirService.AddEdenRoot(uri);
-        App.RescanNeeded = true;
+        _session.RescanNeeded = true;
 
         foreach (var (fileUri, gameName) in found)
             AddFoundSave(gameName, fileUri);
@@ -1081,7 +1083,7 @@ public partial class WelcomePage : ContentPage
             _dirService.AddFile(fileUri);
             AddFoundSave(gameName, fileUri);
         }
-        App.RescanNeeded = true;
+        _session.RescanNeeded = true;
     }
 
     private async Task FindMelonDSAsync()
@@ -1090,7 +1092,7 @@ public partial class WelcomePage : ContentPage
         if (uri is null) return;
 
         _dirService.AddDirectory(uri);
-        App.RescanNeeded = true;
+        _session.RescanNeeded = true;
         AddFoundSave("MelonDS folder", uri);
     }
 
@@ -1100,7 +1102,7 @@ public partial class WelcomePage : ContentPage
         if (uri is null) return;
 
         _dirService.AddDirectory(uri);
-        App.RescanNeeded = true;
+        _session.RescanNeeded = true;
         AddFoundSave("RetroArch folder", uri);
     }
 
@@ -1110,7 +1112,7 @@ public partial class WelcomePage : ContentPage
         if (uri is null) return;
 
         _dirService.AddDirectory(uri);
-        App.RescanNeeded = true;
+        _session.RescanNeeded = true;
         AddFoundSave("Custom folder", uri);
     }
 

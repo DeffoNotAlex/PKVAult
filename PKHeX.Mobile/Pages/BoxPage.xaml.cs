@@ -17,15 +17,18 @@ public partial class BoxPage : ContentPage
     private PKM[] _currentBox = [];
     private int _boxIndex;
 
-    public BoxPage()
+    private readonly SessionState _session;
+
+    public BoxPage(SessionState session)
     {
+        _session = session;
         InitializeComponent();
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        var sav = App.ActiveSave;
+        var sav = _session.ActiveSave;
         if (sav is null) return;
 
         bool freshLoad = _sav != sav;

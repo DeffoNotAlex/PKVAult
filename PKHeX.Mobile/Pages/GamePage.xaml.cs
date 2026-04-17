@@ -101,14 +101,16 @@ public partial class GamePage : ContentPage
     private CancellationTokenSource? _radarAnimCts;
 
     private readonly ISecondaryDisplay _secondary;
+    private readonly SessionState _session;
     private bool _isPhone;
     private bool _isLandscapePhone;
     private PKM? _phoneSheetPk;
     private bool _phoneSheetVisible;
 
-    public GamePage(ISecondaryDisplay secondary)
+    public GamePage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
 
         // Seed the type badge pools into their containers once.
@@ -168,7 +170,7 @@ public partial class GamePage : ContentPage
         GamepadRouter.BoxScrollRequested -= OnBoxScroll;
         GamepadRouter.BoxScrollRequested += OnBoxScroll;
 #endif
-        var sav = App.ActiveSave;
+        var sav = _session.ActiveSave;
         if (sav is null) return;
 
         bool freshSave = _sav != sav;
@@ -212,13 +214,13 @@ public partial class GamePage : ContentPage
         }
 
         // If returning from bank with a withdrawn Pokémon, enter move mode
-        if (App.PendingMove != null && App.PendingFromBank)
+        if (_session.PendingMove != null && _session.PendingFromBank)
         {
-            _movePk          = App.PendingMove;
+            _movePk          = _session.PendingMove;
             _moveSourceBox   = -1; // originated from bank
             _moveSourceSlot  = -1;
             _moveMode        = true;
-            App.PendingMove  = null;
+            _session.PendingMove  = null;
         }
 
         // Always reset species key so radar re-reads preferences (e.g. after returning from Settings)
@@ -1797,7 +1799,7 @@ public partial class GamePage : ContentPage
         while (CompatList.Children.Count > 1)
             CompatList.Children.RemoveAt(1);
 
-        var saves = App.LoadedSaves;
+        var saves = _session.LoadedSaves;
         if (saves.Count == 0)
         {
             CompatList.Children.Add(new Label
@@ -1921,7 +1923,7 @@ public partial class GamePage : ContentPage
     {
         _moveMode = false;
         _movePk   = null;
-        App.PendingSourceBox = -1; // release bank reference if cancelled
+        _session.PendingSourceBox = -1; // release bank reference if cancelled
         BoxCanvas.InvalidateSurface();
     }
 
@@ -1947,10 +1949,10 @@ public partial class GamePage : ContentPage
             }
 
             _sav.SetBoxSlotAtIndex(pk, _boxIndex, _cursorSlot);
-            if (App.PendingSourceBox >= 0)
+            if (_session.PendingSourceBox >= 0)
             {
-                new Services.BankService().ClearSlot(App.PendingSourceBox, App.PendingSourceSlot);
-                App.PendingSourceBox = -1;
+                new Services.BankService().ClearSlot(_session.PendingSourceBox, _session.PendingSourceSlot);
+                _session.PendingSourceBox = -1;
             }
         }
         else
@@ -1971,18 +1973,18 @@ public partial class GamePage : ContentPage
     {
         if (_moveMode && _movePk != null)
         {
-            App.PendingMove     = _movePk;
-            App.PendingFromBank = _moveSourceBox == -1;
-            if (!App.PendingFromBank)
+            _session.PendingMove     = _movePk;
+            _session.PendingFromBank = _moveSourceBox == -1;
+            if (!_session.PendingFromBank)
             {
-                App.PendingSourceBox  = _moveSourceBox;
-                App.PendingSourceSlot = _moveSourceSlot;
+                _session.PendingSourceBox  = _moveSourceBox;
+                _session.PendingSourceSlot = _moveSourceSlot;
             }
             _moveMode = false;
             _movePk   = null;
         }
 
-        App.BankSlideDir = dir;
+        _session.BankSlideDir = dir;
         await Shell.Current.GoToAsync(nameof(BankPage), false);
     }
 
@@ -2366,7 +2368,7 @@ public partial class GamePage : ContentPage
     private async void OnSaveClicked(object sender, EventArgs e)
     {
         if (_sav is null) return;
-        if (string.IsNullOrEmpty(App.ActiveSaveFileUri))
+        if (string.IsNullOrEmpty(_session.ActiveSaveFileUri))
         {
             await DisplayAlertAsync("Save failed", "No original file location found. Use Export instead.", "OK");
             return;
@@ -2374,8 +2376,8 @@ public partial class GamePage : ContentPage
         try
         {
             var data = _sav.Write().ToArray();
-            await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri);
-            await DisplayAlertAsync("Saved", $"Written back to {App.ActiveSaveFileName}.", "OK");
+            await new FileService().WriteBackAsync(data, _session.ActiveSaveFileUri);
+            await DisplayAlertAsync("Saved", $"Written back to {_session.ActiveSaveFileName}.", "OK");
         }
         catch (Exception ex)
         {
@@ -2393,7 +2395,7 @@ public partial class GamePage : ContentPage
         try
         {
             var data = _sav.Write().ToArray();
-            await new FileService().ExportFileAsync(data, App.ActiveSaveFileName);
+            await new FileService().ExportFileAsync(data, _session.ActiveSaveFileName);
         }
         catch (Exception ex)
         {

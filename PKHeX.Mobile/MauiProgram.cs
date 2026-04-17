@@ -33,6 +33,7 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<IFileService, FileService>();
         builder.Services.AddSingleton<DexService>();
+        builder.Services.AddSingleton<SessionState>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<Pages.GamePage>();
         builder.Services.AddTransient<Pages.PkmEditorPage>();
@@ -40,6 +41,10 @@ public static class MauiProgram
         builder.Services.AddTransient<Pages.BankPage>();
         builder.Services.AddTransient<Pages.WelcomePage>();
         builder.Services.AddTransient<Pages.DexPage>();
+        builder.Services.AddTransient<Pages.SettingsPage>();
+        builder.Services.AddTransient<Pages.DatabasePage>();
+        builder.Services.AddTransient<Pages.MysteryGiftDBPage>();
+        builder.Services.AddTransient<Pages.BoxPage>();
 
 #if ANDROID
         // Always use ThorSecondaryDisplay on Android — display detection is lazy

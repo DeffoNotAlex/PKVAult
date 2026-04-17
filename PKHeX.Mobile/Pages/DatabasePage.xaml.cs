@@ -13,8 +13,11 @@ public partial class DatabasePage : ContentPage
     private PokemonEntry? _highlightedEntry;
     private DateTime _lastListNav = DateTime.MinValue;
 
-    public DatabasePage()
+    private readonly SessionState _session;
+
+    public DatabasePage(SessionState session)
     {
+        _session = session;
         InitializeComponent();
     }
 
@@ -24,7 +27,7 @@ public partial class DatabasePage : ContentPage
 #if ANDROID
         GamepadRouter.KeyReceived += OnGamepadKey;
 #endif
-        if (App.ActiveSave is null) return;
+        if (_session.ActiveSave is null) return;
         BuildIndex();
         ApplyFilter();
     }
@@ -87,7 +90,7 @@ public partial class DatabasePage : ContentPage
 
     private void BuildIndex()
     {
-        var sav = App.ActiveSave!;
+        var sav = _session.ActiveSave!;
         _all = new List<PokemonEntry>(sav.BoxCount * sav.BoxSlotCount);
 
         for (int box = 0; box < sav.BoxCount; box++)

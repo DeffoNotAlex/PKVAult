@@ -13,8 +13,11 @@ public partial class MysteryGiftDBPage : ContentPage
     private GiftEntry? _highlightedEntry;
     private DateTime _lastListNav = DateTime.MinValue;
 
-    public MysteryGiftDBPage()
+    private readonly SessionState _session;
+
+    public MysteryGiftDBPage(SessionState session)
     {
+        _session = session;
         InitializeComponent();
     }
 
@@ -118,7 +121,7 @@ public partial class MysteryGiftDBPage : ContentPage
 
     private void ApplyFilter()
     {
-        var sav = App.ActiveSave;
+        var sav = _session.ActiveSave;
         var text = SearchEntry.Text?.Trim() ?? "";
         var compatOnly = CompatibleOnly.IsToggled && sav is not null;
 
@@ -154,7 +157,7 @@ public partial class MysteryGiftDBPage : ContentPage
     {
         GiftList.SelectedItem = null;
 
-        var sav = App.ActiveSave;
+        var sav = _session.ActiveSave;
         if (sav is null) return;
 
         if (!entry.Gift.IsCardCompatible(sav, out var reason))

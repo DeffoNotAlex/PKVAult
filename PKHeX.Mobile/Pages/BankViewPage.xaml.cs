@@ -14,6 +14,7 @@ public partial class BankViewPage : ContentPage
     private const int Rows    = 5;
 
     private readonly ISecondaryDisplay        _secondary;
+    private readonly SessionState             _session;
     private readonly BankService              _bank    = new();
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings              _strings = GameInfo.GetStrings("en");
@@ -82,9 +83,10 @@ public partial class BankViewPage : ContentPage
         new SKColor(185,  90, 255),   // SpA
     ];
 
-    public BankViewPage(ISecondaryDisplay secondary)
+    public BankViewPage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
 
         // Keep radar box square
@@ -457,7 +459,7 @@ public partial class BankViewPage : ContentPage
         while (CompatList.Children.Count > 1)
             CompatList.Children.RemoveAt(1);
 
-        var saves = App.LoadedSaves;
+        var saves = _session.LoadedSaves;
         if (saves.Count == 0)
         {
             CompatList.Children.Add(new Label
@@ -1004,7 +1006,7 @@ public partial class BankViewPage : ContentPage
     {
         if (_speciesCursor >= _genSpeciesList.Count) return;
         var sp = _genSpeciesList[_speciesCursor];
-        PKM pk = App.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
+        PKM pk = _session.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
         pk.Species      = sp;
         pk.CurrentLevel = 1;
         pk.Gender       = pk.GetSaneGender();

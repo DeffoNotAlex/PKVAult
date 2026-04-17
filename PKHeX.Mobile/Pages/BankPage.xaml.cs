@@ -13,6 +13,7 @@ public partial class BankPage : ContentPage
     private const int Rows    = 5;
 
     private readonly ISecondaryDisplay        _secondary;
+    private readonly SessionState             _session;
     private readonly BankService              _bank    = new();
     private readonly FileSystemSpriteRenderer _sprites = new();
     private readonly GameStrings              _strings = GameInfo.GetStrings("en");
@@ -57,9 +58,10 @@ public partial class BankPage : ContentPage
         Color.FromArgb("#7038F8"), Color.FromArgb("#705848"), Color.FromArgb("#7038F8"),
     ];
 
-    public BankPage(ISecondaryDisplay secondary)
+    public BankPage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
     }
 
@@ -79,7 +81,7 @@ public partial class BankPage : ContentPage
         ThemeService.ThemeChanged -= OnThemeChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
         // Slide in the inner grid (not `this`) so hit-testing is always correct
-        RootGrid.TranslationX = App.BankSlideDir < 0 ? -500 : 500;
+        RootGrid.TranslationX = _session.BankSlideDir < 0 ? -500 : 500;
         await RootGrid.TranslateToAsync(0, 0, 260, Easing.CubicInOut);
 
         // Warn once if bank.json was corrupt on load (backup saved alongside it)
@@ -218,9 +220,9 @@ public partial class BankPage : ContentPage
             }
 
             // Ghost of pending deposit at cursor
-            if (isCursor && App.PendingMove != null && !App.PendingFromBank && _movePk == null)
+            if (isCursor && _session.PendingMove != null && !_session.PendingFromBank && _movePk == null)
             {
-                var ghost = _sprites.GetSprite(App.PendingMove);
+                var ghost = _sprites.GetSprite(_session.PendingMove);
                 float inner = slotSize * 0.70f;
                 float aspect = ghost.Width > 0 ? (float)ghost.Width / ghost.Height : 1f;
                 float drawW, drawH;
@@ -250,7 +252,7 @@ public partial class BankPage : ContentPage
             {
                 var color = _moveMode
                     ? new SKColor(60, 220, 110, 230)
-                    : App.PendingMove != null
+                    : _session.PendingMove != null
                     ? new SKColor(60, 200, 255, 230)
                     : new SKColor(80, 160, 255, 200);
                 using var p = new SKPaint { Color = color, Style = SKPaintStyle.Stroke, StrokeWidth = 3f, IsAntialias = true };
@@ -325,7 +327,7 @@ public partial class BankPage : ContentPage
             case Android.Views.Keycode.ButtonB:
                 if (_moveMode) { CancelMoveMode(); break; }
                 if (_selectedSlot >= 0) { DeselectSlot(); break; }
-                App.PendingMove = null; // cancel any pending deposit
+                _session.PendingMove = null; // cancel any pending deposit
                 _ = SwapToGame();
                 break;
 
@@ -401,7 +403,7 @@ public partial class BankPage : ContentPage
     private void HandleActivate()
     {
         // Deposit mode: arriving from game with a Pokémon to place
-        if (App.PendingMove != null && !App.PendingFromBank)
+        if (_session.PendingMove != null && !_session.PendingFromBank)
         {
             ExecuteDeposit();
             return;
@@ -430,34 +432,34 @@ public partial class BankPage : ContentPage
 
     private void ExecuteDeposit()
     {
-        var pk = App.PendingMove!;
+        var pk = _session.PendingMove!;
         _bank.Deposit(_boxIndex, _cursorSlot, pk);
 
         // Clear source game slot and immediately write back the save file so the
         // bank and the save on disk stay in sync. Without writeback the slot is only
         // cleared in memory; if the user never manually saves, the Pokémon appears
         // in both the save file and the bank (apparent clone).
-        if (App.ActiveSave != null && App.PendingSourceBox >= 0)
+        if (_session.ActiveSave != null && _session.PendingSourceBox >= 0)
         {
-            App.ActiveSave.SetBoxSlotAtIndex(
-                App.ActiveSave.BlankPKM,
-                App.PendingSourceBox,
-                App.PendingSourceSlot);
-            App.PendingSourceBox  = -1;
-            App.PendingSourceSlot = -1;
+            _session.ActiveSave.SetBoxSlotAtIndex(
+                _session.ActiveSave.BlankPKM,
+                _session.PendingSourceBox,
+                _session.PendingSourceSlot);
+            _session.PendingSourceBox  = -1;
+            _session.PendingSourceSlot = -1;
 
-            if (!string.IsNullOrEmpty(App.ActiveSaveFileUri))
+            if (!string.IsNullOrEmpty(_session.ActiveSaveFileUri))
             {
-                var data = App.ActiveSave.Write().ToArray();
+                var data = _session.ActiveSave.Write().ToArray();
                 _ = Task.Run(async () =>
                 {
-                    try { await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri); }
+                    try { await new FileService().WriteBackAsync(data, _session.ActiveSaveFileUri); }
                     catch { /* writeback failure is non-fatal; user can still manually save */ }
                 });
             }
         }
 
-        App.PendingMove = null;
+        _session.PendingMove = null;
         LoadBox(_boxIndex);
         UpdateModeBanner();
     }
@@ -517,17 +519,17 @@ public partial class BankPage : ContentPage
         // If in withdraw move mode, carry Pokémon to game
         if (_moveMode && _movePk != null)
         {
-            App.PendingMove       = _movePk;
-            App.PendingSourceBox  = _boxIndex;
-            App.PendingSourceSlot = _moveSourceSlot;
-            App.PendingFromBank   = true;
+            _session.PendingMove       = _movePk;
+            _session.PendingSourceBox  = _boxIndex;
+            _session.PendingSourceSlot = _moveSourceSlot;
+            _session.PendingFromBank   = true;
             _moveMode = false;
             _movePk   = null;
         }
 
-        if (exitDir != 0) App.BankSlideDir = exitDir;
+        if (exitDir != 0) _session.BankSlideDir = exitDir;
 
-        double exitX = App.BankSlideDir < 0 ? -500 : 500;
+        double exitX = _session.BankSlideDir < 0 ? -500 : 500;
         await RootGrid.TranslateToAsync(exitX, 0, 260, Easing.CubicInOut);
         RootGrid.TranslationX = 0;
         await Shell.Current.GoToAsync("..", false);
@@ -721,7 +723,7 @@ public partial class BankPage : ContentPage
         if (_speciesCursor >= _genSpeciesList.Count) return;
         var species = _genSpeciesList[_speciesCursor];
 
-        PKM pk = App.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
+        PKM pk = _session.ActiveSave is { } sav ? sav.BlankPKM : new PK9();
         pk.Species      = species;
         pk.CurrentLevel = 1;
         pk.Gender       = pk.GetSaneGender();
@@ -738,11 +740,11 @@ public partial class BankPage : ContentPage
 
     private void UpdateModeBanner()
     {
-        if (App.PendingMove != null && !App.PendingFromBank)
+        if (_session.PendingMove != null && !_session.PendingFromBank)
         {
-            var name = App.PendingMove.Species < _strings.specieslist.Length
-                ? _strings.specieslist[App.PendingMove.Species] : "?";
-            ModeLabel.Text      = $"Depositing  {name}  Lv.{App.PendingMove.CurrentLevel}  — press A to place";
+            var name = _session.PendingMove.Species < _strings.specieslist.Length
+                ? _strings.specieslist[_session.PendingMove.Species] : "?";
+            ModeLabel.Text      = $"Depositing  {name}  Lv.{_session.PendingMove.CurrentLevel}  — press A to place";
             ModeLabel.TextColor = Color.FromArgb("#44DDAA");
             ModeBanner.BackgroundColor = Color.FromArgb("#0A1E0E");
             ModeBanner.IsVisible = true;

@@ -28,10 +28,12 @@ public partial class PkmEditorPage : ContentPage
     public string? SlotIndexParam { set => int.TryParse(value, out _slotIndex); }
 
     private readonly ISecondaryDisplay _secondary;
+    private readonly SessionState      _session;
 
-    public PkmEditorPage(ISecondaryDisplay secondary)
+    public PkmEditorPage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
 
         // Natures
@@ -106,9 +108,9 @@ public partial class PkmEditorPage : ContentPage
 
         _secondary.Show();
 
-        if (App.ActiveSave is null) return;
+        if (_session.ActiveSave is null) return;
 
-        _pk = App.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
+        _pk = _session.ActiveSave.GetBoxSlotAtIndex(_boxIndex, _slotIndex);
         await _sprites.PreloadBoxAsync([_pk]);
         PopulateControls();
         SpriteCanvas.InvalidateSurface();
@@ -593,17 +595,17 @@ public partial class PkmEditorPage : ContentPage
 
     private async void OnSaveClicked(object sender, EventArgs e)
     {
-        if (_pk is null || App.ActiveSave is null) return;
+        if (_pk is null || _session.ActiveSave is null) return;
         ApplyChanges();
-        App.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
+        _session.ActiveSave.SetBoxSlotAtIndex(_pk, _boxIndex, _slotIndex);
 
         // Write back to original file if a URI is available
-        if (!string.IsNullOrEmpty(App.ActiveSaveFileUri))
+        if (!string.IsNullOrEmpty(_session.ActiveSaveFileUri))
         {
             try
             {
-                var data = App.ActiveSave.Write().ToArray();
-                await new FileService().WriteBackAsync(data, App.ActiveSaveFileUri);
+                var data = _session.ActiveSave.Write().ToArray();
+                await new FileService().WriteBackAsync(data, _session.ActiveSaveFileUri);
             }
             catch (Exception ex)
             {

@@ -12,6 +12,7 @@ namespace PKHeX.Mobile;
 public partial class MainPage : ContentPage
 {
     private readonly ISecondaryDisplay _secondary;
+    private readonly SessionState _session;
     private readonly SaveDirectoryService _dirService = new();
     private readonly IFileService _fileService = new FileService();
     private List<SaveCardViewModel> _saveCards = [];
@@ -52,9 +53,10 @@ public partial class MainPage : ContentPage
     // Hero cross-fade cancellation
     private CancellationTokenSource? _heroAnimCts;
 
-    public MainPage(ISecondaryDisplay secondary)
+    public MainPage(ISecondaryDisplay secondary, SessionState session)
     {
         _secondary = secondary;
+        _session   = session;
         InitializeComponent();
     }
 
@@ -82,11 +84,11 @@ public partial class MainPage : ContentPage
         BottomPanel.IsVisible = !dual;
         ApplyMainPageLayout(dual, Width > Height);
 
-        if (App.RescanNeeded || App.LoadedSaves.Count == 0)
+        if (_session.RescanNeeded || _session.LoadedSaves.Count == 0)
         {
             // Show cached list immediately if available, then rescan in background.
-            if (App.LoadedSaves.Count > 0)
-                ApplySaveEntries(App.LoadedSaves);
+            if (_session.LoadedSaves.Count > 0)
+                ApplySaveEntries(_session.LoadedSaves);
             _ = RefreshSavesAsync();
         }
         else
@@ -167,8 +169,8 @@ public partial class MainPage : ContentPage
     private async Task RefreshSavesAsync()
     {
         var entries = await _dirService.ScanAllAsync();
-        App.LoadedSaves = entries;
-        App.RescanNeeded = false;
+        _session.LoadedSaves = entries;
+        _session.RescanNeeded = false;
         ApplySaveEntries(entries);
     }
 
@@ -187,7 +189,7 @@ public partial class MainPage : ContentPage
         }
 
         // Restore active save highlight when returning from GamePage
-        if (App.ActiveSaveFileUri is { Length: > 0 } uri)
+        if (_session.ActiveSaveFileUri is { Length: > 0 } uri)
         {
             var active = _saveCards.FirstOrDefault(c => c.Entry.FileUri == uri);
             if (active != null)
@@ -220,7 +222,7 @@ public partial class MainPage : ContentPage
         // Clear any stale IsLoaded flags from the previous session
         foreach (var c in _saveCards) c.IsLoaded = false;
 
-        if (App.ActiveSaveFileUri is { Length: > 0 } uri)
+        if (_session.ActiveSaveFileUri is { Length: > 0 } uri)
         {
             var active = _saveCards.FirstOrDefault(c => c.Entry.FileUri == uri);
             if (active != null)
@@ -608,9 +610,9 @@ public partial class MainPage : ContentPage
             foreach (var card in _saveCards)
                 card.IsLoaded = false;
 
-            App.ActiveSave = sav;
-            App.ActiveSaveFileName = entry.FileName;
-            App.ActiveSaveFileUri = entry.FileUri;
+            _session.ActiveSave = sav;
+            _session.ActiveSaveFileName = entry.FileName;
+            _session.ActiveSaveFileUri = entry.FileUri;
             _selectedSave = entry;
 
             var active = _saveCards.FirstOrDefault(c => c.Entry == entry);
@@ -664,10 +666,10 @@ public partial class MainPage : ContentPage
 
     private async Task ExportSaveAsync()
     {
-        if (App.ActiveSave is null || _selectedSave is null) return;
+        if (_session.ActiveSave is null || _selectedSave is null) return;
         try
         {
-            var data = App.ActiveSave.Write().ToArray();
+            var data = _session.ActiveSave.Write().ToArray();
             await _fileService.ExportFileAsync(data, _selectedSave.FileName);
         }
         catch (Exception ex)

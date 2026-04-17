@@ -13,6 +13,7 @@ public partial class DexPage : ContentPage
     private static int TotalRows   => (TotalSpecies + Columns - 1) / Columns; // 129
 
     private readonly ISecondaryDisplay        _secondary;
+    private readonly SessionState             _session;
     private readonly DexService               _dex;
     private readonly FileSystemSpriteRenderer _renderer = new();
     private readonly GameStrings              _strings  = GameInfo.GetStrings("en");
@@ -83,10 +84,11 @@ public partial class DexPage : ContentPage
     // Pan state
     private float _panStartOffset;
 
-    public DexPage(ISecondaryDisplay secondary, DexService dex)
+    public DexPage(ISecondaryDisplay secondary, DexService dex, SessionState session)
     {
         _secondary = secondary;
         _dex       = dex;
+        _session   = session;
         InitializeComponent();
     }
 
@@ -335,12 +337,12 @@ public partial class DexPage : ContentPage
 
     private void ScanActiveSave()
     {
-        if (App.ActiveSave is null)
+        if (_session.ActiveSave is null)
         {
             _ = DisplayAlertAsync("No Save", "Load a save file first.", "OK");
             return;
         }
-        int newly = _dex.ScanSave(App.ActiveSave);
+        int newly = _dex.ScanSave(_session.ActiveSave);
         UpdateCaughtLabel();
         UpdateFooter();
         PushDexStats();
